@@ -1,0 +1,39 @@
+overrides:
+  "@types/react": 18.3.1
+  "@types/react-dom": 18.3.1
+  i18next-fs-backend: ">=2.6.6"
+  hono: ">=4.12.30"
+  "@hono/node-server": ">=1.19.14"
+  kysely: ">=0.28.17"
+  defu: ">=6.1.7"
+  dompurify: ">=3.4.11"
+  esbuild: ">=0.25.0"
+  "glob@>=10.2.0 <10.5.0": ">=10.5.0"
+  "minimatch@>=9.0.0 <9.0.7": ">=9.0.7"
+  "minimatch@>=3 <4": ">=3.1.4"
+  picomatch: ">=4.0.4"
+  lodash: ">=4.18.0"
+  serialize-javascript: ">=7.0.3"
+  ws: ">=8.21.0"
+  vite: ">=6.4.3"
+  "fast-uri": ">=4.1.1"
+  sharp: ">=0.35.0"
+  "form-data": ">=4.0.6"
+  "brace-expansion@<2": ">=1.1.13"
+  "brace-expansion@>=2 <5": ">=2.0.3"
+  "brace-expansion@>=5": ">=5.0.7"
+  yaml: ">=2.8.3"
+  qs: ">=6.15.2"
+  "js-yaml": ">=4.2.0"
+  postcss: ">=8.5.10"
+  "ip-address": ">=10.1.1"
+  "@babel/plugin-transform-modules-systemjs": "7.29.4"
+allowBuilds:
+  core-js: true
+  esbuild: true
+  msw: true
+  sharp: true
+  unrs-resolver: true
+onlyBuiltDependencies:
+  - sharp
+  - esbuild

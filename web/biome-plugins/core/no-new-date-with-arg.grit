@@ -1,0 +1,19 @@
+engine biome(1.0)
+language js(typescript, jsx)
+
+or {
+  `new Date($arg)` as $date where {
+    not $filename <: r".*shared/components/shadui/.*",
+    not $filename <: r".*__tests__/.*",
+    not $filename <: r".*\.test\.tsx?$",
+    not $filename <: r".*\.spec\.tsx?$",
+    register_diagnostic(span=$date, message="Use dayjs or date-fns instead of new Date(...) for parsing dates.")
+  },
+  `new Date($arg, $...)` as $date where {
+    not $filename <: r".*shared/components/shadui/.*",
+    not $filename <: r".*__tests__/.*",
+    not $filename <: r".*\.test\.tsx?$",
+    not $filename <: r".*\.spec\.tsx?$",
+    register_diagnostic(span=$date, message="Use dayjs or date-fns instead of new Date(...) for parsing dates.")
+  }
+}

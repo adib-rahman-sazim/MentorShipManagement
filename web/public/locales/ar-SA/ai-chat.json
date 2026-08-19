@@ -1,0 +1,12 @@
+{
+  "title": "مساعد الذكاء الاصطناعي",
+  "subtitle": "اسألني أي شيء",
+  "startConversation": "ابدأ محادثة",
+  "startConversationDescription": "اسألني أي شيء وسأساعدك بالإجابات المدعومة بالذكاء الاصطناعي",
+  "inputPlaceholder": "اكتب رسالتك... (اضغط Enter للإرسال، Shift+Enter لسطر جديد)",
+  "you": "أنت",
+  "assistant": "مساعد الذكاء الاصطناعي",
+  "errorTitle": "خطأ",
+  "errorSendMessage": "فشل إرسال الرسالة",
+  "errorAutoComplete": "فشل الإكمال التلقائي"
+}

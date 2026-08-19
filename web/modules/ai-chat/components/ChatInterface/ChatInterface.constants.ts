@@ -1,0 +1,1 @@
+export const CHAT_SCROLL_THRESHOLD_PX = 100;

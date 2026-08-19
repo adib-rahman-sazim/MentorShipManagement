@@ -1,0 +1,7 @@
+{
+  "hello": "مرحبا بالعالم",
+  "variableWithCount_one": "لديك {{count}} رسالة",
+  "variableWithCount_few": "لديك {{count}} رسائل",
+  "transComponent": "هذا نص <bold>عريض</bold> وهذا <italic>نص مائل</italic>",
+  "selectLanguage": "اختر اللغة..."
+}

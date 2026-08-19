@@ -1,0 +1,6 @@
+{
+  "onlyPdfAllowed": "Only PDF files are allowed currently.",
+  "uploadSuccess": "Document uploaded successfully",
+  "uploadFailed": "Failed to upload document",
+  "queryFailed": "Failed to query documents"
+}

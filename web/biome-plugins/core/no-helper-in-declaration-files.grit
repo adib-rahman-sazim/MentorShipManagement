@@ -1,0 +1,125 @@
+engine biome(1.0)
+language js(typescript, jsx)
+
+or {
+  `function $name($...) { $... }` as $helper where {
+    not $filename <: r".*shared/typedefs/.*",
+    or {
+      $filename <: r".*\.constants\.ts$",
+      $filename <: r".*\.enums\.ts$",
+      $filename <: r".*\.types\.ts$",
+      $filename <: r".*\.interfaces\.ts$"
+    },
+    register_diagnostic(span=$helper, message="Helper functions are not allowed in declaration or constants files.")
+  },
+  `async function $name($...) { $... }` as $helper where {
+    not $filename <: r".*shared/typedefs/.*",
+    or {
+      $filename <: r".*\.constants\.ts$",
+      $filename <: r".*\.enums\.ts$",
+      $filename <: r".*\.types\.ts$",
+      $filename <: r".*\.interfaces\.ts$"
+    },
+    register_diagnostic(span=$helper, message="Helper functions are not allowed in declaration or constants files.")
+  },
+  `const $name = ($...) => $body` as $helper where {
+    not $filename <: r".*shared/typedefs/.*",
+    or {
+      $filename <: r".*\.constants\.ts$",
+      $filename <: r".*\.enums\.ts$",
+      $filename <: r".*\.types\.ts$",
+      $filename <: r".*\.interfaces\.ts$"
+    },
+    register_diagnostic(span=$helper, message="Helper functions are not allowed in declaration or constants files.")
+  },
+  `const $name = async ($...) => $body` as $helper where {
+    not $filename <: r".*shared/typedefs/.*",
+    or {
+      $filename <: r".*\.constants\.ts$",
+      $filename <: r".*\.enums\.ts$",
+      $filename <: r".*\.types\.ts$",
+      $filename <: r".*\.interfaces\.ts$"
+    },
+    register_diagnostic(span=$helper, message="Helper functions are not allowed in declaration or constants files.")
+  },
+  `const $name = function ($...) { $... }` as $helper where {
+    not $filename <: r".*shared/typedefs/.*",
+    or {
+      $filename <: r".*\.constants\.ts$",
+      $filename <: r".*\.enums\.ts$",
+      $filename <: r".*\.types\.ts$",
+      $filename <: r".*\.interfaces\.ts$"
+    },
+    register_diagnostic(span=$helper, message="Helper functions are not allowed in declaration or constants files.")
+  },
+  `const $name = async function ($...) { $... }` as $helper where {
+    not $filename <: r".*shared/typedefs/.*",
+    or {
+      $filename <: r".*\.constants\.ts$",
+      $filename <: r".*\.enums\.ts$",
+      $filename <: r".*\.types\.ts$",
+      $filename <: r".*\.interfaces\.ts$"
+    },
+    register_diagnostic(span=$helper, message="Helper functions are not allowed in declaration or constants files.")
+  },
+  `$key: function ($...) { $... }` as $helper where {
+    not $filename <: r".*shared/typedefs/.*",
+    or {
+      $filename <: r".*\.constants\.ts$",
+      $filename <: r".*\.enums\.ts$",
+      $filename <: r".*\.types\.ts$",
+      $filename <: r".*\.interfaces\.ts$"
+    },
+    register_diagnostic(span=$helper, message="Helper functions are not allowed in declaration or constants files.")
+  },
+  `$key: async function ($...) { $... }` as $helper where {
+    not $filename <: r".*shared/typedefs/.*",
+    or {
+      $filename <: r".*\.constants\.ts$",
+      $filename <: r".*\.enums\.ts$",
+      $filename <: r".*\.types\.ts$",
+      $filename <: r".*\.interfaces\.ts$"
+    },
+    register_diagnostic(span=$helper, message="Helper functions are not allowed in declaration or constants files.")
+  },
+  `$key: ($...) => $body` as $helper where {
+    not $filename <: r".*shared/typedefs/.*",
+    or {
+      $filename <: r".*\.constants\.ts$",
+      $filename <: r".*\.enums\.ts$",
+      $filename <: r".*\.types\.ts$",
+      $filename <: r".*\.interfaces\.ts$"
+    },
+    register_diagnostic(span=$helper, message="Helper functions are not allowed in declaration or constants files.")
+  },
+  `$key: async ($...) => $body` as $helper where {
+    not $filename <: r".*shared/typedefs/.*",
+    or {
+      $filename <: r".*\.constants\.ts$",
+      $filename <: r".*\.enums\.ts$",
+      $filename <: r".*\.types\.ts$",
+      $filename <: r".*\.interfaces\.ts$"
+    },
+    register_diagnostic(span=$helper, message="Helper functions are not allowed in declaration or constants files.")
+  },
+  `$key($...) { $... }` as $helper where {
+    not $filename <: r".*shared/typedefs/.*",
+    or {
+      $filename <: r".*\.constants\.ts$",
+      $filename <: r".*\.enums\.ts$",
+      $filename <: r".*\.types\.ts$",
+      $filename <: r".*\.interfaces\.ts$"
+    },
+    register_diagnostic(span=$helper, message="Helper functions are not allowed in declaration or constants files.")
+  },
+  `async $key($...) { $... }` as $helper where {
+    not $filename <: r".*shared/typedefs/.*",
+    or {
+      $filename <: r".*\.constants\.ts$",
+      $filename <: r".*\.enums\.ts$",
+      $filename <: r".*\.types\.ts$",
+      $filename <: r".*\.interfaces\.ts$"
+    },
+    register_diagnostic(span=$helper, message="Helper functions are not allowed in declaration or constants files.")
+  }
+}

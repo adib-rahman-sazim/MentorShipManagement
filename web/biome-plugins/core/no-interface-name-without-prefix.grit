@@ -1,0 +1,8 @@
+engine biome(1.0)
+language js(typescript, jsx)
+
+TsInterfaceDeclaration(id=$name) as $interface where {
+  $name <: r"^[^I]|^I[^A-Z]",
+  not $filename <: r".*shared/components/shadui/.*",
+  register_diagnostic(span=$interface, message="Interface names must start with I followed by a PascalCase name.")
+}

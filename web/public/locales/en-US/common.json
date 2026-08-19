@@ -1,0 +1,7 @@
+{
+  "hello": "Hello World",
+  "variableWithCount_one": "You have {{count}} message",
+  "variableWithCount_other": "You have {{count}} messages",
+  "transComponent": "This is a <bold>bold text</bold> and this is a <italic> italic text edited</italic>",
+  "selectLanguage": "Select Language..."
+}

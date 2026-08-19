@@ -1,0 +1,12 @@
+{
+  "title": "AI Assistant",
+  "subtitle": "Ask me anything",
+  "startConversation": "Start a conversation",
+  "startConversationDescription": "Ask me anything and I will help you with AI-powered responses",
+  "inputPlaceholder": "Type your message... (Enter to send, Shift+Enter for new line)",
+  "you": "You",
+  "assistant": "AI Assistant",
+  "errorTitle": "Error",
+  "errorSendMessage": "Failed to send message",
+  "errorAutoComplete": "Auto-complete failed"
+}

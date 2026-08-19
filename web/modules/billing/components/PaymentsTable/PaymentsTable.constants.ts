@@ -1,0 +1,4 @@
+export const PAYMENTS_TABLE_PAGE_SIZE = 10;
+export const PAYMENT_AMOUNT_MINOR_UNIT_DIVISOR = 100;
+export const PAYMENT_DATE_FORMAT = "PPP";
+export const PAYMENT_ID_PREVIEW_LENGTH = 8;

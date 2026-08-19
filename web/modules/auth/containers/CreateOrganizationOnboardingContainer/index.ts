@@ -1,0 +1,3 @@
+import CreateOrganizationOnboardingContainer from "./CreateOrganizationOnboardingContainer";
+
+export default CreateOrganizationOnboardingContainer;

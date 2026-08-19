@@ -1,0 +1,8 @@
+engine biome(1.0)
+language js(typescript, jsx)
+
+TsEnumDeclaration(id=$name) as $enum where {
+  $name <: r"^[^E]|^E[^A-Z]",
+  not $filename <: r".*shared/components/shadui/.*",
+  register_diagnostic(span=$enum, message="Enum names must start with E followed by a PascalCase name.")
+}
