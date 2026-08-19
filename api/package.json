@@ -11,7 +11,6 @@
   },
   "packageManager": "pnpm@10.29.3",
   "scripts": {
-    "prepare": "husky install",
     "build": "nest build",
     "build:bun": "nest build",
     "format": "biome format --write .",
