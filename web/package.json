@@ -17,7 +17,6 @@
     "format:check": "biome format .",
     "biome:ci": "biome ci . --error-on-warnings",
     "postinstall": "next telemetry disable",
-    "prepare": "husky install",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint-staged": "lint-staged",
