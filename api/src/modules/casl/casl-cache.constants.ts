@@ -1,0 +1,3 @@
+export const CASL_CACHE_KEY_PREFIX = "casl:rules:";
+export const CASL_CACHE_TTL_SECONDS_ENV = "CASL_CACHE_TTL_SECONDS";
+export const CASL_CACHE_TTL_SECONDS_DEFAULT = 300;

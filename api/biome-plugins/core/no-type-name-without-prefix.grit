@@ -1,0 +1,11 @@
+engine biome(1.0)
+language js(typescript, jsx)
+
+TsIdentifierBinding() as $type where {
+  $type_text = text($type),
+  $type_text <: r"^I[A-Z]",
+  $filename <: r".*\.types\.ts$",
+  not $filename <: r".*shared/typedefs/.*",
+  not $filename <: r".*shared/components/shadui/.*",
+  register_diagnostic(span=$type, message="Type alias names must start with T followed by a PascalCase name.")
+}

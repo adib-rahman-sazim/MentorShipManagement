@@ -1,0 +1,221 @@
+/**
+ * MikroORM Adapter for Better Auth
+ *
+ * Why `any` types are required:
+ *
+ * Better Auth's CustomAdapter interface uses generic type parameters to preserve type safety
+ * across different entity models (User, Session, Account, etc.). The interface is defined as:
+ *
+ * interface CustomAdapter {
+ *   create: <T extends Record<string, any>>({ data, model, select }:....) => Promise<T>;
+ *   findOne: <T>({ model, where, select }:...) => Promise<T | null>;
+ *   findMany: <T>({ model, where, ... }:...) => Promise<T[]>;
+ *   update: <T>(data: { update: T; ... }) => Promise<T | null>;
+ *   updateMany: (data: { update: Record<string, any>; ... }) => Promise<number>;
+ * }
+ *
+ * The generic `T` is determined at *call-time* by Better Auth based on which model is being
+ * queried (e.g., T = User when querying users table). This allows Better Auth to:
+ * 1. Accept any entity shape without knowing them upfront
+ * 2. Return the same type that was passed in (type preservation)
+ * 3. Work with plugins that add custom fields
+ *
+ * Since our adapter implementation doesn't know what `T` will be until Better Auth calls it,
+ * we cannot use concrete types like `Record<string, unknown>`. We must use `any` to match
+ * the interface signature exactly. Better Auth provides the type safety at the call site,
+ * not in the adapter implementation.
+ *
+ * Summary: `any` is required here because Better Auth uses higher-kinded types (generics determined
+ * at call-time) which TypeScript can only express through `any` in the adapter implementation.
+ */
+/* biome-ignore-all lint/suspicious/noExplicitAny: Better Auth adapter signatures require any. */
+import type { FindOptions, MikroORM } from "@mikro-orm/core";
+
+import { createAdapter } from "better-auth/adapters";
+import { dset } from "dset";
+
+import { MikroOrmAdapterUtils } from "./mikro-orm.adapter.helpers";
+import type { IMikroOrmAdapterConfig } from "./mikro-orm.adapter.interfaces";
+import { MikroOrmAdapterRolePayloadDecorator } from "./mikro-orm.adapter-role-payload.decorator";
+import { MikroOrmAdapterUserInputSanitizer } from "./mikro-orm.adapter-user-input.sanitizer";
+
+/**
+ * Creates MikroORM adapter for Better Auth.
+ *
+ * Current limitations:
+ *   * No m:m and 1:m and embedded references support
+ *   * No complex primary key support
+ *   * No schema generation
+ *
+ * @param orm - Instance of MikroORM returned from `MikroORM.init` or `MikroORM.initSync` methods
+ * @param config - Additional configuration for MikroORM adapter
+ */
+export const mikroOrmAdapter = (
+  orm: MikroORM,
+  { debugLogs, supportsJSON = true }: IMikroOrmAdapterConfig = {},
+) =>
+  createAdapter({
+    config: {
+      debugLogs,
+      supportsJSON,
+      adapterId: "mikro-orm-adapter",
+      adapterName: "MikroORM Adapter",
+    },
+
+    adapter() {
+      const adapterUtils = new MikroOrmAdapterUtils(orm);
+      const userInputSanitizer = new MikroOrmAdapterUserInputSanitizer();
+      const rolePayloadDecorator = new MikroOrmAdapterRolePayloadDecorator();
+
+      return {
+        async create({ model, data, select }) {
+          const em = orm.em.fork();
+          const metadata = adapterUtils.getEntityMetadata(model);
+          const input = adapterUtils.normalizeInput(
+            metadata,
+            userInputSanitizer.sanitize(metadata, data),
+            em,
+          );
+
+          const entity = em.create(metadata.class, input);
+
+          await em.persistAndFlush(entity);
+
+          return (await rolePayloadDecorator.decorate(
+            em,
+            metadata,
+            adapterUtils.normalizeOutput(metadata, entity, select),
+          )) as typeof data;
+        },
+
+        async count({ model, where }): Promise<number> {
+          const em = orm.em.fork();
+          const metadata = adapterUtils.getEntityMetadata(model);
+
+          return em.count(metadata.class, adapterUtils.normalizeWhereClauses(metadata, where));
+        },
+
+        async findOne({ model, where, select }) {
+          const em = orm.em.fork();
+          const metadata = adapterUtils.getEntityMetadata(model);
+
+          const entity = await em.findOne(
+            metadata.class,
+            adapterUtils.normalizeWhereClauses(metadata, where),
+          );
+
+          if (!entity) {
+            return null;
+          }
+
+          return (await rolePayloadDecorator.decorate(
+            em,
+            metadata,
+            adapterUtils.normalizeOutput(metadata, entity, select),
+          )) as any;
+        },
+
+        async findMany({ model, where, limit, offset, sortBy }) {
+          const em = orm.em.fork();
+          const metadata = adapterUtils.getEntityMetadata(model);
+
+          const options: FindOptions<Record<string, unknown>> = {
+            limit,
+            offset,
+          };
+
+          if (sortBy) {
+            const path = adapterUtils.getFieldPath(metadata, sortBy.field);
+            dset(options, ["orderBy", ...path], sortBy.direction);
+          }
+
+          const rows = await em.find(
+            metadata.class,
+            adapterUtils.normalizeWhereClauses(metadata, where),
+            options,
+          );
+
+          return (await rolePayloadDecorator.decorateMany(
+            em,
+            metadata,
+            rows.map((row) => adapterUtils.normalizeOutput(metadata, row)),
+          )) as any;
+        },
+
+        async update({ model, where, update }) {
+          const em = orm.em.fork();
+          const metadata = adapterUtils.getEntityMetadata(model);
+
+          const entity = await em.findOne(
+            metadata.class,
+            adapterUtils.normalizeWhereClauses(metadata, where),
+          );
+
+          if (!entity) {
+            return null;
+          }
+
+          em.assign(
+            entity,
+            adapterUtils.normalizeInput(
+              metadata,
+              userInputSanitizer.sanitize(metadata, update as any),
+              em,
+            ),
+          );
+
+          await em.flush();
+
+          return (await rolePayloadDecorator.decorate(
+            em,
+            metadata,
+            adapterUtils.normalizeOutput(metadata, entity),
+          )) as any;
+        },
+
+        async updateMany({ model, where, update }) {
+          const em = orm.em.fork();
+          const metadata = adapterUtils.getEntityMetadata(model);
+
+          return em.nativeUpdate(
+            metadata.class,
+            adapterUtils.normalizeWhereClauses(metadata, where),
+            adapterUtils.normalizeInput(
+              metadata,
+              userInputSanitizer.sanitize(metadata, update as any),
+              em,
+            ),
+          );
+        },
+
+        async delete({ model, where }) {
+          const em = orm.em.fork();
+          const metadata = adapterUtils.getEntityMetadata(model);
+
+          const entity = await em.findOne(
+            metadata.class,
+
+            adapterUtils.normalizeWhereClauses(metadata, where),
+
+            {
+              fields: ["id"],
+            },
+          );
+
+          if (entity) {
+            await em.removeAndFlush(entity);
+          }
+        },
+
+        async deleteMany({ model, where }) {
+          const em = orm.em.fork();
+          const metadata = adapterUtils.getEntityMetadata(model);
+
+          return em.nativeDelete(
+            metadata.class,
+            adapterUtils.normalizeWhereClauses(metadata, where),
+          );
+        },
+      };
+    },
+  });

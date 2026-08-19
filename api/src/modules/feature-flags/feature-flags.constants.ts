@@ -1,0 +1,6 @@
+export const FEATURE_FLAGS_STRATEGY = "FEATURE_FLAGS_STRATEGY";
+
+export const POSTHOG_DEFAULT_HOST = "https://us.i.posthog.com";
+export const POSTHOG_FLUSH_AT = 20;
+export const POSTHOG_FLUSH_INTERVAL_MS = 10_000;
+export const POSTHOG_FEATURE_FLAGS_POLLING_INTERVAL_MS = 30_000;

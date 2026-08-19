@@ -1,0 +1,10 @@
+export const PERMISSION_DELIMITER = ":";
+
+export const PERMISSION_EFFECT_ALLOW = "allow";
+export const PERMISSION_EFFECT_DENY = "deny";
+
+export const PERMISSION_PARTS_WITHOUT_CONDITION_COUNT = 3;
+export const PERMISSION_PARTS_WITH_CONDITION_COUNT = 4;
+
+export const PERMISSION_KEY_VALUE_DELIMITER = "=";
+export const PERMISSION_CONDITION_KEY = "cond";

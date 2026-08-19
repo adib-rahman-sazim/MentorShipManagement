@@ -1,0 +1,41 @@
+import type { ArgumentMetadata, PipeTransform } from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
+
+import type { IParseEnumArrayOptions } from "@/common/pipes/parse-enum-array/parse-enum-array.pipe.interfaces";
+
+@Injectable()
+export class ParseEnumArrayPipe<T> implements PipeTransform<string, T[] | undefined> {
+  constructor(
+    private readonly enumType: { [key: string]: T },
+    private readonly options: IParseEnumArrayOptions = { optional: false, separator: "," },
+  ) {}
+
+  private split(value: string): string[] {
+    const decodedValue = decodeURIComponent(value);
+    return decodedValue.trim().split(this.options.separator);
+  }
+
+  transform(value: string | undefined, _: ArgumentMetadata): T[] | undefined {
+    if (this.options.optional && (value === undefined || value === "")) {
+      return undefined;
+    }
+
+    if (value === undefined) {
+      throw new BadRequestException("Validation failed: No value provided");
+    }
+
+    const values = this.split(value);
+
+    if (values.length === 0) {
+      throw new BadRequestException("Validation failed: No values provided");
+    }
+
+    const enumValues = Object.values(this.enumType);
+    const invalidValue = values.find((val) => !enumValues.includes(val as T));
+    if (invalidValue !== undefined) {
+      throw new BadRequestException(`Invalid enum value: ${invalidValue}`);
+    }
+
+    return values as T[];
+  }
+}
