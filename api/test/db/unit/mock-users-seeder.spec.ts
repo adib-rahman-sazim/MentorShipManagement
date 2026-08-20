@@ -4,17 +4,10 @@ import { MikroORM } from "@mikro-orm/postgresql";
 import { mockDeep } from "vitest-mock-extended";
 
 import { Account } from "@/common/entities/accounts.entity";
-import { Member } from "@/common/entities/members.entity";
-import { Organization } from "@/common/entities/organizations.entity";
 import { Role } from "@/common/entities/roles.entity";
-import { UserRole } from "@/common/entities/user-roles.entity";
 import { User } from "@/common/entities/users.entity";
-import { EUserRole } from "@/common/enums/roles.enums";
-import { DEFAULT_ORGANIZATION_SLUG } from "@/db/seeders/core-seeders/Seed20260723000003_default_organization/default-organization.constants";
 import { MOCK_USERS } from "@/db/seeders/core-seeders/Seed20260723000005_mock_users/mock-users.constants";
 import { Seed20260723000005_MockUsers } from "@/db/seeders/core-seeders/Seed20260723000005_mock_users/Seed20260723000005_mock_users";
-import { OrganizationFactory } from "@/test/utils/factories/organizations.factory";
-import { RoleFactory } from "@/test/utils/factories/roles.factory";
 import { UserFactory } from "@/test/utils/factories/users.factory";
 
 vi.mock("better-auth/crypto", () => ({
@@ -23,8 +16,6 @@ vi.mock("better-auth/crypto", () => ({
 
 describe("Seed20260723000005_MockUsers", () => {
   let orm: MikroORM;
-  let organizationFactory: OrganizationFactory;
-  let roleFactory: RoleFactory;
   let userFactory: UserFactory;
 
   beforeAll(() => {
@@ -32,10 +23,8 @@ describe("Seed20260723000005_MockUsers", () => {
       clientUrl: "postgresql://localhost:5432/unused",
       connect: false,
       allowGlobalContext: true,
-      entities: [User, Account, Organization, Member, Role, UserRole],
+      entities: [User, Account, Role],
     });
-    organizationFactory = new OrganizationFactory(orm.em);
-    roleFactory = new RoleFactory(orm.em);
     userFactory = new UserFactory(orm.em);
   });
 
@@ -48,59 +37,43 @@ describe("Seed20260723000005_MockUsers", () => {
     vi.restoreAllMocks();
   });
 
-  it("ensures roles and membership for existing mock users without recreating them", async () => {
-    const organization = organizationFactory.makeEntity({
-      id: "org-1",
-      slug: DEFAULT_ORGANIZATION_SLUG,
-    });
-    const managerUser = userFactory.makeEntity({
-      id: "manager-1",
+  it("does not recreate existing mock users or their credential accounts", async () => {
+    const mentorUser = userFactory.makeEntity({
+      id: "mentor-1",
       email: MOCK_USERS[0].email,
       firstName: "Mock",
-      lastName: "Manager",
-      name: "Mock Manager",
+      lastName: "Mentor",
+      name: "Mock Mentor",
     });
-    const customerUser = userFactory.makeEntity({
-      id: "customer-1",
+    const menteeUser = userFactory.makeEntity({
+      id: "mentee-1",
       email: MOCK_USERS[1].email,
       firstName: "Mock",
-      lastName: "Customer",
-      name: "Mock Customer",
+      lastName: "Mentee",
+      name: "Mock Mentee",
     });
-    const managerAccount = orm.em.create(Account, {
-      id: "account-manager",
-      user: managerUser,
+    const mentorAccount = orm.em.create(Account, {
+      id: "account-mentor",
+      user: mentorUser,
       accountId: MOCK_USERS[0].email,
       providerId: "credential",
       password: "existing-hash",
     });
-    const customerAccount = orm.em.create(Account, {
-      id: "account-customer",
-      user: customerUser,
+    const menteeAccount = orm.em.create(Account, {
+      id: "account-mentee",
+      user: menteeUser,
       accountId: MOCK_USERS[1].email,
       providerId: "credential",
       password: "existing-hash",
     });
-    const managerRole = roleFactory.makeEntity({
-      id: 2,
-      slug: EUserRole.MANAGER,
-      name: "Manager",
-      isSystem: true,
-    });
-    const customerRole = roleFactory.makeEntity({
-      id: 3,
-      slug: EUserRole.CUSTOMER,
-      name: "Customer",
-      isSystem: false,
-    });
 
     const usersByEmail = new Map<string, User>([
-      [MOCK_USERS[0].email, managerUser],
-      [MOCK_USERS[1].email, customerUser],
+      [MOCK_USERS[0].email, mentorUser],
+      [MOCK_USERS[1].email, menteeUser],
     ]);
     const accountsByUserId = new Map<string, Account>([
-      [managerUser.id, managerAccount],
-      [customerUser.id, customerAccount],
+      [mentorUser.id, mentorAccount],
+      [menteeUser.id, menteeAccount],
     ]);
     const createdEntities: unknown[] = [];
 
@@ -114,25 +87,7 @@ describe("Seed20260723000005_MockUsers", () => {
         const user = (where as { user?: User }).user;
         return (user ? (accountsByUserId.get(user.id) ?? null) : null) as never;
       }
-      if (entity === Member || entity === UserRole) {
-        return null as never;
-      }
       return null as never;
-    });
-    em.findOneOrFail.mockImplementation(async (entity, where) => {
-      if (entity === Organization) {
-        return organization as never;
-      }
-      if (entity === Role) {
-        const slug = (where as { slug?: EUserRole }).slug;
-        if (slug === EUserRole.MANAGER) {
-          return managerRole as never;
-        }
-        if (slug === EUserRole.CUSTOMER) {
-          return customerRole as never;
-        }
-      }
-      throw new Error("unexpected findOneOrFail");
     });
     em.create.mockImplementation((entityName, data) => {
       const created = orm.em.create(entityName, data);
@@ -146,9 +101,7 @@ describe("Seed20260723000005_MockUsers", () => {
 
     expect(createdEntities.filter((entity) => entity instanceof User)).toHaveLength(0);
     expect(createdEntities.filter((entity) => entity instanceof Account)).toHaveLength(0);
-    expect(createdEntities.filter((entity) => entity instanceof UserRole)).toHaveLength(2);
-    expect(createdEntities.filter((entity) => entity instanceof Member)).toHaveLength(1);
-    expect(managerAccount.password).toBe("existing-hash");
-    expect(customerAccount.password).toBe("existing-hash");
+    expect(mentorAccount.password).toBe("existing-hash");
+    expect(menteeAccount.password).toBe("existing-hash");
   });
 });

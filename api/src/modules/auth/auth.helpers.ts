@@ -1,10 +1,6 @@
 import type { IEmailService } from "@/modules/emails/email-service.interfaces";
 
-import type {
-  IInvitationEmailData,
-  ISystemInvitationEmailData,
-  IUserEmailData,
-} from "./auth.interfaces";
+import type { IUserEmailData } from "./auth.interfaces";
 
 export function createAuthEmailSenders(emailService: IEmailService, webClientBaseUrl: string) {
   return {
@@ -37,41 +33,6 @@ export function createAuthEmailSenders(emailService: IEmailService, webClientBas
           <p>Thanks for signing up! Please verify your email address by clicking the link below:</p>
           <p><a href="${frontendVerifyUrl}" style="display: inline-block; padding: 12px 24px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 6px;">Verify Email</a></p>
           <p>If you didn't create an account, you can safely ignore this email.</p>
-        `,
-      });
-    },
-
-    async sendInvitationEmail(data: IInvitationEmailData): Promise<void> {
-      const { email, inviter, organization: org } = data;
-      const inviteUrl = `${webClientBaseUrl}/invite/accept?token=${data.id}`;
-
-      await emailService.sendEmailByTextOrHtml({
-        to: email,
-        subject: `You've been invited to join ${org.name}`,
-        html: `
-          <h1>You're Invited!</h1>
-          <p>Hi there,</p>
-          <p><strong>${
-            inviter.user.name || inviter.user.email
-          }</strong> has invited you to join <strong>${org.name}</strong>.</p>
-          <p>Click the link below to accept the invitation:</p>
-          <p><a href="${inviteUrl}" style="display: inline-block; padding: 12px 24px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 6px;">Accept Invitation</a></p>
-          <p>If you don't want to join, you can safely ignore this email.</p>
-        `,
-      });
-    },
-
-    async sendSystemInvitationEmail(data: ISystemInvitationEmailData): Promise<void> {
-      await emailService.sendEmailByTextOrHtml({
-        to: data.to,
-        subject: `You've been invited as ${data.role}`,
-        html: `
-          <h1>You're Invited!</h1>
-          <p>Hi ${data.name},</p>
-          <p><strong>${data.inviterName}</strong> has invited you to join as <strong>${data.role}</strong>.</p>
-          <p>Click the link below to accept the invitation and create your account:</p>
-          <p><a href="${data.acceptUrl}" style="display: inline-block; padding: 12px 24px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 6px;">Accept Invitation</a></p>
-          <p>If you don't want to join, you can safely ignore this email.</p>
         `,
       });
     },

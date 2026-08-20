@@ -1,9 +1,8 @@
 import { ApiProperty } from "@nestjs/swagger";
 
 import { Type } from "class-transformer";
-import { IsEmail, IsEnum, IsOptional, IsPositive, IsString, IsUrl, Min } from "class-validator";
+import { IsEnum, IsOptional, IsPositive, IsString, IsUrl, Min } from "class-validator";
 
-import { EUserRole } from "@/common/enums/roles.enums";
 import { EUserState } from "@/common/enums/users.enums";
 
 export class UpdateProfileDto {
@@ -45,22 +44,6 @@ export class UpdateUserDto {
   @IsOptional()
   @IsEnum(EUserState)
   state?: EUserState;
-}
-
-export class InviteUserDto {
-  @IsEmail()
-  email!: string;
-
-  @IsString()
-  firstName!: string;
-
-  @IsString()
-  lastName!: string;
-
-  @ApiProperty({ enum: EUserRole, enumName: "EUserRole", required: false })
-  @IsOptional()
-  @IsEnum(EUserRole)
-  role?: EUserRole;
 }
 
 export class ListUsersQueryDto {

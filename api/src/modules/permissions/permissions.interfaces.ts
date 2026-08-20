@@ -20,8 +20,7 @@ export interface INormalizedCaslRule {
 
 export interface IGetMyCaslRulesContext {
   userId: string;
-  roles?: string[];
-  activeOrganizationId?: string;
+  role?: string;
 }
 
 export interface IGetMyCaslRulesResult {

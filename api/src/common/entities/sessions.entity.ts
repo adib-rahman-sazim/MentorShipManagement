@@ -23,7 +23,4 @@ export class Session extends CustomBaseEntity {
 
   @Property({ nullable: true, type: "text" })
   userAgent?: string;
-
-  @Property({ nullable: true, type: "uuid" })
-  activeOrganizationId?: string;
 }

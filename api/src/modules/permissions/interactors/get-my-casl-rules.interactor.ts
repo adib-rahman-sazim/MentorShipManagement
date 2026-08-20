@@ -2,7 +2,6 @@ import { Injectable } from "@nestjs/common";
 
 import { EUserRole } from "@/common/enums/roles.enums";
 import { CaslAbilityFactory } from "@/modules/casl/casl.ability-factory";
-import type { IAbilityContext } from "@/modules/casl/casl.interfaces";
 import type {
   IGetMyCaslRulesContext,
   IGetMyCaslRulesResult,
@@ -17,21 +16,17 @@ export class GetMyCaslRulesInteractor {
   ) {}
 
   async execute(context: IGetMyCaslRulesContext): Promise<IGetMyCaslRulesResult> {
-    if (!context.userId) {
+    const isKnownRole = Object.values(EUserRole).includes(context.role as EUserRole);
+
+    if (!context.userId || !isKnownRole) {
       return this.permissionsSerializer.serializeEmptyRules();
     }
 
-    const roles = (context.roles ?? []).filter((role): role is EUserRole =>
-      Object.values(EUserRole).includes(role as EUserRole),
-    );
-
-    const abilityContext: IAbilityContext = {
+    const ability = await this.caslAbilityFactory.createForUser({
       userId: context.userId,
-      roles,
-      activeOrganizationId: context.activeOrganizationId,
-    };
+      role: context.role as EUserRole,
+    });
 
-    const ability = await this.caslAbilityFactory.createForUser(abilityContext);
     return this.permissionsSerializer.serializeAbilityRules(ability);
   }
 }

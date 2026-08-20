@@ -27,9 +27,8 @@ export class CaslCacheService {
     );
   }
 
-  buildUserCacheKey(userId: string, activeOrganizationId?: string): string {
-    const organizationKey = activeOrganizationId ?? "none";
-    return `${CASL_CACHE_KEY_PREFIX}user:${userId}:org:${organizationKey}`;
+  buildUserCacheKey(userId: string): string {
+    return `${CASL_CACHE_KEY_PREFIX}user:${userId}`;
   }
 
   async getRules(key: string): Promise<TAppRawRule[] | null> {
@@ -63,7 +62,7 @@ export class CaslCacheService {
 
   async invalidateUser(userId: string): Promise<void> {
     try {
-      const pattern = `${CASL_CACHE_KEY_PREFIX}user:${userId}:org:*`;
+      const pattern = `${CASL_CACHE_KEY_PREFIX}user:${userId}*`;
       const keys = await this.redisService.scanKeys(pattern);
       if (keys.length === 0) {
         return;

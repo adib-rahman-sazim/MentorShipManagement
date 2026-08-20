@@ -1,12 +1,6 @@
-import type { EUserRole } from "@/common/enums/roles.enums";
 import type { EUserState } from "@/common/enums/users.enums";
 
-import type {
-  InviteUserDto,
-  ListUsersQueryDto,
-  UpdateProfileDto,
-  UpdateUserDto,
-} from "./users.dtos";
+import type { ListUsersQueryDto, UpdateProfileDto, UpdateUserDto } from "./users.dtos";
 
 export interface IUserResponse {
   id: string;
@@ -39,12 +33,6 @@ export interface IFindUsersOptions {
   limit: number;
   search?: string;
   state?: EUserState;
-  organizationId?: string;
-}
-
-export interface IInviteUserResponse {
-  success: boolean;
-  message: string;
 }
 
 export interface IUpdateProfileContext {
@@ -54,21 +42,9 @@ export interface IUpdateProfileContext {
 
 export interface IListUsersContext {
   query: ListUsersQueryDto;
-  organizationId: string;
 }
 
 export interface IUpdateUserContext {
   userId: string;
   dto: UpdateUserDto;
-}
-
-export interface IInviteUserContext {
-  dto: InviteUserDto;
-  organizationId: string;
-  inviter: {
-    id: string;
-    email: string;
-    roles: EUserRole[];
-  };
-  inviterHeaders: Headers;
 }

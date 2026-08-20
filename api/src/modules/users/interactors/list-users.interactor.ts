@@ -15,7 +15,7 @@ export class ListUsersInteractor
     private readonly usersSerializer: UsersSerializer,
   ) {}
 
-  async execute({ query, organizationId }: IListUsersContext): Promise<IPaginatedUsersResponse> {
+  async execute({ query }: IListUsersContext): Promise<IPaginatedUsersResponse> {
     const page = query.page ?? 1;
     const limit = query.limit ?? 10;
 
@@ -24,7 +24,6 @@ export class ListUsersInteractor
       limit,
       search: query.search,
       state: query.state,
-      organizationId,
     });
 
     return {

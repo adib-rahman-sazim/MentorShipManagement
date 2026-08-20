@@ -1,23 +1,11 @@
 import { Injectable } from "@nestjs/common";
 
-import { EUserRole } from "@/common/enums/roles.enums";
-
 import { GetCurrentUserInteractor } from "./interactors/get-current-user.interactor";
-import { InviteUserInteractor } from "./interactors/invite-user.interactor";
 import { ListUsersInteractor } from "./interactors/list-users.interactor";
 import { UpdateProfileInteractor } from "./interactors/update-profile.interactor";
 import { UpdateUserInteractor } from "./interactors/update-user.interactor";
-import type {
-  InviteUserDto,
-  ListUsersQueryDto,
-  UpdateProfileDto,
-  UpdateUserDto,
-} from "./users.dtos";
-import type {
-  IInviteUserResponse,
-  IPaginatedUsersResponse,
-  IUserResponse,
-} from "./users.interfaces";
+import type { ListUsersQueryDto, UpdateProfileDto, UpdateUserDto } from "./users.dtos";
+import type { IPaginatedUsersResponse, IUserResponse } from "./users.interfaces";
 
 @Injectable()
 export class UsersService {
@@ -26,7 +14,6 @@ export class UsersService {
     private readonly updateProfileInteractor: UpdateProfileInteractor,
     private readonly listUsersInteractor: ListUsersInteractor,
     private readonly updateUserInteractor: UpdateUserInteractor,
-    private readonly inviteUserInteractor: InviteUserInteractor,
   ) {}
 
   async getCurrentUser(userId: string): Promise<IUserResponse> {
@@ -37,27 +24,11 @@ export class UsersService {
     return this.updateProfileInteractor.execute({ userId, dto });
   }
 
-  async listUsers(
-    query: ListUsersQueryDto,
-    organizationId: string,
-  ): Promise<IPaginatedUsersResponse> {
-    return this.listUsersInteractor.execute({ query, organizationId });
+  async listUsers(query: ListUsersQueryDto): Promise<IPaginatedUsersResponse> {
+    return this.listUsersInteractor.execute({ query });
   }
 
   async updateUser(userId: string, dto: UpdateUserDto): Promise<IUserResponse> {
     return this.updateUserInteractor.execute({ userId, dto });
-  }
-
-  async inviteUser(
-    dto: InviteUserDto,
-    organizationId: string,
-    inviter: {
-      id: string;
-      email: string;
-      roles: EUserRole[];
-    },
-    inviterHeaders: Headers,
-  ): Promise<IInviteUserResponse> {
-    return this.inviteUserInteractor.execute({ dto, organizationId, inviter, inviterHeaders });
   }
 }

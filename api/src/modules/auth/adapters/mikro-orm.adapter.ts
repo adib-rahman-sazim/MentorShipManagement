@@ -36,8 +36,6 @@ import { dset } from "dset";
 
 import { MikroOrmAdapterUtils } from "./mikro-orm.adapter.helpers";
 import type { IMikroOrmAdapterConfig } from "./mikro-orm.adapter.interfaces";
-import { MikroOrmAdapterRolePayloadDecorator } from "./mikro-orm.adapter-role-payload.decorator";
-import { MikroOrmAdapterUserInputSanitizer } from "./mikro-orm.adapter-user-input.sanitizer";
 
 /**
  * Creates MikroORM adapter for Better Auth.
@@ -64,28 +62,18 @@ export const mikroOrmAdapter = (
 
     adapter() {
       const adapterUtils = new MikroOrmAdapterUtils(orm);
-      const userInputSanitizer = new MikroOrmAdapterUserInputSanitizer();
-      const rolePayloadDecorator = new MikroOrmAdapterRolePayloadDecorator();
 
       return {
         async create({ model, data, select }) {
           const em = orm.em.fork();
           const metadata = adapterUtils.getEntityMetadata(model);
-          const input = adapterUtils.normalizeInput(
-            metadata,
-            userInputSanitizer.sanitize(metadata, data),
-            em,
-          );
+          const input = adapterUtils.normalizeInput(metadata, data, em);
 
           const entity = em.create(metadata.class, input);
 
           await em.persistAndFlush(entity);
 
-          return (await rolePayloadDecorator.decorate(
-            em,
-            metadata,
-            adapterUtils.normalizeOutput(metadata, entity, select),
-          )) as typeof data;
+          return adapterUtils.normalizeOutput(metadata, entity, select) as typeof data;
         },
 
         async count({ model, where }): Promise<number> {
@@ -108,11 +96,7 @@ export const mikroOrmAdapter = (
             return null;
           }
 
-          return (await rolePayloadDecorator.decorate(
-            em,
-            metadata,
-            adapterUtils.normalizeOutput(metadata, entity, select),
-          )) as any;
+          return adapterUtils.normalizeOutput(metadata, entity, select) as any;
         },
 
         async findMany({ model, where, limit, offset, sortBy }) {
@@ -135,11 +119,7 @@ export const mikroOrmAdapter = (
             options,
           );
 
-          return (await rolePayloadDecorator.decorateMany(
-            em,
-            metadata,
-            rows.map((row) => adapterUtils.normalizeOutput(metadata, row)),
-          )) as any;
+          return rows.map((row) => adapterUtils.normalizeOutput(metadata, row)) as any;
         },
 
         async update({ model, where, update }) {
@@ -155,22 +135,11 @@ export const mikroOrmAdapter = (
             return null;
           }
 
-          em.assign(
-            entity,
-            adapterUtils.normalizeInput(
-              metadata,
-              userInputSanitizer.sanitize(metadata, update as any),
-              em,
-            ),
-          );
+          em.assign(entity, adapterUtils.normalizeInput(metadata, update as any, em));
 
           await em.flush();
 
-          return (await rolePayloadDecorator.decorate(
-            em,
-            metadata,
-            adapterUtils.normalizeOutput(metadata, entity),
-          )) as any;
+          return adapterUtils.normalizeOutput(metadata, entity) as any;
         },
 
         async updateMany({ model, where, update }) {
@@ -180,11 +149,7 @@ export const mikroOrmAdapter = (
           return em.nativeUpdate(
             metadata.class,
             adapterUtils.normalizeWhereClauses(metadata, where),
-            adapterUtils.normalizeInput(
-              metadata,
-              userInputSanitizer.sanitize(metadata, update as any),
-              em,
-            ),
+            adapterUtils.normalizeInput(metadata, update as any, em),
           );
         },
 

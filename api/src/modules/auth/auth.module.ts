@@ -10,9 +10,7 @@ import { toNodeHandler } from "better-auth/node";
 import type { Request, Response } from "express";
 
 import { Account } from "@/common/entities/accounts.entity";
-import { Invitation } from "@/common/entities/invitations.entity";
-import { Member } from "@/common/entities/members.entity";
-import { Organization } from "@/common/entities/organizations.entity";
+import { Role } from "@/common/entities/roles.entity";
 import { Session } from "@/common/entities/sessions.entity";
 import { User } from "@/common/entities/users.entity";
 import { Verification } from "@/common/entities/verifications.entity";
@@ -23,24 +21,11 @@ import { EmailsModule } from "@/modules/emails/emails.module";
 import { createAuthInstance } from "./auth.config";
 import { BETTER_AUTH_BASE_PATH } from "./auth.constants";
 import type { IBetterAuthInstance } from "./auth.interfaces";
-import { AuthOrganizationHooks } from "./auth.organization.hooks";
 import { AuthService } from "./auth.service";
-import { AuthInvitationProcessor } from "./auth-invitation.processor";
 
 @Module({
-  imports: [
-    MikroOrmModule.forFeature([
-      User,
-      Session,
-      Account,
-      Verification,
-      Organization,
-      Member,
-      Invitation,
-    ]),
-    EmailsModule,
-  ],
-  providers: [AuthService, AuthInvitationProcessor, AuthOrganizationHooks],
+  imports: [MikroOrmModule.forFeature([User, Session, Account, Verification, Role]), EmailsModule],
+  providers: [AuthService],
   exports: [AuthService],
 })
 export class AuthModule implements NestModule, OnModuleInit {
@@ -52,14 +37,10 @@ export class AuthModule implements NestModule, OnModuleInit {
     private readonly adapter: HttpAdapterHost,
     @Inject(MikroORM) private readonly orm: PostgreSqlMikroORM,
     @Inject(EMAIL_SERVICE_TOKEN) private readonly emailService: IEmailService,
-    private readonly authInvitationProcessor: AuthInvitationProcessor,
-    private readonly authOrganizationHooks: AuthOrganizationHooks,
   ) {
     this.auth = createAuthInstance({
       orm: this.orm,
       emailService: this.emailService,
-      authInvitationProcessor: this.authInvitationProcessor,
-      authOrganizationHooks: this.authOrganizationHooks,
     });
     this.authService.setAuth(this.auth);
   }
@@ -79,7 +60,7 @@ export class AuthModule implements NestModule, OnModuleInit {
       res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
       res.setHeader(
         "Access-Control-Allow-Headers",
-        "Content-Type, Authorization, X-Requested-With, Accept, Origin, x-invitation-token",
+        "Content-Type, Authorization, X-Requested-With, Accept, Origin",
       );
 
       if (req.method === "OPTIONS") {

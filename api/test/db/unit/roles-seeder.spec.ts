@@ -41,23 +41,23 @@ describe("Seed20260723000001_Roles", () => {
     expect(em.create).toHaveBeenCalledWith(
       Role,
       expect.objectContaining({
-        slug: EUserRole.SUPER_ADMIN,
-        name: "Super Admin",
+        slug: EUserRole.SUPERADMIN,
+        name: "Superadmin",
         isSystem: true,
       }),
     );
     expect(em.create).toHaveBeenCalledWith(
       Role,
       expect.objectContaining({
-        slug: EUserRole.MANAGER,
+        slug: EUserRole.SENSEI,
         isSystem: true,
       }),
     );
     expect(em.create).toHaveBeenCalledWith(
       Role,
       expect.objectContaining({
-        slug: EUserRole.CUSTOMER,
-        isSystem: false,
+        slug: EUserRole.MENTEE,
+        isSystem: true,
       }),
     );
     expect(em.flush).toHaveBeenCalled();
@@ -66,7 +66,7 @@ describe("Seed20260723000001_Roles", () => {
   it("updates existing role fields without creating duplicates", async () => {
     const existing = roleFactory.makeEntity({
       id: 1,
-      slug: EUserRole.SUPER_ADMIN,
+      slug: EUserRole.SUPERADMIN,
       name: "Stale Name",
       description: "Stale",
       isSystem: false,
@@ -74,7 +74,7 @@ describe("Seed20260723000001_Roles", () => {
 
     const em = mockDeep<EntityManager>();
     em.findOne.mockImplementation(async (_entity, where) => {
-      if ((where as { slug?: EUserRole }).slug === EUserRole.SUPER_ADMIN) {
+      if ((where as { slug?: EUserRole }).slug === EUserRole.SUPERADMIN) {
         return existing as never;
       }
       return null as never;
@@ -83,14 +83,12 @@ describe("Seed20260723000001_Roles", () => {
 
     await new Seed20260723000001_Roles().run(em);
 
-    expect(existing.name).toBe("Super Admin");
-    expect(existing.description).toBe(
-      "Platform super admin with full access; no organization required",
-    );
+    expect(existing.name).toBe("Superadmin");
+    expect(existing.description).toBe("Platform superadmin with full access");
     expect(existing.isSystem).toBe(true);
     expect(em.create).not.toHaveBeenCalledWith(
       Role,
-      expect.objectContaining({ slug: EUserRole.SUPER_ADMIN }),
+      expect.objectContaining({ slug: EUserRole.SUPERADMIN }),
     );
   });
 });
