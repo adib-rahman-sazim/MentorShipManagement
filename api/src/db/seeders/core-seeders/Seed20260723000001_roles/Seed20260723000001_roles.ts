@@ -2,7 +2,6 @@ import type { EntityManager } from "@mikro-orm/core";
 import { Seeder } from "@mikro-orm/seeder";
 
 import { Role } from "@/common/entities/roles.entity";
-import { isSystemLevelRole } from "@/modules/permissions/permissions.role-priority.helpers";
 
 import { ROLE_SEED } from "./roles.constants";
 
@@ -15,12 +14,12 @@ export class Seed20260723000001_Roles extends Seeder {
           slug: seed.slug,
           name: seed.name,
           description: seed.description,
-          isSystem: isSystemLevelRole(seed.slug),
+          isSystem: true,
         });
       } else {
         role.name = seed.name;
         role.description = seed.description;
-        role.isSystem = isSystemLevelRole(seed.slug);
+        role.isSystem = true;
       }
       em.persist(role);
     }

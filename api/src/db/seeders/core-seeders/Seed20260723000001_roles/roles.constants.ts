@@ -4,18 +4,23 @@ import type { TRoleSeedEntry } from "./roles.types";
 
 export const ROLE_SEED: TRoleSeedEntry[] = [
   {
-    slug: EUserRole.SUPER_ADMIN,
-    name: "Super Admin",
-    description: "Platform super admin with full access; no organization required",
+    slug: EUserRole.SUPERADMIN,
+    name: "Superadmin",
+    description: "Platform superadmin with full access",
   },
   {
-    slug: EUserRole.MANAGER,
-    name: "Manager",
-    description: "Platform manager; no organization required",
+    slug: EUserRole.SENSEI,
+    name: "Sensei",
+    description: "Programme lead who manages mentors and mentees",
   },
   {
-    slug: EUserRole.CUSTOMER,
-    name: "Customer",
-    description: "Organization-bound customer member",
+    slug: EUserRole.MENTOR,
+    name: "Mentor",
+    description: "Mentor guiding assigned mentees",
+  },
+  {
+    slug: EUserRole.MENTEE,
+    name: "Mentee",
+    description: "Mentee taking part in the programme",
   },
 ];

@@ -26,7 +26,7 @@ export class UsersRepository extends CustomSQLBaseRepository<User> {
     options: IFindUsersOptions,
     em?: EntityManager,
   ): Promise<{ users: User[]; total: number }> {
-    const { page, limit, search, state, organizationId } = options;
+    const { page, limit, search, state } = options;
     const offset = (page - 1) * limit;
 
     const where: FilterQuery<User> = {};
@@ -42,10 +42,6 @@ export class UsersRepository extends CustomSQLBaseRepository<User> {
         { lastName: { $like: `%${search}%` } },
         { name: { $like: `%${search}%` } },
       ];
-    }
-
-    if (organizationId) {
-      where.memberships = { organization: { id: organizationId } };
     }
 
     const [users, total] = await this.getScopedEntityManager(em).findAndCount(User, where, {

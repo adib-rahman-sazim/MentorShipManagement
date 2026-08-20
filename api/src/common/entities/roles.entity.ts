@@ -11,7 +11,6 @@ import { RolesRepository } from "@/modules/permissions/roles.repository";
 
 import { CustomBaseEntity } from "./custom-base.entity";
 import { RolePermission } from "./roles-permissions.entity";
-import { UserRole } from "./user-roles.entity";
 
 @Entity({ tableName: "roles", repository: () => RolesRepository })
 export class Role extends CustomBaseEntity {
@@ -31,12 +30,6 @@ export class Role extends CustomBaseEntity {
 
   @Property({ type: "boolean", default: false, fieldName: "is_system" })
   isSystem: boolean = false;
-
-  @OneToMany(
-    () => UserRole,
-    (userRole) => userRole.role,
-  )
-  userRoles = new Collection<UserRole>(this);
 
   @OneToMany(
     () => RolePermission,

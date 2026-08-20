@@ -1,6 +1,6 @@
 export enum EUserRole {
-  SUPERADMIN = "superadmin",
-  SENSEI = "sensei",
-  MENTOR = "mentor",
-  MENTEE = "mentee",
+  SUPERADMIN = "SUPERADMIN",
+  SENSEI = "SENSEI",
+  MENTOR = "MENTOR",
+  MENTEE = "MENTEE",
 }

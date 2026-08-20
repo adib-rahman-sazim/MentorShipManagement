@@ -16,13 +16,8 @@ export class PermissionsController {
   @Get("my")
   async getMyPermissions(@Req() req: Request): Promise<GetMyCaslRulesResponse> {
     const userId = req.user!.id;
-    const roles = (req.user?.roles ?? []) as EUserRole[];
-    const activeOrganizationId = req.session?.session?.activeOrganizationId ?? undefined;
+    const role = req.user?.role as EUserRole | undefined;
 
-    return this.getMyCaslRulesInteractor.execute({
-      userId,
-      roles,
-      activeOrganizationId: activeOrganizationId ?? undefined,
-    });
+    return this.getMyCaslRulesInteractor.execute({ userId, role });
   }
 }

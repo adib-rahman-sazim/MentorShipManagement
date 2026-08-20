@@ -31,12 +31,12 @@ const ALL_PAGE_VIEWS = PAGE_RESOURCES.map((resource) =>
   createPermission(resource, EPermission.PAGE_VIEW),
 );
 
-const SENSEI_PAGE_VIEWS = [EResource.DASHBOARD, EResource.SETTINGS, EResource.USER].map((resource) =>
-  createPermission(resource, EPermission.PAGE_VIEW),
+const SENSEI_PAGE_VIEWS = [EResource.DASHBOARD, EResource.SETTINGS, EResource.USER].map(
+  (resource) => createPermission(resource, EPermission.PAGE_VIEW),
 );
 
-const MENTOR_PAGE_VIEWS = [EResource.DASHBOARD, EResource.SETTINGS, EResource.USER].map((resource) =>
-  createPermission(resource, EPermission.PAGE_VIEW),
+const MENTOR_PAGE_VIEWS = [EResource.DASHBOARD, EResource.SETTINGS, EResource.USER].map(
+  (resource) => createPermission(resource, EPermission.PAGE_VIEW),
 );
 
 const MENTEE_PAGE_VIEWS = [EResource.DASHBOARD, EResource.SETTINGS].map((resource) =>

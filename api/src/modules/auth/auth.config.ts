@@ -1,25 +1,18 @@
 import { betterAuth } from "better-auth";
 import { APIError, createAuthMiddleware } from "better-auth/api";
-import { bearer, organization } from "better-auth/plugins";
+import { bearer } from "better-auth/plugins";
 
-import { Invitation } from "@/common/entities/invitations.entity";
-import { UserRole } from "@/common/entities/user-roles.entity";
 import { User } from "@/common/entities/users.entity";
-import { EUserRole } from "@/common/enums/roles.enums";
 import { EUserState } from "@/common/enums/users.enums";
-import { normalizeInvitationEmail } from "@/modules/invitations/invitations.helpers";
-import { ac, customer, manager, super_admin } from "@/modules/permissions/permissions.constants";
 
 import { mikroOrmAdapter } from "./adapters/mikro-orm.adapter";
-import { BETTER_AUTH_BASE_PATH, SELF_SIGNUP_ALLOWED_ROLES } from "./auth.constants";
+import { BETTER_AUTH_BASE_PATH } from "./auth.constants";
 import { createAuthEmailSenders } from "./auth.helpers";
 import type { IBetterAuthInstance, ICreateBetterAuthInstanceOptions } from "./auth.interfaces";
 
 export function createAuthInstance({
   orm,
   emailService,
-  authInvitationProcessor,
-  authOrganizationHooks,
 }: ICreateBetterAuthInstanceOptions): IBetterAuthInstance {
   const webClientBaseUrl = process.env.WEB_CLIENT_BASE_URL;
   const emailSenders = createAuthEmailSenders(emailService, webClientBaseUrl);
@@ -99,29 +92,7 @@ export function createAuthInstance({
       },
     },
 
-    plugins: [
-      bearer(),
-      organization({
-        ac,
-        roles: {
-          super_admin,
-          manager,
-          customer,
-        },
-        creatorRole: EUserRole.CUSTOMER,
-        allowUserToCreateOrganization: async (user) =>
-          authOrganizationHooks.canUserCreateOrganization(orm.em.fork(), user.id),
-        sendInvitationEmail: emailSenders.sendInvitationEmail,
-        organizationHooks: {
-          afterAcceptInvitation: authOrganizationHooks.createAfterAcceptInvitationHook(
-            orm.em.fork(),
-          ),
-          afterCreateOrganization: authOrganizationHooks.createAfterCreateOrganizationHook(
-            orm.em.fork(),
-          ),
-        },
-      }),
-    ],
+    plugins: [bearer()],
 
     logger: {
       level: "error",
@@ -136,79 +107,9 @@ export function createAuthInstance({
     },
 
     hooks: {
-      before: createAuthMiddleware(async (ctx) => {
-        if (ctx.path.startsWith("/sign-up/email")) {
-          if (typeof ctx.body.email === "string") {
-            ctx.body.email = normalizeInvitationEmail(ctx.body.email);
-          }
-
-          const invitationToken = authInvitationProcessor.getInvitationProofFromHeaders(
-            ctx.request?.headers,
-          );
-          if (invitationToken) {
-            const forkedEm = orm.em.fork();
-            const invitation = await authInvitationProcessor.validateSystemInvitationProofForSignup(
-              forkedEm,
-              invitationToken,
-              ctx.body.email as string,
-            );
-            (ctx.context as Record<string, unknown>)._systemInvitationId = invitation.id;
-            (ctx.context as Record<string, unknown>)._systemInvitationRole = invitation.role;
-          }
-        }
-      }),
-
       after: createAuthMiddleware(async (ctx) => {
-        if (ctx.path.startsWith("/sign-up/email") && typeof ctx.body.email === "string") {
-          const email = normalizeInvitationEmail(ctx.body.email);
-          const forkedEm = orm.em.fork();
-          const usersRepository = forkedEm.getRepository(User);
-          const invitationsRepository = forkedEm.getRepository(Invitation);
-          const user = await usersRepository.findOne({ email });
-
-          if (user) {
-            const systemInvitationId = (ctx.context as Record<string, unknown>)
-              ._systemInvitationId as string | undefined;
-            const systemInvitationRole = (ctx.context as Record<string, unknown>)
-              ._systemInvitationRole as EUserRole | undefined;
-
-            if (systemInvitationId && systemInvitationRole) {
-              const invitation = await invitationsRepository.findOne({ id: systemInvitationId });
-
-              await authInvitationProcessor.finalizeUserSignup(forkedEm, {
-                userId: user.id,
-                targetRole: systemInvitationRole,
-                invitation,
-                organizationId: null,
-              });
-            } else if (SELF_SIGNUP_ALLOWED_ROLES.includes(EUserRole.CUSTOMER)) {
-              await authInvitationProcessor.finalizeUserSignup(forkedEm, {
-                userId: user.id,
-                targetRole: EUserRole.CUSTOMER,
-                invitation: null,
-                organizationId: null,
-              });
-            }
-          }
-        }
-
         if (ctx.path.startsWith("/callback")) {
           const newSession = ctx.context.newSession;
-          if (newSession?.user?.id) {
-            const forkedEm = orm.em.fork();
-            const userRolesRepository = forkedEm.getRepository(UserRole);
-            const existingRoleCount = await userRolesRepository.count({
-              user: { id: newSession.user.id },
-            });
-            if (existingRoleCount === 0 && SELF_SIGNUP_ALLOWED_ROLES.includes(EUserRole.CUSTOMER)) {
-              await authInvitationProcessor.finalizeUserSignup(forkedEm, {
-                userId: newSession.user.id,
-                targetRole: EUserRole.CUSTOMER,
-                invitation: null,
-                organizationId: null,
-              });
-            }
-          }
 
           if (newSession?.session?.token) {
             const token = newSession.session.token;
@@ -236,12 +137,6 @@ export function createAuthInstance({
 
             return { data: session };
           },
-        },
-      },
-      member: {
-        create: {
-          before: authOrganizationHooks.createMemberCreateBeforeHook(),
-          after: authOrganizationHooks.createMemberCreateAfterHook(orm.em.fork()),
         },
       },
     },

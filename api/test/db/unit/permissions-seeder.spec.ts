@@ -57,10 +57,10 @@ describe("Seed20260723000002_Permissions", () => {
       denied: true,
       description: "stale",
     });
-    const superAdminRole = roleFactory.makeEntity({
+    const superadminRole = roleFactory.makeEntity({
       id: 10,
-      slug: EUserRole.SUPER_ADMIN,
-      name: "Super Admin",
+      slug: EUserRole.SUPERADMIN,
+      name: "Superadmin",
       isSystem: true,
     });
 
@@ -75,7 +75,7 @@ describe("Seed20260723000002_Permissions", () => {
       }
       if (entity === Role) {
         const slug = (where as { slug?: EUserRole }).slug;
-        return (slug === EUserRole.SUPER_ADMIN ? superAdminRole : null) as never;
+        return (slug === EUserRole.SUPERADMIN ? superadminRole : null) as never;
       }
       return null as never;
     });
@@ -106,10 +106,10 @@ describe("Seed20260723000002_Permissions", () => {
     expect(stalePermission.action).toBe(EPermission.MANAGE);
     expect(stalePermission.denied).toBe(false);
 
-    const desiredSuperAdminCodes = new Set(DEFAULT_ROLE_PERMISSION_CODES[EUserRole.SUPER_ADMIN]);
+    const desiredSuperadminCodes = new Set(DEFAULT_ROLE_PERMISSION_CODES[EUserRole.SUPERADMIN]);
     const createdCodes = createdLinks.map((link) => link.permission.code);
-    expect(createdCodes.length).toBe(desiredSuperAdminCodes.size);
-    expect(new Set(createdCodes)).toEqual(desiredSuperAdminCodes);
+    expect(createdCodes.length).toBe(desiredSuperadminCodes.size);
+    expect(new Set(createdCodes)).toEqual(desiredSuperadminCodes);
     expect(em.create.mock.calls.filter(([entity]) => entity === Permission).length).toBe(
       DEFAULT_PERMISSION_DEFINITIONS.length - 1,
     );
@@ -125,14 +125,14 @@ describe("Seed20260723000002_Permissions", () => {
       conditionType: EPermissionConditionType.NONE,
       denied: false,
     });
-    const superAdminRole = roleFactory.makeEntity({
+    const superadminRole = roleFactory.makeEntity({
       id: 10,
-      slug: EUserRole.SUPER_ADMIN,
-      name: "Super Admin",
+      slug: EUserRole.SUPERADMIN,
+      name: "Superadmin",
       isSystem: true,
     });
     const existingLink = orm.em.create(RolePermission, {
-      role: superAdminRole,
+      role: superadminRole,
       permission: managePermission,
     });
 
@@ -145,7 +145,7 @@ describe("Seed20260723000002_Permissions", () => {
       }
       if (entity === Role) {
         return (
-          (where as { slug?: EUserRole }).slug === EUserRole.SUPER_ADMIN ? superAdminRole : null
+          (where as { slug?: EUserRole }).slug === EUserRole.SUPERADMIN ? superadminRole : null
         ) as never;
       }
       return null as never;

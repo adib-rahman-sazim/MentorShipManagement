@@ -7,6 +7,5 @@ export type TSessionPayload = {
   };
   session: {
     id: string;
-    activeOrganizationId: string | null;
   };
 };

@@ -15,7 +15,7 @@ declare global {
       lastName: string;
       state?: string | null;
       firstLoginAt?: Date | null;
-      roles?: EUserRole[];
+      role?: EUserRole;
     }
 
     interface User extends IUser {}
@@ -29,8 +29,6 @@ declare global {
       updatedAt: Date;
       ipAddress?: string | null;
       userAgent?: string | null;
-      activeOrganizationId?: string | null;
-      activeOrganizationRole?: string | null;
     }
 
     interface Request {
