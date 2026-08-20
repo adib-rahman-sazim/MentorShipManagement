@@ -1,0 +1,90 @@
+name: mms
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: mms_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: mms_dev
+    ports:
+      - "5442:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d mms_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  redis:
+    image: redis:7-alpine
+    container_name: mms_redis
+    restart: unless-stopped
+    command: ["redis-server", "--requirepass", "password"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "password", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: ./api
+      dockerfile: infra/dockerfiles/Dockerfile
+      target: DEVELOPMENT
+    container_name: mms_api
+    restart: unless-stopped
+    env_file:
+      - ./api/.env.development.local
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+    volumes:
+      - ./api:/usr/src
+      - api_node_modules:/usr/src/node_modules
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./web
+      dockerfile: infra/dockerfiles/Dockerfile
+      target: DEVELOPMENT
+    container_name: mms_web
+    restart: unless-stopped
+    env_file:
+      - ./web/.env.local
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./web:/usr/src
+      - web_node_modules:/usr/src/node_modules
+      - web_next:/usr/src/.next
+    depends_on:
+      - api
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: mms_mailhog
+    profiles: ["mail"]
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+volumes:
+  postgres_data:
+  redis_data:
+  api_node_modules:
+  web_node_modules:
+  web_next:
