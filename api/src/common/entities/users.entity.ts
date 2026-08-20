@@ -14,7 +14,6 @@ import { UsersRepository } from "@/modules/users/users.repository";
 
 import { Account } from "./accounts.entity";
 import { CustomBaseEntity } from "./custom-base.entity";
-import { Member } from "./members.entity";
 import { Session } from "./sessions.entity";
 
 @Entity({ tableName: "users", repository: () => UsersRepository })
@@ -60,10 +59,4 @@ export class User extends CustomBaseEntity {
     (account) => account.user,
   )
   accounts = new Collection<Account>(this);
-
-  @OneToMany(
-    () => Member,
-    (member) => member.user,
-  )
-  memberships = new Collection<Member>(this);
 }

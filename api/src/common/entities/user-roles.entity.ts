@@ -10,7 +10,6 @@ import {
 import { UserRolesRepository } from "@/modules/permissions/user-roles.repository";
 
 import { CustomBaseEntity } from "./custom-base.entity";
-import { Organization } from "./organizations.entity";
 import { Role } from "./roles.entity";
 import { User } from "./users.entity";
 
@@ -28,8 +27,4 @@ export class UserRole extends CustomBaseEntity {
   @ManyToOne(() => Role)
   @Index({ name: "user_roles_role_id_index" })
   role!: Rel<Role>;
-
-  @ManyToOne(() => Organization, { nullable: true })
-  @Index({ name: "user_roles_organization_id_index" })
-  organization?: Rel<Organization> | null;
 }

@@ -2,7 +2,6 @@ import { Global, Module } from "@nestjs/common";
 
 import { MikroOrmModule } from "@mikro-orm/nestjs";
 
-import { Member } from "@/common/entities/members.entity";
 import { Permission } from "@/common/entities/permissions.entity";
 import { Role } from "@/common/entities/roles.entity";
 import { RolePermission } from "@/common/entities/roles-permissions.entity";
@@ -16,7 +15,7 @@ import { CaslCacheService } from "./casl-cache.service";
 @Global()
 @Module({
   imports: [
-    MikroOrmModule.forFeature([Permission, Role, RolePermission, UserRole, Member]),
+    MikroOrmModule.forFeature([Permission, Role, RolePermission, UserRole]),
     RedisModule,
   ],
   providers: [CaslAbilityFactory, CaslCacheService, UserRolesService],
