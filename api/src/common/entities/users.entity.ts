@@ -3,9 +3,12 @@ import {
   Entity,
   EntityRepositoryType,
   Enum,
+  Index,
+  ManyToOne,
   OneToMany,
   PrimaryKey,
   Property,
+  type Rel,
   Unique,
 } from "@mikro-orm/core";
 
@@ -14,6 +17,7 @@ import { UsersRepository } from "@/modules/users/users.repository";
 
 import { Account } from "./accounts.entity";
 import { CustomBaseEntity } from "./custom-base.entity";
+import { Role } from "./roles.entity";
 import { Session } from "./sessions.entity";
 
 @Entity({ tableName: "users", repository: () => UsersRepository })
@@ -30,23 +34,21 @@ export class User extends CustomBaseEntity {
   @Property({ default: false })
   emailVerified!: boolean;
 
-  @Property()
-  firstName!: string;
-
-  @Property()
-  lastName!: string;
-
-  @Property()
+  @Property({ fieldName: "full_name" })
   name!: string;
 
   @Property({ nullable: true })
   image?: string;
 
+  @ManyToOne(() => Role)
+  @Index({ name: "users_role_id_index" })
+  role!: Rel<Role>;
+
   @Enum(() => EUserState)
   state: EUserState = EUserState.ACTIVE;
 
   @Property({ nullable: true })
-  firstLoginAt?: Date;
+  deletedAt?: Date;
 
   @OneToMany(
     () => Session,

@@ -74,14 +74,7 @@ services:
     depends_on:
       - api
 
-  mailhog:
-    image: mailhog/mailhog:latest
-    container_name: mms_mailhog
-    profiles: ["mail"]
-    ports:
-      - "1025:1025"
-      - "8025:8025"
-
+  
 volumes:
   postgres_data:
   redis_data:

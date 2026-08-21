@@ -8,8 +8,7 @@ import { mockDeep } from "vitest-mock-extended";
 
 import { AppModule } from "@/app.module";
 import ormConfig from "@/db/db.config";
-import { type IEmailService } from "@/modules/emails/email-service.interfaces";
-import { EMAIL_SERVICE_TOKEN } from "@/modules/emails/emails.constants";
+
 import { FEATURE_FLAGS_STRATEGY } from "@/modules/feature-flags/feature-flags.constants";
 
 import { ControllableFeatureFlagsStrategy } from "./feature-flags.test-strategy";
@@ -20,8 +19,8 @@ export const bootstrapTestServer = async () => {
   const moduleFixture: TestingModule = await Test.createTestingModule({
     imports: [AppModule],
   })
-    .overrideProvider(EMAIL_SERVICE_TOKEN)
-    .useValue(mockDeep<IEmailService>({ funcPropSupport: true }))
+   
+   
     .overrideProvider(FEATURE_FLAGS_STRATEGY)
     .useValue(featureFlagsStrategy)
     .compile();
