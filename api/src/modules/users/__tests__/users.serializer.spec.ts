@@ -10,7 +10,7 @@ import { EUserRole } from "@/common/enums/roles.enums";
 import { EUserState } from "@/common/enums/users.enums";
 import { UserFactory } from "@/test/utils/factories/users.factory";
 
-import type { IUserResponse } from "../users.interfaces";
+import type { UserResponse } from "../users.responses";
 import { UsersSerializer } from "../users.serializer";
 
 describe("UsersSerializer", () => {
@@ -37,7 +37,6 @@ describe("UsersSerializer", () => {
     orm.em.clear();
   });
 
-  
   const makeManagedRole = (id: string, code: EUserRole, name: string) =>
     orm.em.merge(Role, { id, code, name });
 
@@ -53,13 +52,13 @@ describe("UsersSerializer", () => {
 
   describe("serialize", () => {
     it("should flatten the populated role relation down to its code", () => {
-      const result = serializer.serialize<User, IUserResponse>(makeUser());
+      const result = serializer.serialize<User, UserResponse>(makeUser());
 
       expect(result.role).toBe(EUserRole.SENSEI);
     });
 
     it("should leave the rest of the user intact", () => {
-      const result = serializer.serialize<User, IUserResponse>(makeUser());
+      const result = serializer.serialize<User, UserResponse>(makeUser());
 
       expect(result).toMatchObject({
         id: "user-123",
@@ -70,7 +69,7 @@ describe("UsersSerializer", () => {
     });
 
     it("should not expose sessions or accounts", () => {
-      const result = serializer.serialize<User, IUserResponse>(makeUser());
+      const result = serializer.serialize<User, UserResponse>(makeUser());
 
       expect(result).not.toHaveProperty("sessions");
       expect(result).not.toHaveProperty("accounts");
@@ -79,7 +78,7 @@ describe("UsersSerializer", () => {
     it("should leave an unpopulated role reference alone rather than inventing a code", () => {
       const user = makeUser({ role: orm.em.getReference(Role, "role-456") });
 
-      const result = serializer.serialize<User, IUserResponse>(user);
+      const result = serializer.serialize<User, UserResponse>(user);
 
       expect(result.role).toEqual({ id: "role-456" });
     });
@@ -97,13 +96,13 @@ describe("UsersSerializer", () => {
         }),
       ];
 
-      const result = serializer.serializeMany<User, IUserResponse>(users);
+      const result = serializer.serializeMany<User, UserResponse>(users);
 
       expect(result.map((user) => user.role)).toEqual([EUserRole.SENSEI, EUserRole.MENTEE]);
     });
 
     it("should return an empty array when given no rows", () => {
-      expect(serializer.serializeMany<User, IUserResponse>([])).toEqual([]);
+      expect(serializer.serializeMany<User, UserResponse>([])).toEqual([]);
     });
   });
 });
