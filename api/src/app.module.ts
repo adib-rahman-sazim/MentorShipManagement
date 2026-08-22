@@ -5,8 +5,6 @@ import { APP_GUARD } from "@nestjs/core";
 
 import { MikroOrmModule } from "@mikro-orm/nestjs";
 
-import { AuditLoggingModule } from "./common/audit-logging/audit-logging.module";
-import { AuditLoggingSubscriber } from "./common/audit-logging/audit-logging.subscriber";
 import { BullBoardModule } from "./common/bull-board/bull-board.module";
 import { SessionGuard } from "./common/guards/session.guard";
 import { AppLoggerMiddleware } from "./common/middleware/request-logger.middleware";
@@ -33,18 +31,9 @@ import { WebsocketExampleModule } from "./modules/websocket-example/websocket-ex
       validate,
     }),
 
-    MikroOrmModule.forRootAsync({
-      imports: [AuditLoggingModule],
-      useFactory: (auditLoggingSubscriber: AuditLoggingSubscriber) => ({
-        ...ormConfig,
-        subscribers: [auditLoggingSubscriber],
-      }),
-      inject: [AuditLoggingSubscriber],
-    }),
+    MikroOrmModule.forRoot(ormConfig),
 
     EmailsModule,
-
-    AuditLoggingModule,
 
     RedisModule,
     QueueModule,

@@ -1,4 +1,17 @@
 ARG NODE_VERSION=22.21
+FROM node:${NODE_VERSION}-alpine AS DEVELOPMENT
+
+WORKDIR /usr/src/
+
+RUN corepack enable && corepack prepare pnpm@10.29.3 --activate
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
+RUN apk add --no-cache git \
+  && pnpm install --frozen-lockfile
+
+COPY . .
+
+CMD ["pnpm", "start:dev"]
 
 FROM node:${NODE_VERSION}-alpine AS BASE
 

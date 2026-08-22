@@ -58,10 +58,9 @@ describe("Seed20260723000002_Permissions", () => {
       description: "stale",
     });
     const superadminRole = roleFactory.makeEntity({
-      id: 10,
-      slug: EUserRole.SUPERADMIN,
+      id: "00000000-0000-0000-0000-000000000010",
+      code: EUserRole.SUPERADMIN,
       name: "Superadmin",
-      isSystem: true,
     });
 
     const permissionsByCode = new Map<string, Permission>([[manageCode, stalePermission]]);
@@ -74,8 +73,8 @@ describe("Seed20260723000002_Permissions", () => {
         return (code ? (permissionsByCode.get(code) ?? null) : null) as never;
       }
       if (entity === Role) {
-        const slug = (where as { slug?: EUserRole }).slug;
-        return (slug === EUserRole.SUPERADMIN ? superadminRole : null) as never;
+        const code = (where as { code?: EUserRole }).code;
+        return (code === EUserRole.SUPERADMIN ? superadminRole : null) as never;
       }
       return null as never;
     });
@@ -126,10 +125,9 @@ describe("Seed20260723000002_Permissions", () => {
       denied: false,
     });
     const superadminRole = roleFactory.makeEntity({
-      id: 10,
-      slug: EUserRole.SUPERADMIN,
+      id: "00000000-0000-0000-0000-000000000010",
+      code: EUserRole.SUPERADMIN,
       name: "Superadmin",
-      isSystem: true,
     });
     const existingLink = orm.em.create(RolePermission, {
       role: superadminRole,
@@ -145,7 +143,7 @@ describe("Seed20260723000002_Permissions", () => {
       }
       if (entity === Role) {
         return (
-          (where as { slug?: EUserRole }).slug === EUserRole.SUPERADMIN ? superadminRole : null
+          (where as { code?: EUserRole }).code === EUserRole.SUPERADMIN ? superadminRole : null
         ) as never;
       }
       return null as never;

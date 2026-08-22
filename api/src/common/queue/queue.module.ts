@@ -22,7 +22,6 @@ import { registerStandardQueue } from "./queue.helpers";
       }),
       inject: [ConfigService],
     }),
-    registerStandardQueue(QUEUE_NAMES.AUDIT_LOGS),
     registerStandardQueue(QUEUE_NAMES.EXAMPLE_JOBS),
   ],
   exports: [BullModule],
