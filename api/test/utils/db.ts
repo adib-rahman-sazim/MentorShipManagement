@@ -1,17 +1,34 @@
 import type { Connection, EntityManager, IDatabaseDriver } from "@mikro-orm/core";
 
+import { TEST_DATABASE_SUFFIX } from "./db.constants";
+
+const assertTestDatabase = (dbConnection: ReturnType<EntityManager["getConnection"]>): void => {
+  const databaseName = dbConnection.getPlatform().getConfig().get("dbName");
+
+  if (!databaseName?.endsWith(TEST_DATABASE_SUFFIX)) {
+    throw new Error(
+      `Refusing to truncate "${databaseName}": it does not look like a test database ` +
+        `(expected a name ending in "${TEST_DATABASE_SUFFIX}"). Check that the test scripts ` +
+        `run dotenv with -o so .env.test.local actually overrides the container environment.`,
+    );
+  }
+};
+
 /**
  * @description
  * Truncates database tables with deadlock prevention mechanisms:
- * 1. Uses advisory locks to ensure only one truncation happens at a time
- * 2. Sorts tables to ensure consistent locking order
- * 3. Implements retry logic for resilience
+ * 1. Refuses to run against anything but a test database
+ * 2. Uses advisory locks to ensure only one truncation happens at a time
+ * 3. Sorts tables to ensure consistent locking order
+ * 4. Implements retry logic for resilience
  */
 export const truncateTables = async (
   dbService: EntityManager<IDatabaseDriver<Connection>>,
   excludeTables: string[] = [],
 ): Promise<void> => {
   const dbConnection = dbService.getConnection();
+
+  assertTestDatabase(dbConnection);
 
   try {
     await dbConnection.execute("SELECT pg_advisory_lock(1234)");

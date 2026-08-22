@@ -1,68 +1,50 @@
 import { betterAuth } from "better-auth";
-import { APIError, createAuthMiddleware } from "better-auth/api";
+import { APIError } from "better-auth/api";
 import { bearer } from "better-auth/plugins";
 
 import { User } from "@/common/entities/users.entity";
+import { EUserRole } from "@/common/enums/roles.enums";
 import { EUserState } from "@/common/enums/users.enums";
 
 import { mikroOrmAdapter } from "./adapters/mikro-orm.adapter";
-import { BETTER_AUTH_BASE_PATH } from "./auth.constants";
-import { createAuthEmailSenders } from "./auth.helpers";
+import { AUTH_ERROR_MESSAGES, BETTER_AUTH_BASE_PATH } from "./auth.constants";
 import type { IBetterAuthInstance, ICreateBetterAuthInstanceOptions } from "./auth.interfaces";
 
-export function createAuthInstance({
-  orm,
-  emailService,
-}: ICreateBetterAuthInstanceOptions): IBetterAuthInstance {
-  const webClientBaseUrl = process.env.WEB_CLIENT_BASE_URL;
-  const emailSenders = createAuthEmailSenders(emailService, webClientBaseUrl);
+export function createAuthInstance({ orm }: ICreateBetterAuthInstanceOptions): IBetterAuthInstance {
   const isDevelopmentOrTesting =
-    process.env.STAGE_ENV === "test" || process.env.STAGE_ENV === "development";
+    process.env.STAGE_ENV === "local" ||
+    process.env.STAGE_ENV === "development" ||
+    process.env.STAGE_ENV === "test";
 
   return betterAuth({
     database: mikroOrmAdapter(orm),
 
+    secret: process.env.BETTER_AUTH_SECRET,
     baseURL: process.env.API_BASE_URL,
     basePath: BETTER_AUTH_BASE_PATH,
 
-    trustedOrigins: [webClientBaseUrl],
+    trustedOrigins: [process.env.WEB_CLIENT_BASE_URL],
 
     emailAndPassword: {
       enabled: true,
-      autoSignIn: true,
-      requireEmailVerification: true,
-      sendResetPassword: async ({ user, token }) => {
-        await emailSenders.sendResetPasswordEmail(user, token);
-      },
-    },
-
-    emailVerification: {
-      sendOnSignUp: true,
-      autoSignInAfterVerification: true,
-      sendVerificationEmail: async ({ user, token }) => {
-        await emailSenders.sendVerificationEmail(user, token);
-      },
+      disableSignUp: true,
+      requireEmailVerification: false,
     },
 
     user: {
       additionalFields: {
-        firstName: {
-          type: "string",
-          required: true,
-          input: true,
-        },
-        lastName: {
-          type: "string",
-          required: true,
-          input: true,
-        },
         state: {
           type: "string",
           required: false,
-          defaultValue: "ACTIVE",
+          defaultValue: EUserState.ACTIVE,
           input: false,
         },
-        firstLoginAt: {
+        role: {
+          type: Object.values(EUserRole),
+          required: false,
+          input: false,
+        },
+        deletedAt: {
           type: "date",
           required: false,
           input: false,
@@ -73,23 +55,6 @@ export function createAuthInstance({
     session: {
       expiresIn: Number(process.env.SESSION_EXPIRES_IN),
       updateAge: Number(process.env.SESSION_UPDATE_AGE),
-    },
-
-    socialProviders: {
-      google: {
-        clientId: process.env.GOOGLE_CLIENT_ID,
-        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        mapProfileToUser: (profile) => {
-          const nameParts = (profile.name || "").split(" ");
-          const firstName = nameParts[0] || profile.given_name || "";
-          const lastName = nameParts.slice(1).join(" ") || profile.family_name || "";
-
-          return {
-            firstName,
-            lastName,
-          };
-        },
-      },
     },
 
     plugins: [bearer()],
@@ -106,32 +71,22 @@ export function createAuthInstance({
       enabled: !isDevelopmentOrTesting,
     },
 
-    hooks: {
-      after: createAuthMiddleware(async (ctx) => {
-        if (ctx.path.startsWith("/callback")) {
-          const newSession = ctx.context.newSession;
-
-          if (newSession?.session?.token) {
-            const token = newSession.session.token;
-            const callbackURL = `${webClientBaseUrl}/auth/callback`;
-            const separator = callbackURL.includes("?") ? "&" : "?";
-            throw ctx.redirect(`${callbackURL}${separator}token=${token}`);
-          }
-        }
-      }),
-    },
-
     databaseHooks: {
       session: {
         create: {
           before: async (session) => {
             const em = orm.em.fork();
-            const usersRepository = em.getRepository(User);
-            const user = await usersRepository.findOne({ id: session.userId });
+            const user = await em.getRepository(User).findOne({ id: session.userId });
 
-            if (user?.state === EUserState.INACTIVE) {
+            if (!user || user.deletedAt) {
               throw new APIError("FORBIDDEN", {
-                message: "Your account has been deactivated. Please contact an administrator.",
+                message: AUTH_ERROR_MESSAGES.ACCOUNT_NOT_FOUND,
+              });
+            }
+
+            if (user.state === EUserState.INACTIVE) {
+              throw new APIError("FORBIDDEN", {
+                message: AUTH_ERROR_MESSAGES.ACCOUNT_DEACTIVATED,
               });
             }
 

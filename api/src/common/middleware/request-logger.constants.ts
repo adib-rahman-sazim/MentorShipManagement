@@ -8,7 +8,6 @@ export const CLOUD_TRACE_SAMPLED_OPTION = "o=1";
 export const SENSITIVE_QUERY_PARAM_NAMES = [
   "access_token",
   "code",
-  "invitation_token",
   "password",
   "refresh_token",
   "secret",
