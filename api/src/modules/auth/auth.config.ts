@@ -3,6 +3,7 @@ import { APIError } from "better-auth/api";
 import { bearer } from "better-auth/plugins";
 
 import { User } from "@/common/entities/users.entity";
+import { EUserRole } from "@/common/enums/roles.enums";
 import { EUserState } from "@/common/enums/users.enums";
 
 import { mikroOrmAdapter } from "./adapters/mikro-orm.adapter";
@@ -33,11 +34,22 @@ export function createAuthInstance({
     },
 
     user: {
+      
       additionalFields: {
         state: {
           type: "string",
           required: false,
           defaultValue: EUserState.ACTIVE,
+          input: false,
+        },
+        role: {
+          type: Object.values(EUserRole),
+          required: false,
+          input: false,
+        },
+        deletedAt: {
+          type: "date",
+          required: false,
           input: false,
         },
       },

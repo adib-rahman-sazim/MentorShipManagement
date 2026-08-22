@@ -4,7 +4,7 @@ import type { EntityManager, EntityMetadata } from "@mikro-orm/core";
 import { User } from "@/common/entities/users.entity";
 import type { EUserRole } from "@/common/enums/roles.enums";
 
-import { SESSION_ENTITY_NAME, USER_ENTITY_NAME } from "./mikro-orm.adapter.constants";
+import { USER_ENTITY_NAME } from "./mikro-orm.adapter.constants";
 
 export class MikroOrmAdapterRolePayloadDecorator {
   async decorate(
@@ -65,9 +65,6 @@ export class MikroOrmAdapterRolePayloadDecorator {
       return output.id;
     }
 
-    if (metadata.className === SESSION_ENTITY_NAME && typeof output.userId === "string") {
-      return output.userId;
-    }
 
     return null;
   }

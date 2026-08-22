@@ -5,6 +5,7 @@ import type { Reflector } from "@nestjs/core";
 import { beforeEach, describe, expect, it } from "vitest";
 import { type DeepMockProxy, mockDeep } from "vitest-mock-extended";
 
+import { EUserRole } from "@/common/enums/roles.enums";
 import { EUserState } from "@/common/enums/users.enums";
 import type { AuthService } from "@/modules/auth/auth.service";
 
@@ -18,6 +19,7 @@ const buildSessionPayload = (overrides?: {
   user: {
     id: "user-123",
     state: EUserState.ACTIVE,
+    role: EUserRole.SENSEI,
     ...overrides?.user,
   },
   session: {
@@ -74,11 +76,36 @@ describe("SessionGuard", () => {
       await expect(guard.canActivate(mockExecutionContext)).rejects.toThrow(ForbiddenException);
     });
 
+    it("should throw ForbiddenException when the user is soft deleted", async () => {
+      mockAuthService.auth.api.getSession.mockResolvedValue(
+        buildSessionPayload({ user: { deletedAt: new Date() } }) as never,
+      );
+
+      await expect(guard.canActivate(mockExecutionContext)).rejects.toThrow(ForbiddenException);
+    });
+
+    it("should throw UnauthorizedException when the session carries no role", async () => {
+      mockAuthService.auth.api.getSession.mockResolvedValue(
+        buildSessionPayload({ user: { role: undefined } }) as never,
+      );
+
+      await expect(guard.canActivate(mockExecutionContext)).rejects.toThrow(UnauthorizedException);
+    });
+
     it("should attach the session user to the request on success", async () => {
       mockAuthService.auth.api.getSession.mockResolvedValue(buildSessionPayload() as never);
 
       await expect(guard.canActivate(mockExecutionContext)).resolves.toBe(true);
       expect((mockRequest.user as { id: string }).id).toBe("user-123");
+    });
+
+    it("should attach the role to the request user so downstream ABAC can read it", async () => {
+      mockAuthService.auth.api.getSession.mockResolvedValue(
+        buildSessionPayload({ user: { role: EUserRole.MENTOR } }) as never,
+      );
+
+      await expect(guard.canActivate(mockExecutionContext)).resolves.toBe(true);
+      expect((mockRequest.user as { role: EUserRole }).role).toBe(EUserRole.MENTOR);
     });
   });
 });

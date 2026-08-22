@@ -44,6 +44,8 @@ export class SessionGuard implements CanActivate {
         throw new UnauthorizedException(AUTH_ERROR_MESSAGES.NO_VALID_SESSION);
       }
 
+
+
       if (session.user.deletedAt) {
         throw new ForbiddenException(AUTH_ERROR_MESSAGES.ACCOUNT_NOT_FOUND);
       }
@@ -52,6 +54,9 @@ export class SessionGuard implements CanActivate {
         throw new ForbiddenException(AUTH_ERROR_MESSAGES.ACCOUNT_DEACTIVATED);
       }
 
+      if (!session.user.role) {
+        throw new UnauthorizedException(AUTH_ERROR_MESSAGES.SESSION_MISSING_ROLE);
+      }
 
       request.session = session as unknown as Request["session"];
       request.user = session.user as unknown as Express.IUser;

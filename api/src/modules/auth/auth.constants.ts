@@ -11,4 +11,5 @@ export const AUTH_ERROR_MESSAGES = {
   AUTH_NOT_INITIALIZED: "Auth instance not initialized",
   NO_VALID_SESSION: "No valid session found",
   INVALID_OR_EXPIRED_SESSION: "Invalid or expired session",
+  SESSION_MISSING_ROLE: "Session is missing user role",
 };

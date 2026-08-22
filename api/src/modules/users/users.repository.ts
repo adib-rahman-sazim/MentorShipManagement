@@ -8,7 +8,7 @@ import type { IFindUsersOptions } from "./users.interfaces";
 
 export class UsersRepository extends CustomSQLBaseRepository<User> {
   findById(id: string, em?: EntityManager): Promise<User | null> {
-    return this.getScopedRepository(em).findOne({ id });
+    return this.getScopedRepository(em).findOne({ id }, { populate: ["role"] });
   }
 
   findByEmail(email: string, em?: EntityManager): Promise<User | null> {
@@ -43,6 +43,7 @@ export class UsersRepository extends CustomSQLBaseRepository<User> {
       limit,
       offset,
       orderBy: { createdAt: "DESC" },
+      populate: ["role"],
     });
 
     return { users, total };

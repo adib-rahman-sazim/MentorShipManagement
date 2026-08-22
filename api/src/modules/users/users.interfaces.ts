@@ -1,3 +1,4 @@
+import type { EUserRole } from "@/common/enums/roles.enums";
 import type { EUserState } from "@/common/enums/users.enums";
 
 import type { ListUsersQueryDto, UpdateProfileDto, UpdateUserDto } from "./users.dtos";
@@ -6,12 +7,10 @@ export interface IUserResponse {
   id: string;
   email: string;
   emailVerified: boolean;
-  firstName: string;
-  lastName: string;
   name: string;
   image?: string;
   state: EUserState;
-  firstLoginAt?: Date;
+  role: EUserRole;
   createdAt: Date;
   updatedAt: Date;
 }
