@@ -1,0 +1,6 @@
+# Scripts executed inside Linux containers must keep LF endings.
+# Without this, a Windows checkout (core.autocrlf=true) rewrites them to CRLF and
+# Alpine's sh fails with: set: line 2: illegal option -
+*.sh text eol=lf
+Dockerfile text eol=lf
+Dockerfile.* text eol=lf
