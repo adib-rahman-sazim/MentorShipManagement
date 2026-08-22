@@ -21,7 +21,6 @@ export const ALLOWED_HEADERS = [
   "cache-control",
   "access-control-request-headers",
   "access-control-request-method",
-  "x-invitation-token",
 ];
 
 export const ALLOWED_METHODS = [
