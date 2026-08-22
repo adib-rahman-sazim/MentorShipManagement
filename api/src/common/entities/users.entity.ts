@@ -48,6 +48,7 @@ export class User extends CustomBaseEntity {
   state: EUserState = EUserState.ACTIVE;
 
   @Property({ nullable: true })
+  @Index({ name: "users_deleted_at_index" })
   deletedAt?: Date;
 
   @OneToMany(

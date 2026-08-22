@@ -25,21 +25,11 @@ export class UpdateProfileInteractor
     }
 
     const updateData: Partial<User> = {};
-    if (dto.firstName !== undefined) {
-      updateData.firstName = dto.firstName;
-    }
-    if (dto.lastName !== undefined) {
-      updateData.lastName = dto.lastName;
-    }
     if (dto.name !== undefined) {
       updateData.name = dto.name;
     }
     if (dto.image !== undefined) {
       updateData.image = dto.image;
-    }
-
-    if (dto.firstName || dto.lastName) {
-      updateData.name = `${dto.firstName ?? user.firstName} ${dto.lastName ?? user.lastName}`;
     }
 
     const updatedUser = await this.usersRepository.update(userId, updateData);
