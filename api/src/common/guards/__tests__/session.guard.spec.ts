@@ -7,6 +7,7 @@ import { type DeepMockProxy, mockDeep } from "vitest-mock-extended";
 
 import { EUserRole } from "@/common/enums/roles.enums";
 import { EUserState } from "@/common/enums/users.enums";
+import { AUTH_ERROR_MESSAGES } from "@/modules/auth/auth.constants";
 import type { AuthService } from "@/modules/auth/auth.service";
 
 import { SessionGuard } from "../session.guard";
@@ -55,17 +56,34 @@ describe("SessionGuard", () => {
     guard = new SessionGuard(mockAuthService, mockReflector);
   });
 
+  const expectRejection = async (
+    result: Promise<unknown>,
+    exception: new (...args: never[]) => Error,
+    message: string,
+  ) => {
+    await expect(result).rejects.toBeInstanceOf(exception);
+    await expect(result).rejects.toThrow(message);
+  };
+
   describe("canActivate", () => {
     it("should throw UnauthorizedException when no session is found", async () => {
       mockAuthService.auth.api.getSession.mockResolvedValue(null);
 
-      await expect(guard.canActivate(mockExecutionContext)).rejects.toThrow(UnauthorizedException);
+      await expectRejection(
+        guard.canActivate(mockExecutionContext),
+        UnauthorizedException,
+        AUTH_ERROR_MESSAGES.NO_VALID_SESSION,
+      );
     });
 
-    it("should throw UnauthorizedException when getSession throws an error", async () => {
+    it("should convert an unexpected getSession failure into a generic 401", async () => {
       mockAuthService.auth.api.getSession.mockRejectedValue(new Error("Session error"));
 
-      await expect(guard.canActivate(mockExecutionContext)).rejects.toThrow(UnauthorizedException);
+      await expectRejection(
+        guard.canActivate(mockExecutionContext),
+        UnauthorizedException,
+        AUTH_ERROR_MESSAGES.INVALID_OR_EXPIRED_SESSION,
+      );
     });
 
     it("should throw ForbiddenException when user state is INACTIVE", async () => {
@@ -73,7 +91,11 @@ describe("SessionGuard", () => {
         buildSessionPayload({ user: { state: EUserState.INACTIVE } }) as never,
       );
 
-      await expect(guard.canActivate(mockExecutionContext)).rejects.toThrow(ForbiddenException);
+      await expectRejection(
+        guard.canActivate(mockExecutionContext),
+        ForbiddenException,
+        AUTH_ERROR_MESSAGES.ACCOUNT_DEACTIVATED,
+      );
     });
 
     it("should throw ForbiddenException when the user is soft deleted", async () => {
@@ -81,7 +103,11 @@ describe("SessionGuard", () => {
         buildSessionPayload({ user: { deletedAt: new Date() } }) as never,
       );
 
-      await expect(guard.canActivate(mockExecutionContext)).rejects.toThrow(ForbiddenException);
+      await expectRejection(
+        guard.canActivate(mockExecutionContext),
+        ForbiddenException,
+        AUTH_ERROR_MESSAGES.ACCOUNT_NOT_FOUND,
+      );
     });
 
     it("should throw UnauthorizedException when the session carries no role", async () => {
@@ -89,7 +115,11 @@ describe("SessionGuard", () => {
         buildSessionPayload({ user: { role: undefined } }) as never,
       );
 
-      await expect(guard.canActivate(mockExecutionContext)).rejects.toThrow(UnauthorizedException);
+      await expectRejection(
+        guard.canActivate(mockExecutionContext),
+        UnauthorizedException,
+        AUTH_ERROR_MESSAGES.SESSION_MISSING_ROLE,
+      );
     });
 
     it("should attach the session user to the request on success", async () => {

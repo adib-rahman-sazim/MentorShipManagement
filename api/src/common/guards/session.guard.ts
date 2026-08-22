@@ -1,16 +1,24 @@
 import type { CanActivate, ExecutionContext } from "@nestjs/common";
-import { ForbiddenException, Injectable, UnauthorizedException } from "@nestjs/common";
+import {
+  ForbiddenException,
+  HttpException,
+  Injectable,
+  Logger,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 
 import type { Request } from "express";
 
 import { IS_PUBLIC_KEY } from "@/common/decorators/auth/public.decorator.constants";
 import { EUserState } from "@/common/enums/users.enums";
-import { AuthService } from "@/modules/auth/auth.service";
 import { AUTH_ERROR_MESSAGES } from "@/modules/auth/auth.constants";
+import { AuthService } from "@/modules/auth/auth.service";
 
 @Injectable()
 export class SessionGuard implements CanActivate {
+  private readonly logger = new Logger(SessionGuard.name);
+
   constructor(
     private readonly authService: AuthService,
     private readonly reflector: Reflector,
@@ -40,11 +48,9 @@ export class SessionGuard implements CanActivate {
         headers,
       });
 
-     if (!session) {
+      if (!session) {
         throw new UnauthorizedException(AUTH_ERROR_MESSAGES.NO_VALID_SESSION);
       }
-
-
 
       if (session.user.deletedAt) {
         throw new ForbiddenException(AUTH_ERROR_MESSAGES.ACCOUNT_NOT_FOUND);
@@ -63,10 +69,12 @@ export class SessionGuard implements CanActivate {
 
       return true;
     } catch (error) {
-      if (error instanceof ForbiddenException) {
+      if (error instanceof HttpException) {
         throw error;
       }
-           throw new UnauthorizedException(AUTH_ERROR_MESSAGES.INVALID_OR_EXPIRED_SESSION);;
+      this.logger.error("Unexpected error while resolving the session", error);
+
+      throw new UnauthorizedException(AUTH_ERROR_MESSAGES.INVALID_OR_EXPIRED_SESSION);
     }
   }
 }
