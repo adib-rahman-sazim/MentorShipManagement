@@ -1,4 +1,4 @@
-import { Entity, PrimaryKey, Property } from "@mikro-orm/core";
+import { Entity, Index, PrimaryKey, Property } from "@mikro-orm/core";
 
 import { CustomBaseEntity } from "./custom-base.entity";
 
@@ -8,6 +8,7 @@ export class Verification extends CustomBaseEntity {
   id!: string;
 
   @Property()
+  @Index({ name: "verifications_identifier_index" })
   identifier!: string;
 
   @Property()

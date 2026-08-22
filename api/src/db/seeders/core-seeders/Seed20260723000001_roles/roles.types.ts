@@ -1,7 +1,6 @@
 import type { EUserRole } from "@/common/enums/roles.enums";
 
 export type TRoleSeedEntry = {
-  slug: EUserRole;
+  code: EUserRole;
   name: string;
-  description: string;
 };
