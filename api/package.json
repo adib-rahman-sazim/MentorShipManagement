@@ -155,8 +155,6 @@
   },
   "mikro-orm": {
     "useTsNode": true,
-    "configPaths": [
-      "./src/db/db.config.ts"
-    ]
+    "configPaths": ["./src/db/db.config.ts"]
   }
 }

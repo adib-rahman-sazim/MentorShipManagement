@@ -35,8 +35,8 @@ import { createAdapter } from "better-auth/adapters";
 import { dset } from "dset";
 
 import { MikroOrmAdapterUtils } from "./mikro-orm.adapter.helpers";
-import { MikroOrmAdapterRolePayloadDecorator } from "./mikro-orm.adapter-role-payload.decorator";
 import type { IMikroOrmAdapterConfig } from "./mikro-orm.adapter.interfaces";
+import { MikroOrmAdapterRolePayloadDecorator } from "./mikro-orm.adapter-role-payload.decorator";
 import { MikroOrmAdapterUserInputSanitizer } from "./mikro-orm.adapter-user-input.sanitizer";
 
 /**

@@ -14,7 +14,6 @@ import { validate } from "./common/validators/env.validator";
 import ormConfig from "./db/db.config";
 import { AuthModule } from "./modules/auth/auth.module";
 import { CaslModule } from "./modules/casl/casl.module";
-
 import { FeatureFlagsModule } from "./modules/feature-flags/feature-flags.module";
 import { HealthModule } from "./modules/health/health.module";
 import { PermissionsModule } from "./modules/permissions/permissions.module";
@@ -32,8 +31,6 @@ import { WebsocketExampleModule } from "./modules/websocket-example/websocket-ex
     }),
 
     MikroOrmModule.forRoot(ormConfig),
-
-  
 
     RedisModule,
     QueueModule,

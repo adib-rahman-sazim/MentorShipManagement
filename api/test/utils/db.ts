@@ -2,7 +2,6 @@ import type { Connection, EntityManager, IDatabaseDriver } from "@mikro-orm/core
 
 import { TEST_DATABASE_SUFFIX } from "./db.constants";
 
-
 const assertTestDatabase = (dbConnection: ReturnType<EntityManager["getConnection"]>): void => {
   const databaseName = dbConnection.getPlatform().getConfig().get("dbName");
 

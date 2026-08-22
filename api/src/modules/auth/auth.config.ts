@@ -10,9 +10,7 @@ import { mikroOrmAdapter } from "./adapters/mikro-orm.adapter";
 import { AUTH_ERROR_MESSAGES, BETTER_AUTH_BASE_PATH } from "./auth.constants";
 import type { IBetterAuthInstance, ICreateBetterAuthInstanceOptions } from "./auth.interfaces";
 
-export function createAuthInstance({
-  orm,
-}: ICreateBetterAuthInstanceOptions): IBetterAuthInstance {
+export function createAuthInstance({ orm }: ICreateBetterAuthInstanceOptions): IBetterAuthInstance {
   const isDevelopmentOrTesting =
     process.env.STAGE_ENV === "local" ||
     process.env.STAGE_ENV === "development" ||
@@ -34,7 +32,6 @@ export function createAuthInstance({
     },
 
     user: {
-      
       additionalFields: {
         state: {
           type: "string",

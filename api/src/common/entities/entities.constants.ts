@@ -7,7 +7,6 @@ import { Session } from "./sessions.entity";
 import { User } from "./users.entity";
 import { Verification } from "./verifications.entity";
 
-
 export const ENTITIES = [
   CustomBaseEntity,
   Account,

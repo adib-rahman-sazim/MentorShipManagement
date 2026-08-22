@@ -65,7 +65,6 @@ export class MikroOrmAdapterRolePayloadDecorator {
       return output.id;
     }
 
-
     return null;
   }
 }
