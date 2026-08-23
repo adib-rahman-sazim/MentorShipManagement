@@ -18,6 +18,7 @@ import type { ICreateUserContext } from "../users.interfaces";
 import { UsersRepository } from "../users.repository";
 import type { UserResponse } from "../users.responses";
 import { UsersSerializer } from "../users.serializer";
+import { assertActorCanAssignRole } from "../users-role-assignment.helpers";
 
 @Injectable()
 export class CreateUserInteractor implements IBaseInteractor<ICreateUserContext, UserResponse> {
@@ -29,7 +30,9 @@ export class CreateUserInteractor implements IBaseInteractor<ICreateUserContext,
     private readonly caslCacheService: CaslCacheService,
   ) {}
 
-  async execute({ dto }: ICreateUserContext): Promise<UserResponse> {
+  async execute({ dto, actorRole }: ICreateUserContext): Promise<UserResponse> {
+    assertActorCanAssignRole(actorRole, dto.role);
+
     const role = await this.rolesRepository.findByCode(dto.role);
 
     if (!role) {
@@ -64,8 +67,6 @@ export class CreateUserInteractor implements IBaseInteractor<ICreateUserContext,
 
     return this.usersSerializer.serialize(user);
   }
-
- 
   private provision(dto: CreateUserDto, role: Role, hashedPassword: string): Promise<User> {
     return this.usersRepository.transactional(async (em) => {
       const user = this.usersRepository.createUser(

@@ -1,4 +1,4 @@
-import { ConflictException } from "@nestjs/common";
+import { ConflictException, ForbiddenException } from "@nestjs/common";
 
 import type { EntityManager, MikroORM } from "@mikro-orm/postgresql";
 
@@ -111,9 +111,9 @@ describe("CreateUserInteractor", () => {
     rolesRepository.findByCode.mockResolvedValue(makeRole());
     usersRepository.findByEmailIncludingDeleted.mockResolvedValue(makeUser());
 
-    await expect(interactor.execute({ dto: buildDto() })).rejects.toThrow(
-      new ConflictException(USER_ERROR_MESSAGES.EMAIL_ALREADY_IN_USE),
-    );
+    await expect(
+      interactor.execute({ dto: buildDto(), actorRole: EUserRole.SUPERADMIN }),
+    ).rejects.toThrow(new ConflictException(USER_ERROR_MESSAGES.EMAIL_ALREADY_IN_USE));
 
     expect(usersRepository.createUser).not.toHaveBeenCalled();
   });
@@ -121,7 +121,10 @@ describe("CreateUserInteractor", () => {
   it("resolves the role by its code", async () => {
     arrangeNewUser();
 
-    await interactor.execute({ dto: buildDto({ role: EUserRole.SENSEI }) });
+    await interactor.execute({
+      dto: buildDto({ role: EUserRole.SENSEI }),
+      actorRole: EUserRole.SUPERADMIN,
+    });
 
     expect(rolesRepository.findByCode).toHaveBeenCalledWith(EUserRole.SENSEI);
   });
@@ -129,7 +132,7 @@ describe("CreateUserInteractor", () => {
   it("hashes the password and never persists the raw value", async () => {
     arrangeNewUser();
 
-    await interactor.execute({ dto: buildDto() });
+    await interactor.execute({ dto: buildDto(), actorRole: EUserRole.SUPERADMIN });
 
     expect(hashPassword).toHaveBeenCalledWith(RAW_PASSWORD);
 
@@ -142,7 +145,7 @@ describe("CreateUserInteractor", () => {
   it("binds the credential account to the newly created user", async () => {
     const { user } = arrangeNewUser();
 
-    await interactor.execute({ dto: buildDto() });
+    await interactor.execute({ dto: buildDto(), actorRole: EUserRole.SUPERADMIN });
 
     expect(entityManager.create).toHaveBeenCalledWith(
       Account,
@@ -152,5 +155,17 @@ describe("CreateUserInteractor", () => {
         providerId: CREDENTIAL_PROVIDER_ID,
       }),
     );
+  });
+
+  it("rejects a non-superadmin assigning the superadmin role", async () => {
+    await expect(
+      interactor.execute({
+        dto: buildDto({ role: EUserRole.SUPERADMIN }),
+        actorRole: EUserRole.SENSEI,
+      }),
+    ).rejects.toThrow(new ForbiddenException(USER_ERROR_MESSAGES.CANNOT_ASSIGN_SUPERADMIN));
+
+    expect(rolesRepository.findByCode).not.toHaveBeenCalled();
+    expect(usersRepository.createUser).not.toHaveBeenCalled();
   });
 });

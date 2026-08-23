@@ -1,3 +1,5 @@
+import { ForbiddenException } from "@nestjs/common";
+
 import type { MikroORM } from "@mikro-orm/postgresql";
 
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
@@ -10,6 +12,7 @@ import { EUserState } from "@/common/enums/users.enums";
 import { CaslCacheService } from "@/modules/casl/casl-cache.service";
 import { RolesRepository } from "@/modules/permissions/roles.repository";
 import { UpdateUserInteractor } from "@/modules/users/interactors/update-user.interactor";
+import { USER_ERROR_MESSAGES } from "@/modules/users/users.constants";
 import { UsersRepository } from "@/modules/users/users.repository";
 import { UsersSerializer } from "@/modules/users/users.serializer";
 import { UserFactory } from "@/test/utils/factories/users.factory";
@@ -73,7 +76,11 @@ describe("UpdateUserInteractor", () => {
       orm.em.merge(Role, { id: MENTOR_ROLE_ID, code: EUserRole.MENTOR, name: "Mentor" }),
     );
 
-    await interactor.execute({ userId: TARGET_USER_ID, dto: { role: EUserRole.MENTOR } });
+    await interactor.execute({
+      userId: TARGET_USER_ID,
+      dto: { role: EUserRole.MENTOR },
+      actorRole: EUserRole.SENSEI,
+    });
 
     expect(user.role.code).toBe(EUserRole.MENTOR);
     expect(caslCacheService.invalidateUser).toHaveBeenCalledWith(TARGET_USER_ID);
@@ -83,9 +90,29 @@ describe("UpdateUserInteractor", () => {
     const user = makeUser();
     usersRepository.findById.mockResolvedValue(user);
 
-    await interactor.execute({ userId: TARGET_USER_ID, dto: { name: "Renamed" } });
+    await interactor.execute({
+      userId: TARGET_USER_ID,
+      dto: { name: "Renamed" },
+      actorRole: EUserRole.SENSEI,
+    });
 
     expect(user.name).toBe("Renamed");
     expect(caslCacheService.invalidateUser).not.toHaveBeenCalled();
+  });
+
+  it("rejects a non-superadmin promoting a user to superadmin", async () => {
+    const user = makeUser();
+    usersRepository.findById.mockResolvedValue(user);
+
+    await expect(
+      interactor.execute({
+        userId: TARGET_USER_ID,
+        dto: { role: EUserRole.SUPERADMIN },
+        actorRole: EUserRole.SENSEI,
+      }),
+    ).rejects.toThrow(new ForbiddenException(USER_ERROR_MESSAGES.CANNOT_ASSIGN_SUPERADMIN));
+
+    expect(rolesRepository.findByCode).not.toHaveBeenCalled();
+    expect(usersRepository.flush).not.toHaveBeenCalled();
   });
 });

@@ -78,8 +78,8 @@ export class UsersController {
   @ApiCreatedResponse({ type: UserResponse })
   @ApiNotFoundResponse({ description: "The requested role does not exist." })
   @ApiConflictResponse({ description: "A user with this email already exists." })
-  async createUser(@Body() dto: CreateUserDto): Promise<UserResponse> {
-    return this.usersService.createUser(dto);
+  async createUser(@Req() req: Request, @Body() dto: CreateUserDto): Promise<UserResponse> {
+    return this.usersService.createUser(dto, req.user!.role!);
   }
 
   @Patch(":id")
@@ -88,10 +88,11 @@ export class UsersController {
   @ApiOperation({ summary: "Update another user." })
   @ApiOkResponse({ type: UserResponse })
   async updateUser(
+    @Req() req: Request,
     @Param("id", ParseUUIDPipe) userId: string,
     @Body() dto: UpdateUserDto,
   ): Promise<UserResponse> {
-    return this.usersService.updateUser(userId, dto);
+    return this.usersService.updateUser(userId, dto, req.user!.role!);
   }
 
   @Get(":id")

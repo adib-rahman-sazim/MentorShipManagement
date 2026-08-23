@@ -9,6 +9,7 @@ import type { IUpdateUserContext } from "../users.interfaces";
 import { UsersRepository } from "../users.repository";
 import type { UserResponse } from "../users.responses";
 import { UsersSerializer } from "../users.serializer";
+import { assertActorCanAssignRole } from "../users-role-assignment.helpers";
 
 @Injectable()
 export class UpdateUserInteractor implements IBaseInteractor<IUpdateUserContext, UserResponse> {
@@ -19,7 +20,7 @@ export class UpdateUserInteractor implements IBaseInteractor<IUpdateUserContext,
     private readonly caslCacheService: CaslCacheService,
   ) {}
 
-  async execute({ userId, dto }: IUpdateUserContext): Promise<UserResponse> {
+  async execute({ userId, dto, actorRole }: IUpdateUserContext): Promise<UserResponse> {
     const user = await this.usersRepository.findById(userId);
 
     if (!user) {
@@ -39,6 +40,8 @@ export class UpdateUserInteractor implements IBaseInteractor<IUpdateUserContext,
     let isRoleChanging = false;
 
     if (dto.role !== undefined && dto.role !== user.role.code) {
+      assertActorCanAssignRole(actorRole, dto.role);
+
       const role = await this.rolesRepository.findByCode(dto.role);
 
       if (!role) {

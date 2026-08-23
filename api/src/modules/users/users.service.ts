@@ -1,5 +1,7 @@
 import { Injectable } from "@nestjs/common";
 
+import type { EUserRole } from "@/common/enums/roles.enums";
+
 import { CreateUserInteractor } from "./interactors/create-user.interactor";
 import { DeleteUserInteractor } from "./interactors/delete-user.interactor";
 import { GetUserInteractor } from "./interactors/get-user.interactor";
@@ -37,12 +39,16 @@ export class UsersService {
     return this.listUsersInteractor.execute({ query });
   }
 
-  async updateUser(userId: string, dto: UpdateUserDto): Promise<UserResponse> {
-    return this.updateUserInteractor.execute({ userId, dto });
+  async updateUser(
+    userId: string,
+    dto: UpdateUserDto,
+    actorRole: EUserRole,
+  ): Promise<UserResponse> {
+    return this.updateUserInteractor.execute({ userId, dto, actorRole });
   }
 
-  async createUser(dto: CreateUserDto): Promise<UserResponse> {
-    return this.createUserInteractor.execute({ dto });
+  async createUser(dto: CreateUserDto, actorRole: EUserRole): Promise<UserResponse> {
+    return this.createUserInteractor.execute({ dto, actorRole });
   }
 
   async getUserById(userId: string): Promise<UserResponse> {

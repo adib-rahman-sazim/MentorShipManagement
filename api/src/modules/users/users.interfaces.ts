@@ -1,3 +1,4 @@
+import type { EUserRole } from "@/common/enums/roles.enums";
 import type { EUserState } from "@/common/enums/users.enums";
 
 import type {
@@ -26,10 +27,12 @@ export interface IListUsersContext {
 export interface IUpdateUserContext {
   userId: string;
   dto: UpdateUserDto;
+  actorRole: EUserRole;
 }
 
 export interface ICreateUserContext {
   dto: CreateUserDto;
+  actorRole: EUserRole;
 }
 
 export interface IDeleteUserContext {

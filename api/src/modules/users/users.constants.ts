@@ -7,6 +7,7 @@ export const USER_ERROR_MESSAGES = {
   ROLE_NOT_FOUND: "Role not found",
   EMAIL_ALREADY_IN_USE: "A user with this email already exists",
   CANNOT_DELETE_SELF: "You cannot delete your own account",
+  CANNOT_ASSIGN_SUPERADMIN: "Only a superadmin can assign the superadmin role",
 } as const;
 
 export const ROLE_FIELD = "role";
