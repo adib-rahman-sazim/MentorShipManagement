@@ -44,12 +44,12 @@ export class CreateUserInteractor implements IBaseInteractor<ICreateUserContext,
 
     const hashedPassword = await hashPassword(dto.password);
 
-    const user = existingUser
-      ? await this.reactivate(existingUser, dto, role, hashedPassword)
-      : this.provision(dto, role, hashedPassword);
+    let user: User;
 
     try {
-      await this.usersRepository.flush();
+      user = existingUser
+        ? await this.reactivate(existingUser, dto, role, hashedPassword)
+        : await this.provision(dto, role, hashedPassword);
     } catch (error) {
       if (error instanceof UniqueConstraintViolationException) {
         throw new ConflictException(USER_ERROR_MESSAGES.EMAIL_ALREADY_IN_USE);
@@ -65,22 +65,29 @@ export class CreateUserInteractor implements IBaseInteractor<ICreateUserContext,
     return this.usersSerializer.serialize(user);
   }
 
-  private provision(dto: CreateUserDto, role: Role, hashedPassword: string): User {
-    const user = this.usersRepository.createUser({
-      email: dto.email,
-      name: dto.name,
-      image: dto.image,
-      role,
-      state: dto.state ?? EUserState.ACTIVE,
-      emailVerified: true,
+ 
+  private provision(dto: CreateUserDto, role: Role, hashedPassword: string): Promise<User> {
+    return this.usersRepository.transactional(async (em) => {
+      const user = this.usersRepository.createUser(
+        {
+          email: dto.email,
+          name: dto.name,
+          image: dto.image,
+          role,
+          state: dto.state ?? EUserState.ACTIVE,
+          emailVerified: true,
+        },
+        em,
+      );
+
+      await em.flush();
+
+      this.accountsRepository.createCredentialAccount(user, hashedPassword, em);
+
+      return user;
     });
-
-    this.accountsRepository.createCredentialAccount(user, hashedPassword);
-
-    return user;
   }
 
-  
   private async reactivate(
     user: User,
     dto: CreateUserDto,
@@ -101,6 +108,8 @@ export class CreateUserInteractor implements IBaseInteractor<ICreateUserContext,
     } else {
       this.accountsRepository.createCredentialAccount(user, hashedPassword);
     }
+
+    await this.usersRepository.flush();
 
     return user;
   }

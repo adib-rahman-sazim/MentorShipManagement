@@ -1,9 +1,14 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
+  ParseUUIDPipe,
   Patch,
+  Post,
   Query,
   Req,
   UseGuards,
@@ -11,7 +16,11 @@ import {
 } from "@nestjs/common";
 import {
   ApiBearerAuth,
+  ApiConflictResponse,
+  ApiCreatedResponse,
   ApiForbiddenResponse,
+  ApiNoContentResponse,
+  ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiUnauthorizedResponse,
@@ -25,7 +34,7 @@ import { CaslPermissionsGuard } from "@/modules/casl/casl.guard";
 import { EPermission, EResource } from "@/modules/permissions/permissions.enums";
 import { createPermission } from "@/utils/permission-string/permission-string.helpers";
 
-import { ListUsersQueryDto, UpdateProfileDto, UpdateUserDto } from "./users.dtos";
+import { CreateUserDto, ListUsersQueryDto, UpdateProfileDto, UpdateUserDto } from "./users.dtos";
 import { PaginatedUsersResponse, UserResponse } from "./users.responses";
 import { UsersService } from "./users.service";
 
@@ -62,12 +71,47 @@ export class UsersController {
     return this.usersService.listUsers(query);
   }
 
+  @Post()
+  @UseGuards(CaslPermissionsGuard)
+  @Permissions([createPermission(EResource.USER, EPermission.CREATE)])
+  @ApiOperation({ summary: "Provision a new user account with credentials." })
+  @ApiCreatedResponse({ type: UserResponse })
+  @ApiNotFoundResponse({ description: "The requested role does not exist." })
+  @ApiConflictResponse({ description: "A user with this email already exists." })
+  async createUser(@Body() dto: CreateUserDto): Promise<UserResponse> {
+    return this.usersService.createUser(dto);
+  }
+
   @Patch(":id")
   @UseGuards(CaslPermissionsGuard)
   @Permissions([createPermission(EResource.USER, EPermission.UPDATE)])
   @ApiOperation({ summary: "Update another user." })
   @ApiOkResponse({ type: UserResponse })
-  async updateUser(@Param("id") userId: string, @Body() dto: UpdateUserDto): Promise<UserResponse> {
+  async updateUser(
+    @Param("id", ParseUUIDPipe) userId: string,
+    @Body() dto: UpdateUserDto,
+  ): Promise<UserResponse> {
     return this.usersService.updateUser(userId, dto);
+  }
+
+  @Get(":id")
+  @UseGuards(CaslPermissionsGuard)
+  @Permissions([createPermission(EResource.USER, EPermission.READ)])
+  @ApiOperation({ summary: "Return a single user by id, including their role." })
+  @ApiOkResponse({ type: UserResponse })
+  @ApiNotFoundResponse({ description: "User not found." })
+  async getUser(@Param("id", ParseUUIDPipe) userId: string): Promise<UserResponse> {
+    return this.usersService.getUserById(userId);
+  }
+
+  @Delete(":id")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(CaslPermissionsGuard)
+  @Permissions([createPermission(EResource.USER, EPermission.DELETE)])
+  @ApiOperation({ summary: "Soft-delete a user and revoke their sessions." })
+  @ApiNoContentResponse({ description: "The user was soft-deleted." })
+  @ApiNotFoundResponse({ description: "User not found." })
+  async deleteUser(@Req() req: Request, @Param("id", ParseUUIDPipe) userId: string): Promise<void> {
+    return this.usersService.deleteUser(userId, req.user!.id);
   }
 }

@@ -1,10 +1,17 @@
 import { Injectable } from "@nestjs/common";
 
+import { CreateUserInteractor } from "./interactors/create-user.interactor";
+import { DeleteUserInteractor } from "./interactors/delete-user.interactor";
 import { GetUserInteractor } from "./interactors/get-user.interactor";
 import { ListUsersInteractor } from "./interactors/list-users.interactor";
 import { UpdateProfileInteractor } from "./interactors/update-profile.interactor";
 import { UpdateUserInteractor } from "./interactors/update-user.interactor";
-import type { ListUsersQueryDto, UpdateProfileDto, UpdateUserDto } from "./users.dtos";
+import type {
+  CreateUserDto,
+  ListUsersQueryDto,
+  UpdateProfileDto,
+  UpdateUserDto,
+} from "./users.dtos";
 import type { PaginatedUsersResponse, UserResponse } from "./users.responses";
 
 @Injectable()
@@ -14,6 +21,8 @@ export class UsersService {
     private readonly updateProfileInteractor: UpdateProfileInteractor,
     private readonly listUsersInteractor: ListUsersInteractor,
     private readonly updateUserInteractor: UpdateUserInteractor,
+    private readonly createUserInteractor: CreateUserInteractor,
+    private readonly deleteUserInteractor: DeleteUserInteractor,
   ) {}
 
   async getCurrentUser(userId: string): Promise<UserResponse> {
@@ -30,5 +39,17 @@ export class UsersService {
 
   async updateUser(userId: string, dto: UpdateUserDto): Promise<UserResponse> {
     return this.updateUserInteractor.execute({ userId, dto });
+  }
+
+  async createUser(dto: CreateUserDto): Promise<UserResponse> {
+    return this.createUserInteractor.execute({ dto });
+  }
+
+  async getUserById(userId: string): Promise<UserResponse> {
+    return this.getUserInteractor.execute(userId);
+  }
+
+  async deleteUser(userId: string, actorId: string): Promise<void> {
+    return this.deleteUserInteractor.execute({ userId, actorId });
   }
 }
