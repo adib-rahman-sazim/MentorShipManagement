@@ -1,7 +1,8 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 
-import type { User } from "@/common/entities/users.entity";
 import type { IBaseInteractor } from "@/common/interfaces/base-interactor.interfaces";
+import { CaslCacheService } from "@/modules/casl/casl-cache.service";
+import { RolesRepository } from "@/modules/permissions/roles.repository";
 
 import { USER_ERROR_MESSAGES } from "../users.constants";
 import type { IUpdateUserContext } from "../users.interfaces";
@@ -13,7 +14,9 @@ import { UsersSerializer } from "../users.serializer";
 export class UpdateUserInteractor implements IBaseInteractor<IUpdateUserContext, UserResponse> {
   constructor(
     private readonly usersRepository: UsersRepository,
+    private readonly rolesRepository: RolesRepository,
     private readonly usersSerializer: UsersSerializer,
+    private readonly caslCacheService: CaslCacheService,
   ) {}
 
   async execute({ userId, dto }: IUpdateUserContext): Promise<UserResponse> {
@@ -23,24 +26,35 @@ export class UpdateUserInteractor implements IBaseInteractor<IUpdateUserContext,
       throw new NotFoundException(USER_ERROR_MESSAGES.USER_NOT_FOUND);
     }
 
-    const updateData: Partial<User> = {};
     if (dto.name !== undefined) {
-      updateData.name = dto.name;
+      user.name = dto.name;
     }
     if (dto.image !== undefined) {
-      updateData.image = dto.image;
+      user.image = dto.image;
     }
     if (dto.state !== undefined) {
-      updateData.state = dto.state;
+      user.state = dto.state;
     }
 
-    const updatedUser = await this.usersRepository.update(userId, updateData);
+    let isRoleChanging = false;
 
-    if (!updatedUser) {
-      throw new NotFoundException(USER_ERROR_MESSAGES.USER_NOT_FOUND);
+    if (dto.role !== undefined && dto.role !== user.role.code) {
+      const role = await this.rolesRepository.findByCode(dto.role);
+
+      if (!role) {
+        throw new NotFoundException(USER_ERROR_MESSAGES.ROLE_NOT_FOUND);
+      }
+
+      user.role = role;
+      isRoleChanging = true;
     }
 
     await this.usersRepository.flush();
-    return this.usersSerializer.serialize(updatedUser);
+
+    if (isRoleChanging) {
+      await this.caslCacheService.invalidateUser(userId);
+    }
+
+    return this.usersSerializer.serialize(user);
   }
 }

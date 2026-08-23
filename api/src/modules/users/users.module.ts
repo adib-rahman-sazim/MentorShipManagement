@@ -5,7 +5,7 @@ import { MikroOrmModule } from "@mikro-orm/nestjs";
 import { User } from "@/common/entities/users.entity";
 
 import { AuthModule } from "../auth/auth.module";
-import { GetCurrentUserInteractor } from "./interactors/get-current-user.interactor";
+import { GetUserInteractor } from "./interactors/get-user.interactor";
 import { ListUsersInteractor } from "./interactors/list-users.interactor";
 import { UpdateProfileInteractor } from "./interactors/update-profile.interactor";
 import { UpdateUserInteractor } from "./interactors/update-user.interactor";
@@ -18,7 +18,7 @@ import { UsersService } from "./users.service";
   controllers: [UsersController],
   providers: [
     UsersService,
-    GetCurrentUserInteractor,
+    GetUserInteractor,
     UpdateProfileInteractor,
     ListUsersInteractor,
     UpdateUserInteractor,

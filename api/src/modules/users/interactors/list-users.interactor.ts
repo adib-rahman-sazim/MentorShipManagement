@@ -17,8 +17,7 @@ export class ListUsersInteractor
   ) {}
 
   async execute({ query }: IListUsersContext): Promise<PaginatedUsersResponse> {
-    const page = query.page ?? 1;
-    const limit = query.limit ?? 10;
+    const { page, limit } = query;
 
     const { users, total } = await this.usersRepository.findAllPaginated({
       page,

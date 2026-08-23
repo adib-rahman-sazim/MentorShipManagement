@@ -7,7 +7,7 @@ import { Role } from "@/common/entities/roles.entity";
 import { User } from "@/common/entities/users.entity";
 import { EUserState } from "@/common/enums/users.enums";
 
-import { CREDENTIAL_PROVIDER_ID } from "./credential-user.constants";
+import { CREDENTIAL_PROVIDER_ID } from "@/modules/auth/auth.constants";
 import type { TEnsureCredentialUserParams } from "./credential-user.types";
 
 export async function ensureCredentialUser(

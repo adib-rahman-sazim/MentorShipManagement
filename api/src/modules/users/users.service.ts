@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 
-import { GetCurrentUserInteractor } from "./interactors/get-current-user.interactor";
+import { GetUserInteractor } from "./interactors/get-user.interactor";
 import { ListUsersInteractor } from "./interactors/list-users.interactor";
 import { UpdateProfileInteractor } from "./interactors/update-profile.interactor";
 import { UpdateUserInteractor } from "./interactors/update-user.interactor";
@@ -10,14 +10,14 @@ import type { PaginatedUsersResponse, UserResponse } from "./users.responses";
 @Injectable()
 export class UsersService {
   constructor(
-    private readonly getCurrentUserInteractor: GetCurrentUserInteractor,
+    private readonly getUserInteractor: GetUserInteractor,
     private readonly updateProfileInteractor: UpdateProfileInteractor,
     private readonly listUsersInteractor: ListUsersInteractor,
     private readonly updateUserInteractor: UpdateUserInteractor,
   ) {}
 
   async getCurrentUser(userId: string): Promise<UserResponse> {
-    return this.getCurrentUserInteractor.execute(userId);
+    return this.getUserInteractor.execute(userId);
   }
 
   async updateProfile(userId: string, dto: UpdateProfileDto): Promise<UserResponse> {

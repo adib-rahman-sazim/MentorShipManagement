@@ -1,6 +1,11 @@
 import type { EUserState } from "@/common/enums/users.enums";
 
-import type { ListUsersQueryDto, UpdateProfileDto, UpdateUserDto } from "./users.dtos";
+import type {
+  CreateUserDto,
+  ListUsersQueryDto,
+  UpdateProfileDto,
+  UpdateUserDto,
+} from "./users.dtos";
 
 export interface IFindUsersOptions {
   page: number;
@@ -21,4 +26,13 @@ export interface IListUsersContext {
 export interface IUpdateUserContext {
   userId: string;
   dto: UpdateUserDto;
+}
+
+export interface ICreateUserContext {
+  dto: CreateUserDto;
+}
+
+export interface IDeleteUserContext {
+  userId: string;
+  actorId: string;
 }
