@@ -2,29 +2,16 @@ import { useEffect, useState } from "react";
 
 import { useRouter } from "next/router";
 
-import CreateOrganizationPageSkeleton from "@/shared/components/skeletons/CreateOrganizationPageSkeleton";
+
 import PageSkeleton from "@/shared/components/skeletons/PageSkeleton";
 import { ACCESS_TOKEN_LOCAL_STORAGE_KEY } from "@/shared/constants/app.constants";
-import GeneralLayout from "@/shared/layouts/GeneralLayout";
+
 import { useAuth } from "@/shared/providers/AuthProvider";
 
 import Unauthorized from "../../Unauthorized";
-import { getSignInUrlWithRedirectParam, isCreateOrganizationRoute } from "./ProtectedRoute.helpers";
+import { getSignInUrlWithRedirectParam } from "./ProtectedRoute.helpers";
 import { TProtectedRouteProps } from "./ProtectedRoute.types";
 
-const ProtectedRouteLoadingFallback = ({ pathname }: { pathname: string }) => {
-  if (isCreateOrganizationRoute(pathname)) {
-    return (
-      <GeneralLayout>
-        <div className="flex flex-1 items-center justify-center p-4">
-          <CreateOrganizationPageSkeleton />
-        </div>
-      </GeneralLayout>
-    );
-  }
-
-  return <PageSkeleton />;
-};
 
 const ProtectedRoute = ({ children }: TProtectedRouteProps) => {
   const router = useRouter();
@@ -68,7 +55,7 @@ const ProtectedRoute = ({ children }: TProtectedRouteProps) => {
 
     if (!isAuthenticated && !hasToken) {
       const redirectTo = `${location.pathname}${location.search}`;
-      router.push(getSignInUrlWithRedirectParam(redirectTo));
+      router.replace(getSignInUrlWithRedirectParam(redirectTo));
     }
   }, [
     router,
@@ -81,11 +68,11 @@ const ProtectedRoute = ({ children }: TProtectedRouteProps) => {
   ]);
 
   if (!hasCheckedToken) {
-    return <ProtectedRouteLoadingFallback pathname={router.pathname} />;
+    return <PageSkeleton />;
   }
 
   if (isLoading || waitingForRefetch) {
-    return <ProtectedRouteLoadingFallback pathname={router.pathname} />;
+    return <PageSkeleton />;
   }
 
   if (hasToken && !isAuthenticated && hasTriggeredRefetch) {
