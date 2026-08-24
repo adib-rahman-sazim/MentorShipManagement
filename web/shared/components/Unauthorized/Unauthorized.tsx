@@ -1,21 +1,17 @@
 import { useRouter } from "next/router";
 
-import { ArrowLeft, Building2, LogOut, Mail } from "lucide-react";
+import { ArrowLeft, LogOut} from "lucide-react";
 
 import { Button } from "@/shared/components/shadui/button";
-import {
-  CREATE_ORGANIZATION_ROUTE,
-  INVITE_ACCEPT_ROUTE,
-} from "@/shared/constants/routes.constants";
+
 import { useSignOut } from "@/shared/hooks/useSignOut";
 import { useAbilityContext } from "@/shared/providers/AbilityProvider";
-import { useCan } from "@/shared/providers/AbilityProvider/AbilityProvider.hooks";
-import { useGetMyPendingInvitationsQuery } from "@/shared/redux/rtk-apis/invitations/invitations.api";
-import { EPermission, EResource } from "@/shared/typedefs";
+
+
+
 
 import {
-  UNAUTHORIZED_COMPLETE_INVITATION_LABEL,
-  UNAUTHORIZED_CREATE_ORGANIZATION_LABEL,
+  
   UNAUTHORIZED_DESCRIPTION,
   UNAUTHORIZED_GO_BACK_LABEL,
   UNAUTHORIZED_HEADING,
@@ -28,15 +24,8 @@ const Unauthorized = () => {
   const router = useRouter();
   const { ability } = useAbilityContext();
   const { signOut } = useSignOut();
-  const { data: pendingInvitations } = useGetMyPendingInvitationsQuery();
-  const { isAllowed: canCreateOrganization, isLoading: isAbilityLoading } = useCan(
-    EPermission.CREATE,
-    EResource.ORGANIZATION,
-  );
-
-  const pendingInvitation = pendingInvitations?.[0];
-  const shouldShowCreateOrganization =
-    !pendingInvitation && !isAbilityLoading && canCreateOrganization;
+  
+  
 
   const handleGoBack = () => {
     router.push(getDefaultAuthorizedRoute((action, resource) => ability.can(action, resource)));
@@ -46,17 +35,9 @@ const Unauthorized = () => {
     void signOut();
   };
 
-  const handleCompleteInvitation = () => {
-    if (!pendingInvitation) {
-      return;
-    }
+  
 
-    router.push(`${INVITE_ACCEPT_ROUTE}?token=${pendingInvitation.id}`);
-  };
-
-  const handleCreateOrganization = () => {
-    router.push(CREATE_ORGANIZATION_ROUTE);
-  };
+  
 
   return (
     <main className="relative flex min-h-screen overflow-hidden bg-background text-foreground">
@@ -89,28 +70,14 @@ const Unauthorized = () => {
           </p>
 
           <div className="mt-2 flex flex-wrap items-center gap-3 opacity-0 animate-unauthorized-fade-up [animation-delay:450ms]">
-            {pendingInvitation ? (
-              <Button size="lg" onClick={handleCompleteInvitation}>
-                <Mail data-icon="inline-start" />
-                {UNAUTHORIZED_COMPLETE_INVITATION_LABEL}
+            <Button size="lg" onClick={handleGoBack}>
+              <ArrowLeft data-icon="inline-start" />
+            {UNAUTHORIZED_GO_BACK_LABEL}
               </Button>
-            ) : null}
-            {!pendingInvitation && shouldShowCreateOrganization ? (
-              <Button size="lg" onClick={handleCreateOrganization}>
-                <Building2 data-icon="inline-start" />
-                {UNAUTHORIZED_CREATE_ORGANIZATION_LABEL}
-              </Button>
-            ) : null}
-            {!pendingInvitation && !shouldShowCreateOrganization ? (
-              <Button size="lg" onClick={handleGoBack}>
-                <ArrowLeft data-icon="inline-start" />
-                {UNAUTHORIZED_GO_BACK_LABEL}
-              </Button>
-            ) : null}
-            <Button size="lg" variant="destructive" onClick={handleSignOut}>
+              <Button size="lg" variant="destructive" onClick={handleSignOut}>
               {UNAUTHORIZED_SIGN_OUT_LABEL}
-              <LogOut data-icon="inline-end" />
-            </Button>
+                <LogOut data-icon="inline-end" />
+              </Button>
           </div>
         </div>
 

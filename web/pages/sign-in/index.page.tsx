@@ -4,7 +4,7 @@ import SignInContainer from "@/modules/sign-in/container/SignInContainer";
 import i18nConfig from "@/next-i18next.config.mjs";
 import NextHead from "@/shared/components/NextHead";
 import PublicRoute from "@/shared/components/wrappers/PublicRoute";
-import GeneralLayout from "@/shared/layouts/GeneralLayout";
+import AuthLayout from "@/shared/layouts/AuthLayout";
 import { NextApplicationPage } from "@/shared/typedefs";
 
 const SignIn: NextApplicationPage = () => (
@@ -14,7 +14,7 @@ const SignIn: NextApplicationPage = () => (
   </>
 );
 
-SignIn.Layout = GeneralLayout;
+SignIn.Layout = AuthLayout;
 SignIn.Guard = PublicRoute;
 
 export default SignIn;
