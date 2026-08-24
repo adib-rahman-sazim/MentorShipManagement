@@ -10,6 +10,7 @@ import { toast } from "sonner";
 
 import { ACCESS_TOKEN_LOCAL_STORAGE_KEY } from "@/shared/constants/app.constants";
 import { API_BASE_URL } from "@/shared/constants/env.constants";
+import { HTTP_STATUS_FORBIDDEN, HTTP_STATUS_UNAUTHORIZED } from "@/shared/constants/http.constants";
 import { SIGN_IN_ROUTE } from "@/shared/constants/routes.constants";
 import {
   TOAST_MESSAGE_ACCOUNT_DEACTIVATED,
@@ -33,9 +34,11 @@ const baseQuery = fetchBaseQuery({
   },
 });
 
-const isUnauthorizedError = (error?: FetchBaseQueryError) => error && error.status === 401;
+const isUnauthorizedError = (error?: FetchBaseQueryError) =>
+  error && error.status === HTTP_STATUS_UNAUTHORIZED;
 
-const isForbiddenError = (error?: FetchBaseQueryError) => error && error.status === 403;
+const isForbiddenError = (error?: FetchBaseQueryError) =>
+  error && error.status === HTTP_STATUS_FORBIDDEN;
 
 const baseQueryWithErrorHandling = async (args: string | FetchArgs, api: BaseQueryApi) => {
   const result = await baseQuery(args, api, {});

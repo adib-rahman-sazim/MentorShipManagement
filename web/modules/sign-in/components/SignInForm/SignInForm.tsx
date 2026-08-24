@@ -1,7 +1,3 @@
-import React from "react";
-
-import { FaSignInAlt } from "react-icons/fa";
-
 import { PasswordInput } from "@/shared/components/Form/PasswordInput";
 import LoadingSpinner from "@/shared/components/LoadingSpinner";
 import { Button } from "@/shared/components/shadui/button";
@@ -15,7 +11,18 @@ import {
 } from "@/shared/components/shadui/form";
 import { Input } from "@/shared/components/shadui/input";
 
+import {
+  SIGN_IN_EMAIL_LABEL,
+  SIGN_IN_EMAIL_PLACEHOLDER,
+  SIGN_IN_PASSWORD_LABEL,
+  SIGN_IN_PASSWORD_PLACEHOLDER,
+  SIGN_IN_SUBMIT_LABEL,
+  SIGN_IN_SUBMITTING_LABEL,
+} from "./SignInForm.constants";
 import { useSignInForm } from "./SignInForm.hooks";
+
+
+
 
 export const SignInForm = () => {
   const { form, onSubmit } = useSignInForm();
@@ -23,15 +30,23 @@ export const SignInForm = () => {
 
   return (
     <Form {...form}>
-      <form onSubmit={onSubmit} className="space-y-6">
+      <form onSubmit={onSubmit} className="flex flex-col gap-5" noValidate>
         <FormField
           control={form.control}
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel>{SIGN_IN_EMAIL_LABEL}</FormLabel>
               <FormControl>
-                <Input placeholder="Email" type="email" disabled={isSubmitting} {...field} />
+                <Input
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  autoFocus
+                  placeholder={SIGN_IN_EMAIL_PLACEHOLDER}
+                  disabled={isSubmitting}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -43,9 +58,14 @@ export const SignInForm = () => {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password</FormLabel>
+              <FormLabel>{SIGN_IN_PASSWORD_LABEL}</FormLabel>
               <FormControl>
-                <PasswordInput placeholder="Password" disabled={isSubmitting} {...field} />
+                <PasswordInput
+                  autoComplete="current-password"
+                  placeholder={SIGN_IN_PASSWORD_PLACEHOLDER}
+                  disabled={isSubmitting}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -53,9 +73,14 @@ export const SignInForm = () => {
         />
 
         <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? <LoadingSpinner /> : null}
-          <FaSignInAlt />
-          Sign In
+          {isSubmitting ? (
+            <>
+              <LoadingSpinner className="text-primary-foreground" />
+              <span className="ml-2">{SIGN_IN_SUBMITTING_LABEL}</span>
+            </>
+          ) : (
+            SIGN_IN_SUBMIT_LABEL
+          )}
         </Button>
       </form>
     </Form>
