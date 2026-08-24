@@ -1,3 +1,5 @@
+import { DASHBOARD_ROUTE } from "@/shared/constants/routes.constants";
+
 export const isSafePostAuthRedirect = (redirect: string): boolean => {
   if (!redirect.startsWith("/")) {
     return false;
@@ -9,3 +11,6 @@ export const isSafePostAuthRedirect = (redirect: string): boolean => {
 
   return true;
 };
+
+export const getPostAuthDestination = (storedRedirect: string | null): string =>
+  storedRedirect && isSafePostAuthRedirect(storedRedirect) ? storedRedirect : DASHBOARD_ROUTE;
