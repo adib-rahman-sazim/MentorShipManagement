@@ -50,6 +50,12 @@ export function createAuthInstance({ orm }: ICreateBetterAuthInstanceOptions): I
           required: false,
           input: false,
         },
+
+        roleId: {
+          type: "string",
+          required: false,
+          input: false,
+        },
       },
     },
 
