@@ -3,22 +3,15 @@ import { PropsWithChildren, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
 import AuthFormPageSkeleton from "@/shared/components/skeletons/AuthFormPageSkeleton";
-import LandingPageSkeleton from "@/shared/components/skeletons/LandingPageSkeleton";
-import SystemInvitePageSkeleton from "@/shared/components/skeletons/SystemInvitePageSkeleton";
-import { VERIFY_ROUTE } from "@/shared/constants/routes.constants";
-import GeneralLayout from "@/shared/layouts/GeneralLayout";
+import AuthLayout from "@/shared/layouts/AuthLayout";
 import { useAuth } from "@/shared/providers/AuthProvider";
-import { resolvePostAuthDestinationFromSession } from "@/shared/utils/postAuthDestination";
-import { consumePostAuthRedirect } from "@/shared/utils/postAuthRedirect";
-
-import { isHomeRoute, isSystemInviteAcceptRoute } from "./PublicRoute.helpers";
+import { consumePostAuthRedirect, getPostAuthDestination } from "@/shared/utils/postAuthRedirect";
 
 const PublicRoute = ({ children }: PropsWithChildren) => {
   const router = useRouter();
-  const { isLoading, isAuthenticated, activeOrganizationId } = useAuth();
+  const { isLoading, isAuthenticated } = useAuth();
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [hasResolvedAuth, setHasResolvedAuth] = useState(false);
-  const shouldDeferToVerifyPage = router.pathname === VERIFY_ROUTE;
 
   useEffect(() => {
     if (!isLoading) {
@@ -27,66 +20,21 @@ const PublicRoute = ({ children }: PropsWithChildren) => {
   }, [isLoading]);
 
   useEffect(() => {
-    if (isLoading || isRedirecting || shouldDeferToVerifyPage) {
+    if (isLoading || isRedirecting) {
       return;
     }
 
     if (isAuthenticated) {
       setIsRedirecting(true);
-      void (async () => {
-        const nextPath = await resolvePostAuthDestinationFromSession({
-          storedRedirect: consumePostAuthRedirect(),
-          activeOrganizationId,
-        });
-        router.replace(nextPath);
-      })();
+      router.replace(getPostAuthDestination(consumePostAuthRedirect()));
     }
-  }, [
-    router,
-    isLoading,
-    isAuthenticated,
-    isRedirecting,
-    shouldDeferToVerifyPage,
-    activeOrganizationId,
-  ]);
+  }, [router, isLoading, isAuthenticated, isRedirecting]);
 
-  if ((!hasResolvedAuth && isLoading) || isRedirecting) {
-    if (isHomeRoute(router.pathname)) {
-      return (
-        <GeneralLayout>
-          <div className="flex flex-1 items-center justify-center">
-            <LandingPageSkeleton />
-          </div>
-        </GeneralLayout>
-      );
-    }
-
-    if (isSystemInviteAcceptRoute(router.pathname)) {
-      return (
-        <GeneralLayout>
-          <div className="flex flex-1 items-center justify-center p-4">
-            <SystemInvitePageSkeleton />
-          </div>
-        </GeneralLayout>
-      );
-    }
-
+  if ((!hasResolvedAuth && isLoading) || isRedirecting || isAuthenticated) {
     return (
-      <GeneralLayout>
-        <div className="flex flex-1 items-center justify-center p-4">
-          <AuthFormPageSkeleton />
-        </div>
-      </GeneralLayout>
-    );
-  }
-
-  if (isAuthenticated && !shouldDeferToVerifyPage) {
-    return (
-      <GeneralLayout>
-        <div className="flex flex-1 items-center justify-center p-4">
-          <AuthFormPageSkeleton />
-        </div>
-      </GeneralLayout>
+      <AuthLayout>
+        <AuthFormPageSkeleton />
+      </AuthLayout>
     );
   }
 

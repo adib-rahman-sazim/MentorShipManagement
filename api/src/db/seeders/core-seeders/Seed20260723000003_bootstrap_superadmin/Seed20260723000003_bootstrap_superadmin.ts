@@ -30,7 +30,6 @@ export class Seed20260723000003_BootstrapSuperadmin extends Seeder {
       throw new Error(BOOTSTRAP_SUPERADMIN_ERROR_MESSAGES.MISSING_CREDENTIALS);
     }
 
-    
     const userWithOtherRole = await em.findOne(User, {
       email,
       role: { code: { $ne: EUserRole.SUPERADMIN } },
