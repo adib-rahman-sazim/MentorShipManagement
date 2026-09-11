@@ -2,6 +2,7 @@ import { ApiProperty } from "@nestjs/swagger";
 
 import { EUserRole } from "@/common/enums/roles.enums";
 import { EUserState } from "@/common/enums/users.enums";
+import { AbstractApiResponse } from "@/common/interceptors/response-transform.interceptor.responses";
 
 export class UserResponse {
   @ApiProperty({ format: "uuid" })
@@ -52,4 +53,14 @@ export class PaginatedUsersResponse {
 
   @ApiProperty({ type: PaginationMetaResponse })
   meta!: PaginationMetaResponse;
+}
+
+export class UserApiResponse extends AbstractApiResponse {
+  @ApiProperty({ type: UserResponse })
+  data!: UserResponse;
+}
+
+export class PaginatedUsersApiResponse extends AbstractApiResponse {
+  @ApiProperty({ type: PaginatedUsersResponse })
+  data!: PaginatedUsersResponse;
 }
