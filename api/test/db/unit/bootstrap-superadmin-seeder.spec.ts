@@ -84,9 +84,7 @@ describe("Seed20260723000003_BootstrapSuperadmin", () => {
     process.env.SUPERADMIN_PASSWORD = "strong-password";
 
     const em = mockDeep<EntityManager>();
-    em.findOne
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce({ id: "existing-mentee" } as User);
+    em.findOne.mockResolvedValueOnce(null).mockResolvedValueOnce({ id: "existing-mentee" } as User);
 
     await expect(new Seed20260723000003_BootstrapSuperadmin().run(em)).rejects.toThrow(
       BOOTSTRAP_SUPERADMIN_ERROR_MESSAGES.EMAIL_TAKEN_BY_OTHER_ROLE,

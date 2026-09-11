@@ -2,16 +2,13 @@ import { useEffect, useState } from "react";
 
 import { useRouter } from "next/router";
 
-
 import PageSkeleton from "@/shared/components/skeletons/PageSkeleton";
 import { ACCESS_TOKEN_LOCAL_STORAGE_KEY } from "@/shared/constants/app.constants";
-
 import { useAuth } from "@/shared/providers/AuthProvider";
 
 import Unauthorized from "../../Unauthorized";
 import { getSignInUrlWithRedirectParam } from "./ProtectedRoute.helpers";
 import { TProtectedRouteProps } from "./ProtectedRoute.types";
-
 
 const ProtectedRoute = ({ children }: TProtectedRouteProps) => {
   const router = useRouter();
