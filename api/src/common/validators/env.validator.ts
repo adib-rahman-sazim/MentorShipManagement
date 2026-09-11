@@ -1,7 +1,18 @@
 import { plainToInstance } from "class-transformer";
-import { IsIn, IsNumber, IsOptional, IsPositive, IsString, validateSync } from "class-validator";
+import {
+  IsEmail,
+  IsIn,
+  IsNumber,
+  IsOptional,
+  IsPositive,
+  IsString,
+  MinLength,
+  ValidateIf,
+  validateSync,
+} from "class-validator";
 
 import { EBooleanEnv, EStageEnv } from "@/common/enums/environment-variables.enums";
+import { USER_PASSWORD_MIN_LENGTH } from "@/modules/users/users.constants";
 
 import type { IEnvironmentVariables } from "../interfaces/environment-variables.interfaces";
 
@@ -49,12 +60,23 @@ class EnvironmentVariables implements IEnvironmentVariables {
   @IsIn(Object.values(EBooleanEnv))
   ENABLE_AUDIT_LOGGING: EBooleanEnv = EBooleanEnv.FALSE;
 
-  @IsOptional()
-  @IsString()
+  @ValidateIf(
+    (environment: EnvironmentVariables) =>
+      environment.STAGE_ENV === EStageEnv.PRODUCTION ||
+      environment.SUPERADMIN_EMAIL !== undefined ||
+      environment.SUPERADMIN_PASSWORD !== undefined,
+  )
+  @IsEmail()
   SUPERADMIN_EMAIL?: string;
 
-  @IsOptional()
+  @ValidateIf(
+    (environment: EnvironmentVariables) =>
+      environment.STAGE_ENV === EStageEnv.PRODUCTION ||
+      environment.SUPERADMIN_EMAIL !== undefined ||
+      environment.SUPERADMIN_PASSWORD !== undefined,
+  )
   @IsString()
+  @MinLength(USER_PASSWORD_MIN_LENGTH)
   SUPERADMIN_PASSWORD?: string;
 
   @IsOptional()

@@ -7,8 +7,9 @@ import { UsersRepository } from "../users.repository";
 import type { UserResponse } from "../users.responses";
 import { UsersSerializer } from "../users.serializer";
 
+
 @Injectable()
-export class GetCurrentUserInteractor implements IBaseInteractor<string, UserResponse> {
+export class GetUserInteractor implements IBaseInteractor<string, UserResponse> {
   constructor(
     private readonly usersRepository: UsersRepository,
     private readonly usersSerializer: UsersSerializer,

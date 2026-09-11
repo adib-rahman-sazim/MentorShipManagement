@@ -51,7 +51,7 @@ describe("Seed20260723000005_MockUsers", () => {
       orm.em.create(Account, {
         id: `account-${index}`,
         user,
-        accountId: MOCK_USERS[index].email,
+        accountId: existingUsers[index].id,
         providerId: "credential",
         password: "existing-hash",
       }),

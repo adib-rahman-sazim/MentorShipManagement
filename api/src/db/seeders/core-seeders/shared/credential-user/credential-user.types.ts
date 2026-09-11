@@ -5,4 +5,5 @@ export type TEnsureCredentialUserParams = {
   password: string;
   name: string;
   role: EUserRole;
+  updateExistingPassword?: boolean;
 };

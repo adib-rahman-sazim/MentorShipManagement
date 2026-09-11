@@ -1,11 +1,24 @@
-import { Entity, Index, ManyToOne, PrimaryKey, Property, type Rel, Unique } from "@mikro-orm/core";
+import {
+  Entity,
+  EntityRepositoryType,
+  Index,
+  ManyToOne,
+  PrimaryKey,
+  Property,
+  type Rel,
+  Unique,
+} from "@mikro-orm/core";
+
+import { AccountsRepository } from "@/modules/users/accounts.repository";
 
 import { CustomBaseEntity } from "./custom-base.entity";
 import { User } from "./users.entity";
 
-@Entity({ tableName: "accounts" })
+@Entity({ tableName: "accounts", repository: () => AccountsRepository })
 @Unique({ properties: ["providerId", "accountId"] })
 export class Account extends CustomBaseEntity {
+  [EntityRepositoryType]?: AccountsRepository;
+
   @PrimaryKey({ type: "uuid", defaultRaw: "gen_random_uuid()" })
   id!: string;
 

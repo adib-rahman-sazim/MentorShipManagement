@@ -3,9 +3,14 @@ import { Seeder } from "@mikro-orm/seeder";
 
 import { Seed20260723000001_Roles } from "./core-seeders/Seed20260723000001_roles/Seed20260723000001_roles";
 import { Seed20260723000002_Permissions } from "./core-seeders/Seed20260723000002_permissions/Seed20260723000002_permissions";
+import { Seed20260723000003_BootstrapSuperadmin } from "./core-seeders/Seed20260723000003_bootstrap_superadmin/Seed20260723000003_bootstrap_superadmin";
 
 export class ProdSeeder extends Seeder {
   async run(em: EntityManager): Promise<void> {
-    await this.call(em, [Seed20260723000001_Roles, Seed20260723000002_Permissions]);
+    await this.call(em, [
+      Seed20260723000001_Roles,
+      Seed20260723000002_Permissions,
+      Seed20260723000003_BootstrapSuperadmin,
+    ]);
   }
 }
