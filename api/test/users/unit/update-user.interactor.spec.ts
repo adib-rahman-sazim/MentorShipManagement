@@ -1,6 +1,6 @@
 import { ForbiddenException } from "@nestjs/common";
 
-import type { MikroORM } from "@mikro-orm/postgresql";
+import type { EntityManager, MikroORM } from "@mikro-orm/postgresql";
 
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { type DeepMockProxy, mockDeep } from "vitest-mock-extended";
@@ -19,6 +19,7 @@ import { UserFactory } from "@/test/utils/factories/users.factory";
 import { createOfflineOrm } from "@/test/utils/helpers/offline-orm.helpers";
 
 const TARGET_USER_ID = "66666666-6666-4666-8666-666666666666";
+const ACTOR_ID = "99999999-9999-4999-8999-999999999999";
 const MENTEE_ROLE_ID = "77777777-7777-4777-8777-777777777777";
 const MENTOR_ROLE_ID = "88888888-8888-4888-8888-888888888888";
 
@@ -30,6 +31,7 @@ describe("UpdateUserInteractor", () => {
   let rolesRepository: DeepMockProxy<RolesRepository>;
   let usersSerializer: DeepMockProxy<UsersSerializer>;
   let caslCacheService: DeepMockProxy<CaslCacheService>;
+  let transactionalEntityManager: DeepMockProxy<EntityManager>;
   let interactor: UpdateUserInteractor;
 
   const makeUser = (): User =>
@@ -55,6 +57,11 @@ describe("UpdateUserInteractor", () => {
     rolesRepository = mockDeep<RolesRepository>();
     usersSerializer = mockDeep<UsersSerializer>();
     caslCacheService = mockDeep<CaslCacheService>();
+    transactionalEntityManager = mockDeep<EntityManager>();
+
+    usersRepository.transactional.mockImplementation((callback) =>
+      callback(transactionalEntityManager),
+    );
 
     interactor = new UpdateUserInteractor(
       usersRepository,
@@ -80,6 +87,7 @@ describe("UpdateUserInteractor", () => {
       userId: TARGET_USER_ID,
       dto: { role: EUserRole.MENTOR },
       actorRole: EUserRole.SENSEI,
+      actorId: ACTOR_ID,
     });
 
     expect(user.role.code).toBe(EUserRole.MENTOR);
@@ -94,6 +102,7 @@ describe("UpdateUserInteractor", () => {
       userId: TARGET_USER_ID,
       dto: { name: "Renamed" },
       actorRole: EUserRole.SENSEI,
+      actorId: ACTOR_ID,
     });
 
     expect(user.name).toBe("Renamed");
@@ -109,6 +118,7 @@ describe("UpdateUserInteractor", () => {
         userId: TARGET_USER_ID,
         dto: { role: EUserRole.SUPERADMIN },
         actorRole: EUserRole.SENSEI,
+        actorId: ACTOR_ID,
       }),
     ).rejects.toThrow(new ForbiddenException(USER_ERROR_MESSAGES.CANNOT_ASSIGN_SUPERADMIN));
 
