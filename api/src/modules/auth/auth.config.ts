@@ -6,12 +6,13 @@ import { User } from "@/common/entities/users.entity";
 import { EUserState } from "@/common/enums/users.enums";
 import { AuthRoleLookup } from "./auth.role-lookup";
 
-
-
-
 import { mikroOrmAdapter } from "./adapters/mikro-orm.adapter";
 import { AUTH_ERROR_MESSAGES, BETTER_AUTH_BASE_PATH } from "./auth.constants";
-import type {  IAuthUserWithRoleId, IBetterAuthInstance, ICreateBetterAuthInstanceOptions } from "./auth.interfaces";
+import type {
+  IAuthUserWithRoleId,
+  IBetterAuthInstance,
+  ICreateBetterAuthInstanceOptions,
+} from "./auth.interfaces";
 
 export function createAuthInstance({ orm }: ICreateBetterAuthInstanceOptions): IBetterAuthInstance {
   const isDevelopmentOrTesting =
@@ -19,7 +20,6 @@ export function createAuthInstance({ orm }: ICreateBetterAuthInstanceOptions): I
     process.env.STAGE_ENV === "development" ||
     process.env.STAGE_ENV === "test";
   const roleLookup = new AuthRoleLookup(orm);
-
 
   return betterAuth({
     database: mikroOrmAdapter(orm),
@@ -44,7 +44,7 @@ export function createAuthInstance({ orm }: ICreateBetterAuthInstanceOptions): I
           defaultValue: EUserState.ACTIVE,
           input: false,
         },
-        
+
         deletedAt: {
           type: "date",
           required: false,
@@ -58,12 +58,13 @@ export function createAuthInstance({ orm }: ICreateBetterAuthInstanceOptions): I
       updateAge: Number(process.env.SESSION_UPDATE_AGE),
     },
 
-    plugins: [bearer(),
-       customSession(async ({ user, session }) => {
-       const role = await roleLookup.getRoleCode((user as IAuthUserWithRoleId).roleId);
+    plugins: [
+      bearer(),
+      customSession(async ({ user, session }) => {
+        const role = await roleLookup.getRoleCode((user as IAuthUserWithRoleId).roleId);
 
-      return { user: { ...user, role }, session };
-  }),
+        return { user: { ...user, role }, session };
+      }),
     ],
 
     logger: {
