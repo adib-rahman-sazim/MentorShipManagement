@@ -1,20 +1,25 @@
 import { betterAuth } from "better-auth";
 import { APIError } from "better-auth/api";
-import { bearer } from "better-auth/plugins";
+import { bearer, customSession } from "better-auth/plugins";
 
 import { User } from "@/common/entities/users.entity";
-import { EUserRole } from "@/common/enums/roles.enums";
 import { EUserState } from "@/common/enums/users.enums";
+import { AuthRoleLookup } from "./auth.role-lookup";
+
+
+
 
 import { mikroOrmAdapter } from "./adapters/mikro-orm.adapter";
 import { AUTH_ERROR_MESSAGES, BETTER_AUTH_BASE_PATH } from "./auth.constants";
-import type { IBetterAuthInstance, ICreateBetterAuthInstanceOptions } from "./auth.interfaces";
+import type {  IAuthUserWithRoleId, IBetterAuthInstance, ICreateBetterAuthInstanceOptions } from "./auth.interfaces";
 
 export function createAuthInstance({ orm }: ICreateBetterAuthInstanceOptions): IBetterAuthInstance {
   const isDevelopmentOrTesting =
     process.env.STAGE_ENV === "local" ||
     process.env.STAGE_ENV === "development" ||
     process.env.STAGE_ENV === "test";
+  const roleLookup = new AuthRoleLookup(orm);
+
 
   return betterAuth({
     database: mikroOrmAdapter(orm),
@@ -39,11 +44,7 @@ export function createAuthInstance({ orm }: ICreateBetterAuthInstanceOptions): I
           defaultValue: EUserState.ACTIVE,
           input: false,
         },
-        role: {
-          type: Object.values(EUserRole),
-          required: false,
-          input: false,
-        },
+        
         deletedAt: {
           type: "date",
           required: false,
@@ -57,7 +58,13 @@ export function createAuthInstance({ orm }: ICreateBetterAuthInstanceOptions): I
       updateAge: Number(process.env.SESSION_UPDATE_AGE),
     },
 
-    plugins: [bearer()],
+    plugins: [bearer(),
+       customSession(async ({ user, session }) => {
+       const role = await roleLookup.getRoleCode((user as IAuthUserWithRoleId).roleId);
+
+      return { user: { ...user, role }, session };
+  }),
+    ],
 
     logger: {
       level: "error",

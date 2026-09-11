@@ -37,5 +37,9 @@ export interface IBetterAuthInstance {
 }
 
 export interface ICreateBetterAuthInstanceOptions {
-  orm: MikroORM;
+  orm: MikroORM; 
+}
+
+export interface IAuthUserWithRoleId {
+  roleId?: string | null;
 }
