@@ -1,8 +1,10 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 
+import { EUserState } from "@/common/enums/users.enums";
 import type { IBaseInteractor } from "@/common/interfaces/base-interactor.interfaces";
 import { CaslCacheService } from "@/modules/casl/casl-cache.service";
 import { RolesRepository } from "@/modules/permissions/roles.repository";
+
 
 import { USER_ERROR_MESSAGES } from "../users.constants";
 import type { IUpdateUserContext } from "../users.interfaces";
@@ -16,45 +18,59 @@ export class UpdateUserInteractor implements IBaseInteractor<IUpdateUserContext,
   constructor(
     private readonly usersRepository: UsersRepository,
     private readonly rolesRepository: RolesRepository,
+  
     private readonly usersSerializer: UsersSerializer,
     private readonly caslCacheService: CaslCacheService,
+    
   ) {}
 
-  async execute({ userId, dto, actorRole }: IUpdateUserContext): Promise<UserResponse> {
-    const user = await this.usersRepository.findById(userId);
-
-    if (!user) {
-      throw new NotFoundException(USER_ERROR_MESSAGES.USER_NOT_FOUND);
-    }
-
-    if (dto.name !== undefined) {
-      user.name = dto.name;
-    }
-    if (dto.image !== undefined) {
-      user.image = dto.image;
-    }
-    if (dto.state !== undefined) {
-      user.state = dto.state;
+  async execute({ userId, dto, actorRole, actorId }: IUpdateUserContext): Promise<UserResponse> {
+    if (dto.state === EUserState.INACTIVE && userId === actorId) {
+      throw new ForbiddenException(USER_ERROR_MESSAGES.CANNOT_DEACTIVATE_SELF);
     }
 
     let isRoleChanging = false;
+    let isDeactivating = false;
 
-    if (dto.role !== undefined && dto.role !== user.role.code) {
-      assertActorCanAssignRole(actorRole, dto.role);
+    const user = await this.usersRepository.transactional(async (em) => {
+      const user = await this.usersRepository.findById(userId, em);
 
-      const role = await this.rolesRepository.findByCode(dto.role);
-
-      if (!role) {
-        throw new NotFoundException(USER_ERROR_MESSAGES.ROLE_NOT_FOUND);
+      if (!user) {
+        throw new NotFoundException(USER_ERROR_MESSAGES.USER_NOT_FOUND);
       }
 
-      user.role = role;
-      isRoleChanging = true;
-    }
+      if (dto.name !== undefined) {
+        user.name = dto.name;
+      }
+      if (dto.image !== undefined) {
+        user.image = dto.image;
+      }
+      if (dto.state !== undefined) {
+        isDeactivating = dto.state === EUserState.INACTIVE && user.state !== EUserState.INACTIVE;
+        user.state = dto.state;
+      }
 
-    await this.usersRepository.flush();
+      if (dto.role !== undefined && dto.role !== user.role.code) {
+        assertActorCanAssignRole(actorRole, dto.role);
 
-    if (isRoleChanging) {
+        const role = await this.rolesRepository.findByCode(dto.role, em);
+
+        if (!role) {
+          throw new NotFoundException(USER_ERROR_MESSAGES.ROLE_NOT_FOUND);
+        }
+
+        user.role = role;
+        isRoleChanging = true;
+      }
+
+      if (isDeactivating) {
+        await this.usersRepository.deleteSessionsForUser(userId, em);
+      }
+
+      return user;
+    });
+
+    if (isRoleChanging || isDeactivating) {
       await this.caslCacheService.invalidateUser(userId);
     }
 

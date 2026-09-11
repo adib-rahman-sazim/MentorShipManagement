@@ -28,6 +28,7 @@ export interface IUpdateUserContext {
   userId: string;
   dto: UpdateUserDto;
   actorRole: EUserRole;
+  actorId: string;
 }
 
 export interface ICreateUserContext {

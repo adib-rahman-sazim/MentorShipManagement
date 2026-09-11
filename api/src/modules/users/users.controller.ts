@@ -92,7 +92,7 @@ export class UsersController {
     @Param("id", ParseUUIDPipe) userId: string,
     @Body() dto: UpdateUserDto,
   ): Promise<UserResponse> {
-    return this.usersService.updateUser(userId, dto, req.user!.role!);
+    return this.usersService.updateUser(userId, dto, req.user!.role!, req.user!.id);
   }
 
   @Get(":id")

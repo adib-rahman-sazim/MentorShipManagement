@@ -8,6 +8,7 @@ export const USER_ERROR_MESSAGES = {
   EMAIL_ALREADY_IN_USE: "A user with this email already exists",
   CANNOT_DELETE_SELF: "You cannot delete your own account",
   CANNOT_ASSIGN_SUPERADMIN: "Only a superadmin can assign the superadmin role",
+  CANNOT_DEACTIVATE_SELF: "You cannot deactivate your own account",
 } as const;
 
 export const ROLE_FIELD = "role";
