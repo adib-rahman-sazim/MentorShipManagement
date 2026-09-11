@@ -45,7 +45,7 @@ export class UsersService {
     actorRole: EUserRole,
     actorId: string,
   ): Promise<UserResponse> {
-    return this.updateUserInteractor.execute({ userId, dto, actorRole , actorId});
+    return this.updateUserInteractor.execute({ userId, dto, actorRole, actorId });
   }
 
   async createUser(dto: CreateUserDto, actorRole: EUserRole): Promise<UserResponse> {

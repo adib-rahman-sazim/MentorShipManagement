@@ -50,6 +50,7 @@ services:
     volumes:
       - ./api:/usr/src
       - api_node_modules:/usr/src/node_modules
+      - api_dist:/usr/src/dist
     depends_on:
       db:
         condition: service_healthy
@@ -79,5 +80,6 @@ volumes:
   postgres_data:
   redis_data:
   api_node_modules:
+  api_dist:
   web_node_modules:
   web_next:

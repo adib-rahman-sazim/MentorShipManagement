@@ -1,17 +1,12 @@
 import { useRouter } from "next/router";
 
-import { ArrowLeft, LogOut} from "lucide-react";
+import { ArrowLeft, LogOut } from "lucide-react";
 
 import { Button } from "@/shared/components/shadui/button";
-
 import { useSignOut } from "@/shared/hooks/useSignOut";
 import { useAbilityContext } from "@/shared/providers/AbilityProvider";
 
-
-
-
 import {
-  
   UNAUTHORIZED_DESCRIPTION,
   UNAUTHORIZED_GO_BACK_LABEL,
   UNAUTHORIZED_HEADING,
@@ -24,8 +19,6 @@ const Unauthorized = () => {
   const router = useRouter();
   const { ability } = useAbilityContext();
   const { signOut } = useSignOut();
-  
-  
 
   const handleGoBack = () => {
     router.push(getDefaultAuthorizedRoute((action, resource) => ability.can(action, resource)));
@@ -34,10 +27,6 @@ const Unauthorized = () => {
   const handleSignOut = () => {
     void signOut();
   };
-
-  
-
-  
 
   return (
     <main className="relative flex min-h-screen overflow-hidden bg-background text-foreground">
@@ -72,12 +61,12 @@ const Unauthorized = () => {
           <div className="mt-2 flex flex-wrap items-center gap-3 opacity-0 animate-unauthorized-fade-up [animation-delay:450ms]">
             <Button size="lg" onClick={handleGoBack}>
               <ArrowLeft data-icon="inline-start" />
-            {UNAUTHORIZED_GO_BACK_LABEL}
-              </Button>
-              <Button size="lg" variant="destructive" onClick={handleSignOut}>
+              {UNAUTHORIZED_GO_BACK_LABEL}
+            </Button>
+            <Button size="lg" variant="destructive" onClick={handleSignOut}>
               {UNAUTHORIZED_SIGN_OUT_LABEL}
-                <LogOut data-icon="inline-end" />
-              </Button>
+              <LogOut data-icon="inline-end" />
+            </Button>
           </div>
         </div>
 

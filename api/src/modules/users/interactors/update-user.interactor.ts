@@ -5,7 +5,6 @@ import type { IBaseInteractor } from "@/common/interfaces/base-interactor.interf
 import { CaslCacheService } from "@/modules/casl/casl-cache.service";
 import { RolesRepository } from "@/modules/permissions/roles.repository";
 
-
 import { USER_ERROR_MESSAGES } from "../users.constants";
 import type { IUpdateUserContext } from "../users.interfaces";
 import { UsersRepository } from "../users.repository";
@@ -18,10 +17,9 @@ export class UpdateUserInteractor implements IBaseInteractor<IUpdateUserContext,
   constructor(
     private readonly usersRepository: UsersRepository,
     private readonly rolesRepository: RolesRepository,
-  
+
     private readonly usersSerializer: UsersSerializer,
     private readonly caslCacheService: CaslCacheService,
-    
   ) {}
 
   async execute({ userId, dto, actorRole, actorId }: IUpdateUserContext): Promise<UserResponse> {
