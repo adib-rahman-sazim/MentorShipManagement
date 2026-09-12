@@ -27,7 +27,12 @@ const MENTOR_CODES = [
   "mentorship_graph:page_view:allow",
 ];
 
-const MENTEE_CODES = ["dashboard:page_view:allow", "settings:page_view:allow", "user:read:allow"];
+const MENTEE_CODES = [
+  "dashboard:page_view:allow",
+  "settings:page_view:allow",
+  "mentorship_graph:page_view:allow",
+  "user:read:allow",
+];
 
 const USER_MANAGEMENT_CODES = [
   "user:create:allow",

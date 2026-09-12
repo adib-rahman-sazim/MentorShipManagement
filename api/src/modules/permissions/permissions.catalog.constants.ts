@@ -48,10 +48,6 @@ const HIERARCHY_PAGE_VIEWS = [
   EResource.MENTORSHIP_GRAPH,
 ].map((resource) => createPermission(resource, EPermission.PAGE_VIEW));
 
-const MENTEE_PAGE_VIEWS = [EResource.DASHBOARD, EResource.SETTINGS].map((resource) =>
-  createPermission(resource, EPermission.PAGE_VIEW),
-);
-
 export const DEFAULT_ROLE_PERMISSION_CODES: Record<EUserRole, string[]> = {
   [EUserRole.SUPERADMIN]: [createPermission(EResource.ALL, EPermission.MANAGE)],
   [EUserRole.SENSEI]: [
@@ -64,7 +60,7 @@ export const DEFAULT_ROLE_PERMISSION_CODES: Record<EUserRole, string[]> = {
   ],
   [EUserRole.MENTOR]: [...HIERARCHY_PAGE_VIEWS],
   [EUserRole.MENTEE]: [
-    ...MENTEE_PAGE_VIEWS,
+    ...HIERARCHY_PAGE_VIEWS,
     ...permissionCodesFromPairs([EResource.USER, EPermission.READ]),
   ],
 };
