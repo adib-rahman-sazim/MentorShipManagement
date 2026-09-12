@@ -17,6 +17,7 @@ import {
   E2E_PASSWORD,
   ME_ROUTE,
   MENTEE_EMAIL,
+  MENTOR_EMAIL,
   PROVISIONED_EMAIL,
   PROVISIONED_NAME,
   PROVISIONED_PASSWORD,
@@ -92,6 +93,16 @@ describe("Users (E2E)", () => {
     });
 
     return signIn(SENSEI_EMAIL);
+  };
+
+  const arrangeMentor = async (): Promise<string> => {
+    await createUserInDb(dbService, {
+      email: MENTOR_EMAIL,
+      password: E2E_PASSWORD,
+      role: EUserRole.MENTOR,
+    });
+
+    return signIn(MENTOR_EMAIL);
   };
 
   const provisionPayload = (overrides: Record<string, unknown> = {}) => ({
@@ -232,27 +243,86 @@ describe("Users (E2E)", () => {
   });
 
   describe("permission gating", () => {
-    it("forbids a sensei from provisioning a superadmin", async () => {
+    it("lets a superadmin list users", async () => {
+      const token = await arrangeSuperadmin();
+
+      await request(httpServer)
+        .get(USERS_ROUTE)
+        .set("Authorization", `Bearer ${token}`)
+        .expect(HttpStatus.OK);
+    });
+
+    it("lets a sensei list users", async () => {
       const senseiToken = await arrangeSensei();
-      await ensureRoleInDb(dbService, EUserRole.SUPERADMIN);
+
+      await request(httpServer)
+        .get(USERS_ROUTE)
+        .set("Authorization", `Bearer ${senseiToken}`)
+        .expect(HttpStatus.OK);
+    });
+
+    it("lets a sensei read a user", async () => {
+      const senseiToken = await arrangeSensei();
+      const mentee = await arrangeMentee();
+
+      await request(httpServer)
+        .get(userRoute(mentee.id))
+        .set("Authorization", `Bearer ${senseiToken}`)
+        .expect(HttpStatus.OK);
+    });
+
+    it("forbids a sensei from provisioning a user", async () => {
+      const senseiToken = await arrangeSensei();
+      await ensureRoleInDb(dbService, EUserRole.MENTOR);
 
       await request(httpServer)
         .post(USERS_ROUTE)
         .set("Authorization", `Bearer ${senseiToken}`)
-        .send(provisionPayload({ role: EUserRole.SUPERADMIN }))
+        .send(provisionPayload())
         .expect(HttpStatus.FORBIDDEN);
     });
 
-    it("forbids a sensei from promoting a user to superadmin", async () => {
+    it("forbids a sensei from updating another user", async () => {
       const senseiToken = await arrangeSensei();
       const mentee = await arrangeMentee();
-      await ensureRoleInDb(dbService, EUserRole.SUPERADMIN);
 
       await request(httpServer)
         .patch(userRoute(mentee.id))
         .set("Authorization", `Bearer ${senseiToken}`)
-        .send({ role: EUserRole.SUPERADMIN })
+        .send({ name: "Renamed" })
         .expect(HttpStatus.FORBIDDEN);
+    });
+
+    it("forbids a mentor from listing users", async () => {
+      const mentorToken = await arrangeMentor();
+
+      await request(httpServer)
+        .get(USERS_ROUTE)
+        .set("Authorization", `Bearer ${mentorToken}`)
+        .expect(HttpStatus.FORBIDDEN);
+    });
+
+    it("forbids a mentor from reading a user", async () => {
+      const mentorToken = await arrangeMentor();
+      const mentee = await arrangeMentee();
+
+      await request(httpServer)
+        .get(userRoute(mentee.id))
+        .set("Authorization", `Bearer ${mentorToken}`)
+        .expect(HttpStatus.FORBIDDEN);
+    });
+
+    it("lets a mentee read a user", async () => {
+      const mentee = await arrangeMentee();
+      const menteeToken = await signIn(MENTEE_EMAIL);
+      const target = await arrangeMentee(VICTIM_EMAIL);
+
+      expect(mentee.id).not.toBe(target.id);
+
+      await request(httpServer)
+        .get(userRoute(target.id))
+        .set("Authorization", `Bearer ${menteeToken}`)
+        .expect(HttpStatus.OK);
     });
 
     it("forbids a mentee from provisioning a user", async () => {
