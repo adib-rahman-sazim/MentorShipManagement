@@ -6,6 +6,9 @@ export enum EPermission {
   UPDATE = "update",
   DELETE = "delete",
   MANAGE = "manage",
+  ASSIGN = "assign",
+  REVIEW = "review",
+  APPROVE = "approve",
 }
 
 export enum EResource {
@@ -15,6 +18,9 @@ export enum EResource {
   PERMISSIONS = "permissions",
   DASHBOARD = "dashboard",
   SETTINGS = "settings",
+  MENTORSHIP = "mentorship",
+  DRAFT = "draft",
+  MENTORSHIP_GRAPH = "mentorship_graph",
 }
 
 export enum EPermissionConditionType {
