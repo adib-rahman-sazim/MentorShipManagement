@@ -26,3 +26,8 @@ export enum EResource {
 export enum EPermissionConditionType {
   NONE = "none",
 }
+
+export enum EPermissionOverrideEffect {
+  ALLOW = "ALLOW",
+  REVOKE = "REVOKE",
+}

@@ -4,6 +4,7 @@ import { Permission } from "./permissions.entity";
 import { Role } from "./roles.entity";
 import { RolePermission } from "./roles-permissions.entity";
 import { Session } from "./sessions.entity";
+import { UserPermissionOverride } from "./user-permission-overrides.entity";
 import { User } from "./users.entity";
 import { Verification } from "./verifications.entity";
 
@@ -15,5 +16,6 @@ export const ENTITIES = [
   RolePermission,
   Session,
   User,
+  UserPermissionOverride,
   Verification,
 ];
