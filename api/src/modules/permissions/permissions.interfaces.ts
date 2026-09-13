@@ -1,3 +1,5 @@
+import type { EUserRole } from "@/common/enums/roles.enums";
+
 import type {
   EPermission,
   EPermissionCode,
@@ -30,4 +32,16 @@ export interface IGetMyCaslRulesContext {
 
 export interface IGetMyCaslRulesResult {
   rules: INormalizedCaslRule[];
+}
+
+export interface IEffectivePermissionsContext {
+  userId: string;
+  role: EUserRole;
+}
+
+export interface IEffectivePermissionCodesInput {
+  roleCodes: string[];
+  grantedCodes: string[];
+  revokedCodes: string[];
+  allCodes: string[];
 }

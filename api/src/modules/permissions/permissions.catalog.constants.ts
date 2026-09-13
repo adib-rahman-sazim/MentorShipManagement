@@ -4,6 +4,8 @@ import { toPermissionDefinition } from "./permissions.catalog.helpers";
 import { EPermission, EPermissionCode, EResource } from "./permissions.enums";
 import type { IPermissionDefinition } from "./permissions.interfaces";
 
+export const ALL_MANAGE_PERMISSION_CODE = EPermissionCode.CAN_MANAGE_ALL;
+
 export const DEFAULT_PERMISSION_DEFINITIONS: IPermissionDefinition[] = [
   toPermissionDefinition(
     EPermissionCode.CAN_MANAGE_ALL,
