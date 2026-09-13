@@ -18,7 +18,10 @@ import type { ICreateUserContext } from "../users.interfaces";
 import { UsersRepository } from "../users.repository";
 import type { UserResponse } from "../users.responses";
 import { UsersSerializer } from "../users.serializer";
-import { assertActorCanAssignRole } from "../users-role-assignment.helpers";
+import {
+  assertActorCanAssignRole,
+  assertSuperadminSlotFree,
+} from "../users-role-assignment.helpers";
 
 @Injectable()
 export class CreateUserInteractor implements IBaseInteractor<ICreateUserContext, UserResponse> {
@@ -69,6 +72,11 @@ export class CreateUserInteractor implements IBaseInteractor<ICreateUserContext,
   }
   private provision(dto: CreateUserDto, role: Role, hashedPassword: string): Promise<User> {
     return this.usersRepository.transactional(async (em) => {
+      await assertSuperadminSlotFree(dto.role, em, {
+        usersRepository: this.usersRepository,
+        rolesRepository: this.rolesRepository,
+      });
+
       const user = this.usersRepository.createUser(
         {
           email: dto.email,
@@ -89,29 +97,38 @@ export class CreateUserInteractor implements IBaseInteractor<ICreateUserContext,
     });
   }
 
-  private async reactivate(
+  private reactivate(
     user: User,
     dto: CreateUserDto,
     role: Role,
     hashedPassword: string,
   ): Promise<User> {
-    user.deletedAt = null;
-    user.name = dto.name;
-    user.image = dto.image;
-    user.role = role;
-    user.state = dto.state ?? EUserState.ACTIVE;
-    user.emailVerified = true;
+    return this.usersRepository.transactional(async (em) => {
+      await assertSuperadminSlotFree(
+        dto.role,
+        em,
+        { usersRepository: this.usersRepository, rolesRepository: this.rolesRepository },
+        user.id,
+      );
 
-    const account = await this.accountsRepository.findCredentialAccount(user);
+      user.deletedAt = null;
+      user.name = dto.name;
+      user.image = dto.image;
+      user.role = role;
+      user.state = dto.state ?? EUserState.ACTIVE;
+      user.emailVerified = true;
 
-    if (account) {
-      account.password = hashedPassword;
-    } else {
-      this.accountsRepository.createCredentialAccount(user, hashedPassword);
-    }
+      const account = await this.accountsRepository.findCredentialAccount(user, em);
 
-    await this.usersRepository.flush();
+      if (account) {
+        account.password = hashedPassword;
+      } else {
+        this.accountsRepository.createCredentialAccount(user, hashedPassword, em);
+      }
 
-    return user;
+      await em.flush();
+
+      return user;
+    });
   }
 }
