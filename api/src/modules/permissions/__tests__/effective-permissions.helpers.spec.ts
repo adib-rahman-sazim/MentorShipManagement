@@ -2,11 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import { resolveEffectivePermissionCodes } from "@/modules/permissions/effective-permissions.helpers";
 import { ALL_MANAGE_PERMISSION_CODE } from "@/modules/permissions/permissions.catalog.constants";
+import { EPermissionCode } from "@/modules/permissions/permissions.enums";
 import type { IEffectivePermissionCodesInput } from "@/modules/permissions/permissions.interfaces";
 
-const USER_READ = "user:read:allow";
-const USER_UPDATE = "user:update:allow";
-const USER_DELETE = "user:delete:allow";
+const USER_READ = EPermissionCode.CAN_READ_USER;
+const USER_UPDATE = EPermissionCode.CAN_UPDATE_USER;
+const USER_DELETE = EPermissionCode.CAN_DELETE_USER;
 const ALL_CODES = [ALL_MANAGE_PERMISSION_CODE, USER_READ, USER_UPDATE, USER_DELETE];
 
 const buildInput = (

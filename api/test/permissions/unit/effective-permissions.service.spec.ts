@@ -10,6 +10,7 @@ import { EffectivePermissionsService } from "@/modules/permissions/effective-per
 import { ALL_MANAGE_PERMISSION_CODE } from "@/modules/permissions/permissions.catalog.constants";
 import {
   EPermission,
+  EPermissionCode,
   EPermissionConditionType,
   EPermissionOverrideEffect,
   EResource,
@@ -20,9 +21,9 @@ import { UserPermissionOverridesRepository } from "@/modules/permissions/user-pe
 import { createOfflineOrm } from "@/test/utils/helpers/offline-orm.helpers";
 
 const SUBJECT_USER_ID = "33333333-3333-4333-8333-333333333333";
-const USER_READ_CODE = "user:read:allow";
-const USER_UPDATE_CODE = "user:update:allow";
-const USER_DELETE_CODE = "user:delete:allow";
+const USER_READ_CODE = EPermissionCode.CAN_READ_USER;
+const USER_UPDATE_CODE = EPermissionCode.CAN_UPDATE_USER;
+const USER_DELETE_CODE = EPermissionCode.CAN_DELETE_USER;
 
 describe("EffectivePermissionsService", () => {
   let orm: MikroORM;
