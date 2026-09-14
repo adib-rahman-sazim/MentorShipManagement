@@ -1,5 +1,8 @@
+import type { Permission } from "@/common/entities/permissions.entity";
+import type { User } from "@/common/entities/users.entity";
 import type { EUserRole } from "@/common/enums/roles.enums";
 
+import type { ReplaceUserPermissionOverridesDto } from "./permissions.dtos";
 import type {
   EPermission,
   EPermissionCode,
@@ -44,4 +47,39 @@ export interface IEffectivePermissionCodesInput {
   grantedCodes: string[];
   revokedCodes: string[];
   allCodes: string[];
+}
+
+export interface IResolvedPermissionCodes {
+  allPermissions: Permission[];
+  effectiveCodes: string[];
+  grantedCodes: string[];
+  revokedCodes: string[];
+}
+
+export interface IUserPermissionsViewInput extends IResolvedPermissionCodes {
+  user: User;
+}
+
+export interface IAllManageInput {
+  roleCodes: string[];
+  revokedCodes: string[];
+}
+
+export interface IPermissionSourceInput {
+  effectiveCodes: Set<string>;
+  grantedCodes: Set<string>;
+  revokedCodes: Set<string>;
+}
+
+export interface IGetUserPermissionOverridesContext {
+  userId: string;
+  actorId: string;
+  actorRole: EUserRole;
+}
+
+export interface IReplaceUserPermissionOverridesContext {
+  userId: string;
+  actorId: string;
+  actorRole: EUserRole;
+  dto: ReplaceUserPermissionOverridesDto;
 }

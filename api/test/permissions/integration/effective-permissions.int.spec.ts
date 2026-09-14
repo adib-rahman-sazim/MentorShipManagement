@@ -68,7 +68,6 @@ describe("EffectivePermissionsService (Integration)", () => {
       user,
       permission,
       effect,
-      grantedBy: superadmin,
       reason: OVERRIDE_REASON,
     });
 
