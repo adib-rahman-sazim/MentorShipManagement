@@ -58,3 +58,10 @@ export enum EPermissionOverrideEffect {
   ALLOW = "ALLOW",
   REVOKE = "REVOKE",
 }
+
+export enum EPermissionSource {
+  ROLE = "ROLE",
+  GRANTED = "GRANTED",
+  REVOKED = "REVOKED",
+  NONE = "NONE",
+}
