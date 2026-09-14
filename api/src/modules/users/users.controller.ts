@@ -31,8 +31,7 @@ import type { Request } from "express";
 import { Permissions } from "@/common/decorators/auth/permissions.decorator";
 import { ResponseTransformInterceptor } from "@/common/interceptors/response-transform.interceptor";
 import { CaslPermissionsGuard } from "@/modules/casl/casl.guard";
-import { EPermission, EResource } from "@/modules/permissions/permissions.enums";
-import { createPermission } from "@/utils/permission-string/permission-string.helpers";
+import { EPermissionCode } from "@/modules/permissions/permissions.enums";
 
 import { CreateUserDto, ListUsersQueryDto, UpdateProfileDto, UpdateUserDto } from "./users.dtos";
 import {
@@ -69,7 +68,7 @@ export class UsersController {
 
   @Get()
   @UseGuards(CaslPermissionsGuard)
-  @Permissions([createPermission(EResource.USER, EPermission.LIST)])
+  @Permissions([EPermissionCode.CAN_LIST_USERS])
   @ApiOperation({ summary: "List users." })
   @ApiOkResponse({ type: PaginatedUsersApiResponse })
   async listUsers(@Query() query: ListUsersQueryDto): Promise<PaginatedUsersResponse> {
@@ -78,7 +77,7 @@ export class UsersController {
 
   @Post()
   @UseGuards(CaslPermissionsGuard)
-  @Permissions([createPermission(EResource.USER, EPermission.CREATE)])
+  @Permissions([EPermissionCode.CAN_CREATE_USER])
   @ApiOperation({ summary: "Provision a new user account with credentials." })
   @ApiCreatedResponse({ type: UserApiResponse })
   @ApiNotFoundResponse({ description: "The requested role does not exist." })
@@ -89,7 +88,7 @@ export class UsersController {
 
   @Patch(":id")
   @UseGuards(CaslPermissionsGuard)
-  @Permissions([createPermission(EResource.USER, EPermission.UPDATE)])
+  @Permissions([EPermissionCode.CAN_UPDATE_USER])
   @ApiOperation({ summary: "Update another user." })
   @ApiOkResponse({ type: UserApiResponse })
   async updateUser(
@@ -102,7 +101,7 @@ export class UsersController {
 
   @Get(":id")
   @UseGuards(CaslPermissionsGuard)
-  @Permissions([createPermission(EResource.USER, EPermission.READ)])
+  @Permissions([EPermissionCode.CAN_READ_USER])
   @ApiOperation({ summary: "Return a single user by id, including their role." })
   @ApiOkResponse({ type: UserApiResponse })
   @ApiNotFoundResponse({ description: "User not found." })
@@ -113,7 +112,7 @@ export class UsersController {
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(CaslPermissionsGuard)
-  @Permissions([createPermission(EResource.USER, EPermission.DELETE)])
+  @Permissions([EPermissionCode.CAN_DELETE_USER])
   @ApiOperation({ summary: "Soft-delete a user and revoke their sessions." })
   @ApiNoContentResponse({ description: "The user was soft-deleted." })
   @ApiNotFoundResponse({ description: "User not found." })

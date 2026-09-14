@@ -1,7 +1,12 @@
-import type { EPermission, EPermissionConditionType, EResource } from "./permissions.enums";
+import type {
+  EPermission,
+  EPermissionCode,
+  EPermissionConditionType,
+  EResource,
+} from "./permissions.enums";
 
 export interface IPermissionDefinition {
-  code: string;
+  code: EPermissionCode;
   resource: EResource;
   action: EPermission;
   conditionType: EPermissionConditionType;

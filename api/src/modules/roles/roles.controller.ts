@@ -4,8 +4,7 @@ import { Permissions } from "@/common/decorators/auth/permissions.decorator";
 import type { EUserRole } from "@/common/enums/roles.enums";
 import { ResponseTransformInterceptor } from "@/common/interceptors/response-transform.interceptor";
 import { CaslPermissionsGuard } from "@/modules/casl/casl.guard";
-import { EPermission, EResource } from "@/modules/permissions/permissions.enums";
-import { createPermission } from "@/utils/permission-string/permission-string.helpers";
+import { EPermissionCode } from "@/modules/permissions/permissions.enums";
 
 import { RolesService } from "./roles.service";
 
@@ -16,7 +15,7 @@ export class RolesController {
 
   @Get()
   @UseGuards(CaslPermissionsGuard)
-  @Permissions([createPermission(EResource.ROLE, EPermission.LIST)])
+  @Permissions([EPermissionCode.CAN_LIST_ROLES])
   getRoles(): EUserRole[] {
     return this.rolesService.getRoles();
   }
