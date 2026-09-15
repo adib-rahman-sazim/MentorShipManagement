@@ -31,10 +31,6 @@ export class UserPermissionOverride extends CustomBaseEntity {
   @Enum(() => EPermissionOverrideEffect)
   effect!: EPermissionOverrideEffect;
 
-  @ManyToOne(() => User, { fieldName: "granted_by_id" })
-  @Index({ name: "user_permission_overrides_granted_by_id_index" })
-  grantedBy!: Rel<User>;
-
   @Property({ type: "text", nullable: true })
   reason?: string | null;
 
