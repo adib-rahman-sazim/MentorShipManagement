@@ -42,6 +42,7 @@ services:
       target: DEVELOPMENT
     container_name: mms_api
     restart: unless-stopped
+    user: "1000:1000"
     env_file:
       - ./api/.env.development.local
     ports:
