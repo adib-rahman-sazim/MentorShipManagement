@@ -2,6 +2,7 @@ export const BETTER_AUTH_BASE_PATH = "/api/v1/auth";
 
 export const AUTH_CORS_ALLOWED_METHODS = "GET, POST, PUT, DELETE, PATCH, OPTIONS";
 
+export const CREDENTIAL_PROVIDER_ID = "credential";
 export const AUTH_CORS_ALLOWED_HEADERS =
   "Content-Type, Authorization, X-Requested-With, Accept, Origin";
 

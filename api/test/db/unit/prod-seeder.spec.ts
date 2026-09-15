@@ -3,6 +3,7 @@ import { Seeder } from "@mikro-orm/seeder";
 
 import { Seed20260723000001_Roles } from "@/db/seeders/core-seeders/Seed20260723000001_roles/Seed20260723000001_roles";
 import { Seed20260723000002_Permissions } from "@/db/seeders/core-seeders/Seed20260723000002_permissions/Seed20260723000002_permissions";
+import { Seed20260723000003_BootstrapSuperadmin } from "@/db/seeders/core-seeders/Seed20260723000003_bootstrap_superadmin/Seed20260723000003_bootstrap_superadmin";
 import { Seed20260723000005_MockUsers } from "@/db/seeders/core-seeders/Seed20260723000005_mock_users/Seed20260723000005_mock_users";
 import { ProdSeeder } from "@/db/seeders/prod-seeder";
 
@@ -28,7 +29,11 @@ describe("ProdSeeder", () => {
     const seeder = new ProdSeeder();
     await seeder.run({} as EntityManager);
 
-    expect(capturedSeeders).toEqual([Seed20260723000001_Roles, Seed20260723000002_Permissions]);
+    expect(capturedSeeders).toEqual([
+      Seed20260723000001_Roles,
+      Seed20260723000002_Permissions,
+      Seed20260723000003_BootstrapSuperadmin,
+    ]);
     expect(capturedSeeders).not.toContain(Seed20260723000005_MockUsers);
   });
 });

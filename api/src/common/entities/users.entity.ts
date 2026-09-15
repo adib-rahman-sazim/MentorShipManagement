@@ -47,9 +47,9 @@ export class User extends CustomBaseEntity {
   @Enum(() => EUserState)
   state: EUserState = EUserState.ACTIVE;
 
-  @Property({ nullable: true })
+  @Property({ type: "datetime", nullable: true })
   @Index({ name: "users_deleted_at_index" })
-  deletedAt?: Date;
+  deletedAt?: Date | null;
 
   @OneToMany(
     () => Session,

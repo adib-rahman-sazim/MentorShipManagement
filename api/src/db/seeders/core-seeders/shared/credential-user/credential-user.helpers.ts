@@ -6,8 +6,8 @@ import { Account } from "@/common/entities/accounts.entity";
 import { Role } from "@/common/entities/roles.entity";
 import { User } from "@/common/entities/users.entity";
 import { EUserState } from "@/common/enums/users.enums";
+import { CREDENTIAL_PROVIDER_ID } from "@/modules/auth/auth.constants";
 
-import { CREDENTIAL_PROVIDER_ID } from "./credential-user.constants";
 import type { TEnsureCredentialUserParams } from "./credential-user.types";
 
 export async function ensureCredentialUser(
@@ -33,26 +33,38 @@ export async function ensureCredentialUser(
     user.role = role;
     user.emailVerified = true;
     user.state = EUserState.ACTIVE;
+    user.deletedAt = null;
     em.persist(user);
   }
 
+  if (isNewUser) {
+    await em.flush();
+  }
+
+  let existingAccount: Account | null = null;
+
   if (!isNewUser) {
-    const existingAccount = await em.findOne(Account, {
+    existingAccount = await em.findOne(Account, {
       user,
       providerId: CREDENTIAL_PROVIDER_ID,
     });
-    if (existingAccount) {
+    if (existingAccount && !params.updateExistingPassword) {
       return user;
     }
   }
 
   const hashedPassword = await hashPassword(params.password);
-  em.create(Account, {
-    user,
-    accountId: params.email,
-    providerId: CREDENTIAL_PROVIDER_ID,
-    password: hashedPassword,
-  });
+
+  if (existingAccount) {
+    existingAccount.password = hashedPassword;
+  } else {
+    em.create(Account, {
+      user,
+      accountId: user.id,
+      providerId: CREDENTIAL_PROVIDER_ID,
+      password: hashedPassword,
+    });
+  }
 
   await em.flush();
 
