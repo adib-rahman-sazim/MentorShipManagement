@@ -25,6 +25,7 @@ export enum EResource {
 
 export enum EPermissionConditionType {
   NONE = "none",
+  SUBTREE = "subtree",
 }
 
 export enum EPermissionCode {
