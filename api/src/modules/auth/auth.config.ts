@@ -4,7 +4,6 @@ import { bearer, customSession } from "better-auth/plugins";
 
 import { User } from "@/common/entities/users.entity";
 import { EUserState } from "@/common/enums/users.enums";
-import { AuthRoleLookup } from "./auth.role-lookup";
 
 import { mikroOrmAdapter } from "./adapters/mikro-orm.adapter";
 import { AUTH_ERROR_MESSAGES, BETTER_AUTH_BASE_PATH } from "./auth.constants";
@@ -13,6 +12,7 @@ import type {
   IBetterAuthInstance,
   ICreateBetterAuthInstanceOptions,
 } from "./auth.interfaces";
+import { AuthRoleLookup } from "./auth.role-lookup";
 
 export function createAuthInstance({ orm }: ICreateBetterAuthInstanceOptions): IBetterAuthInstance {
   const isDevelopmentOrTesting =

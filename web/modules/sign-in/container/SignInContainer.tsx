@@ -1,63 +1,18 @@
-import React from "react";
-
-import { FaGoogle, FaLink } from "react-icons/fa";
-
-import CustomLink from "@/shared/components/CustomLink";
-import { Button } from "@/shared/components/shadui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/shared/components/shadui/card";
-import { Separator } from "@/shared/components/shadui/separator";
-import { AUTH_CALLBACK_ROUTE } from "@/shared/constants/routes.constants";
-import { signIn } from "@/shared/lib/auth-client";
+import { APP_NAME } from "@/shared/constants/app.constants";
 
 import { SignInForm } from "../components/SignInForm";
+import { SIGN_IN_HEADING, SIGN_IN_SUBHEADING } from "../components/SignInForm/SignInForm.constants";
 
-const SignInContainer = () => {
-  const handleGoogleSignIn = async () => {
-    const callbackURL = `${window.location.origin}${AUTH_CALLBACK_ROUTE}`;
-    await signIn.social({
-      provider: "google",
-      callbackURL,
-    });
-  };
+const SignInContainer = () => (
+  <section className="w-full max-w-[24rem]">
+    <header className="mb-8 flex flex-col gap-2">
+      <p className="text-sm text-muted-foreground">{APP_NAME}</p>
+      <h1 className="text-2xl font-semibold tracking-tight text-foreground">{SIGN_IN_HEADING}</h1>
+      <p className="text-sm text-muted-foreground">{SIGN_IN_SUBHEADING}</p>
+    </header>
 
-  return (
-    <div className="flex-1 flex items-center justify-center p-4">
-      <Card className="w-full max-w-lg">
-        <CardHeader>
-          <CardTitle>Sign-in to your account</CardTitle>
-          <CardDescription>Enter your credentials to sign-in</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <SignInForm />
-          <CustomLink href="/forgot-password" label="Forgot Password?" className="my-4" />
-
-          <Separator className="my-4" />
-
-          <div className="flex flex-col space-y-4">
-            <Button variant="outline">
-              <FaLink /> Sign In with Magic Link
-            </Button>
-            <Button variant="outline" onClick={handleGoogleSignIn}>
-              <FaGoogle /> Sign In with Google
-            </Button>
-          </div>
-
-          <Separator className="my-4" />
-
-          <div className="flex items-center justify-center gap-1">
-            <p>Don&rsquo;t have an account?</p>
-            <CustomLink href="/sign-up" label="Sign Up" />
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-};
+    <SignInForm />
+  </section>
+);
 
 export default SignInContainer;

@@ -22,15 +22,15 @@ export const PureAbilityContext = createContext(defaultAbility);
 export const Can = createContextualCan(PureAbilityContext.Consumer);
 
 export function AbilityProvider({ children }: TAbilityProviderProps) {
-  const { isAuthenticated, user, activeOrganizationId } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   const permissionsContextKey = useMemo(() => {
     if (!isAuthenticated || !user?.id) {
       return "anonymous";
     }
 
-    return `${user.id}:${activeOrganizationId ?? "none"}`;
-  }, [isAuthenticated, user?.id, activeOrganizationId]);
+    return user.id;
+  }, [isAuthenticated, user?.id]);
 
   const { data, isLoading, isFetching, isUninitialized, isError } = useGetMyPermissionsQuery(
     permissionsContextKey,

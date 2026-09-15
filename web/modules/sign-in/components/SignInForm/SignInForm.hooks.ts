@@ -3,13 +3,18 @@ import { useRouter } from "next/router";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-import { ACCESS_TOKEN_LOCAL_STORAGE_KEY } from "@/shared/constants/app.constants";
-import { DASHBOARD_ROUTE } from "@/shared/constants/routes.constants";
 import { signIn } from "@/shared/lib/auth-client";
-import { resolvePostAuthDestinationFromSession } from "@/shared/utils/postAuthDestination";
-import { isSafePostAuthRedirect, persistPostAuthRedirect } from "@/shared/utils/postAuthRedirect";
+import {
+  getPostAuthDestination,
+  isSafePostAuthRedirect,
+  persistPostAuthRedirect,
+} from "@/shared/utils/postAuthRedirect";
 
-import { signInFormInitialValues, signInFormValidationSchemaResolver } from "./SignInForm.helpers";
+import {
+  getSignInErrorMessage,
+  signInFormInitialValues,
+  signInFormValidationSchemaResolver,
+} from "./SignInForm.helpers";
 import { TSignInFormFields } from "./SignInForm.types";
 
 export const useSignInForm = () => {
@@ -18,7 +23,7 @@ export const useSignInForm = () => {
   const redirect =
     typeof redirectQuery === "string" && isSafePostAuthRedirect(redirectQuery)
       ? redirectQuery
-      : DASHBOARD_ROUTE;
+      : null;
 
   const form = useForm<TSignInFormFields>({
     defaultValues: signInFormInitialValues,
@@ -27,38 +32,21 @@ export const useSignInForm = () => {
   });
 
   const onSubmit = async (values: TSignInFormFields) => {
-    const result = await signIn.email(
-      {
-        email: values.email,
-        password: values.password,
-      },
-      {
-        onSuccess: (ctx) => {
-          const authToken = ctx.response.headers.get("set-auth-token");
-          if (authToken) {
-            localStorage.setItem(ACCESS_TOKEN_LOCAL_STORAGE_KEY, authToken);
-          }
-        },
-      },
-    );
+    const result = await signIn.email({
+      email: values.email,
+      password: values.password,
+    });
 
     if (result.error) {
-      toast.error("Sign In failed", {
-        description: result.error.message || "Invalid credentials",
-      });
+      toast.error(getSignInErrorMessage(result.error));
       return;
     }
 
-    if (redirect !== DASHBOARD_ROUTE) {
+    if (redirect) {
       persistPostAuthRedirect(redirect);
     }
 
-    const nextPath = await resolvePostAuthDestinationFromSession({
-      storedRedirect: redirect !== DASHBOARD_ROUTE ? redirect : null,
-    });
-
-    toast.success("Signed in successfully");
-    router.push(nextPath);
+    router.replace(getPostAuthDestination(redirect));
   };
 
   return {

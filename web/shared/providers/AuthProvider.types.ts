@@ -1,19 +1,17 @@
 import { ReactNode } from "react";
 
-import { EUserRole } from "@/shared/redux/rtk-apis/roles/roles.enums";
-import { EUserState } from "@/shared/typedefs/api";
+import { EUserState } from "@/shared/typedefs";
 
 export type TSessionUser = {
   id: string;
   email: string;
   emailVerified: boolean;
-  firstName: string;
-  lastName: string;
   name: string;
   image?: string | null;
   state: EUserState;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt?: Date | null;
 };
 
 export type TSessionData = {
@@ -30,8 +28,6 @@ export type TAuthContextType = {
   user: TSessionUser | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  activeOrganizationId: string | null;
-  activeOrganizationRole: EUserRole | null;
   refetch: () => void;
 };
 

@@ -19,7 +19,6 @@ export class DeleteUserInteractor implements IBaseInteractor<IDeleteUserContext,
       throw new ForbiddenException(USER_ERROR_MESSAGES.CANNOT_DELETE_SELF);
     }
 
-    
     await this.usersRepository.transactional(async (em) => {
       const user = await this.usersRepository.findById(userId, em);
 

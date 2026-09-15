@@ -7,7 +7,6 @@ import { UsersRepository } from "../users.repository";
 import type { UserResponse } from "../users.responses";
 import { UsersSerializer } from "../users.serializer";
 
-
 @Injectable()
 export class GetUserInteractor implements IBaseInteractor<string, UserResponse> {
   constructor(
