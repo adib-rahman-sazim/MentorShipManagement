@@ -3,7 +3,6 @@ import { MOCK_USER_EMAILS } from "@/db/seeders/core-seeders/Seed20260723000005_m
 
 import type { TMentorshipFixture } from "./mentorships.types";
 
-
 export const MENTORSHIP_FIXTURES: TMentorshipFixture[] = [
   {
     supervisorEmail: MOCK_USER_EMAILS.SENSEI,

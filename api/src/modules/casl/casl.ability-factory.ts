@@ -9,7 +9,7 @@ import { MentorshipsRepository } from "@/modules/mentorships/mentorships.reposit
 import { EffectivePermissionsService } from "@/modules/permissions/effective-permissions.service";
 import { EPermissionConditionType, EResource } from "@/modules/permissions/permissions.enums";
 
-import type { TAppRawRule, TAppAbility } from "./casl.types";
+import type { TAppAbility, TAppRawRule } from "./casl.types";
 import { CaslCacheService } from "./casl-cache.service";
 
 @Injectable()
@@ -35,7 +35,6 @@ export class CaslAbilityFactory {
     return this.buildAbilityFromRules(resolvedRules);
   }
 
- 
   async invalidateForMentorshipChange(userId: string): Promise<void> {
     const ancestorUserIds = await this.mentorshipsRepository.findAncestorUserIds(
       userId,
