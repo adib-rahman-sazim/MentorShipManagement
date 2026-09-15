@@ -53,3 +53,8 @@ export enum EPermissionCode {
   CAN_VIEW_USERS_PAGE = "can_view_users_page",
   CAN_VIEW_MENTORSHIP_GRAPH = "can_view_mentorship_graph",
 }
+
+export enum EPermissionOverrideEffect {
+  ALLOW = "ALLOW",
+  REVOKE = "REVOKE",
+}
