@@ -1,4 +1,18 @@
 ARG NODE_VERSION=22.21
+FROM node:${NODE_VERSION}-alpine AS DEVELOPMENT
+
+WORKDIR /usr/src/
+
+RUN corepack enable
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
+RUN corepack prepare --activate \
+  && apk add --no-cache git python3 make g++ \
+  && pnpm install --frozen-lockfile
+
+COPY . .
+
+ENTRYPOINT [ "/bin/sh", "./infra/entrypoints/entrypoint.dev.sh" ]
 
 FROM node:${NODE_VERSION}-alpine as BASE
 

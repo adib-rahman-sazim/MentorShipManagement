@@ -9,10 +9,8 @@ export class RoleFactory extends Factory<Role> {
 
   protected definition(): EntityData<Role> {
     return {
-      slug: EUserRole.MENTEE,
+      code: EUserRole.MENTEE,
       name: "Mentee",
-      description: "Mentee taking part in the programme",
-      isSystem: true,
     };
   }
 }

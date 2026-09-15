@@ -68,7 +68,7 @@ const ormConfig = defineConfig({
       if (!name) {
         throw new Error("Specify migration name via `--name=...`");
       }
-      return `Migration${timestamp}_${name}`;
+      return `${timestamp}_${name}`;
     },
   },
 

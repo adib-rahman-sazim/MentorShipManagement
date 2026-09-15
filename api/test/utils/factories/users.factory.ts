@@ -11,8 +11,6 @@ export class UserFactory extends Factory<User> {
     return {
       email: "user@test.com",
       emailVerified: true,
-      firstName: "Test",
-      lastName: "User",
       name: "Test User",
       state: EUserState.ACTIVE,
     };

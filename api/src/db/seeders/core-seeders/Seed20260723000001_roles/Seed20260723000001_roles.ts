@@ -8,18 +8,14 @@ import { ROLE_SEED } from "./roles.constants";
 export class Seed20260723000001_Roles extends Seeder {
   async run(em: EntityManager): Promise<void> {
     for (const seed of ROLE_SEED) {
-      let role = await em.findOne(Role, { slug: seed.slug });
+      let role = await em.findOne(Role, { code: seed.code });
       if (!role) {
         role = em.create(Role, {
-          slug: seed.slug,
+          code: seed.code,
           name: seed.name,
-          description: seed.description,
-          isSystem: true,
         });
       } else {
         role.name = seed.name;
-        role.description = seed.description;
-        role.isSystem = true;
       }
       em.persist(role);
     }

@@ -11,9 +11,8 @@ export class Seed20260723000005_MockUsers extends Seeder {
       await ensureCredentialUser(em, {
         email: fixture.email,
         password: MOCK_USER_DEFAULT_PASSWORD,
-        firstName: fixture.firstName,
-        lastName: fixture.lastName,
         name: fixture.name,
+        role: fixture.role,
       });
     }
 

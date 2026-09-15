@@ -1,4 +1,4 @@
-import { Entity, ManyToOne, PrimaryKey, Property, type Rel, Unique } from "@mikro-orm/core";
+import { Entity, Index, ManyToOne, PrimaryKey, Property, type Rel, Unique } from "@mikro-orm/core";
 
 import { CustomBaseEntity } from "./custom-base.entity";
 import { User } from "./users.entity";
@@ -13,6 +13,7 @@ export class Session extends CustomBaseEntity {
   token!: string;
 
   @ManyToOne(() => User)
+  @Index({ name: "sessions_user_id_index" })
   user!: Rel<User>;
 
   @Property()

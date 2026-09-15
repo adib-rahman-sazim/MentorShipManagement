@@ -37,13 +37,13 @@ export class Seed20260723000002_Permissions extends Seeder {
     }
     await em.flush();
 
-    for (const roleSlug of Object.values(EUserRole)) {
-      const role = await em.findOne(Role, { slug: roleSlug });
+    for (const roleCode of Object.values(EUserRole)) {
+      const role = await em.findOne(Role, { code: roleCode });
       if (!role) {
         continue;
       }
 
-      const desiredCodes = new Set(DEFAULT_ROLE_PERMISSION_CODES[roleSlug] ?? []);
+      const desiredCodes = new Set(DEFAULT_ROLE_PERMISSION_CODES[roleCode] ?? []);
       const existingLinks = await em.find(
         RolePermission,
         { role: { id: role.id } },

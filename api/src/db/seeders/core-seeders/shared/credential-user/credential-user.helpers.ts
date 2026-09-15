@@ -3,6 +3,7 @@ import type { EntityManager } from "@mikro-orm/core";
 import { hashPassword } from "better-auth/crypto";
 
 import { Account } from "@/common/entities/accounts.entity";
+import { Role } from "@/common/entities/roles.entity";
 import { User } from "@/common/entities/users.entity";
 import { EUserState } from "@/common/enums/users.enums";
 
@@ -16,20 +17,20 @@ export async function ensureCredentialUser(
   let user = await em.findOne(User, { email: params.email });
   const isNewUser = !user;
 
+  const role = await em.findOneOrFail(Role, { code: params.role });
+
   if (!user) {
     user = em.create(User, {
       email: params.email,
       emailVerified: true,
-      firstName: params.firstName,
-      lastName: params.lastName,
       name: params.name,
+      role,
       state: EUserState.ACTIVE,
     });
     em.persist(user);
   } else {
-    user.firstName = params.firstName;
-    user.lastName = params.lastName;
     user.name = params.name;
+    user.role = role;
     user.emailVerified = true;
     user.state = EUserState.ACTIVE;
     em.persist(user);

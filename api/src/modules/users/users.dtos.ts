@@ -8,14 +8,6 @@ import { EUserState } from "@/common/enums/users.enums";
 export class UpdateProfileDto {
   @IsOptional()
   @IsString()
-  firstName?: string;
-
-  @IsOptional()
-  @IsString()
-  lastName?: string;
-
-  @IsOptional()
-  @IsString()
   name?: string;
 
   @IsOptional()
@@ -24,14 +16,6 @@ export class UpdateProfileDto {
 }
 
 export class UpdateUserDto {
-  @IsOptional()
-  @IsString()
-  firstName?: string;
-
-  @IsOptional()
-  @IsString()
-  lastName?: string;
-
   @IsOptional()
   @IsString()
   name?: string;

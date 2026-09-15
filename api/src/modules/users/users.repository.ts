@@ -36,12 +36,7 @@ export class UsersRepository extends CustomSQLBaseRepository<User> {
     }
 
     if (search) {
-      where.$or = [
-        { email: { $like: `%${search}%` } },
-        { firstName: { $like: `%${search}%` } },
-        { lastName: { $like: `%${search}%` } },
-        { name: { $like: `%${search}%` } },
-      ];
+      where.$or = [{ email: { $like: `%${search}%` } }, { name: { $like: `%${search}%` } }];
     }
 
     const [users, total] = await this.getScopedEntityManager(em).findAndCount(User, where, {

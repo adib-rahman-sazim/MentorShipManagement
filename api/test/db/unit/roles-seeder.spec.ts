@@ -41,23 +41,22 @@ describe("Seed20260723000001_Roles", () => {
     expect(em.create).toHaveBeenCalledWith(
       Role,
       expect.objectContaining({
-        slug: EUserRole.SUPERADMIN,
+        code: EUserRole.SUPERADMIN,
         name: "Superadmin",
-        isSystem: true,
       }),
     );
     expect(em.create).toHaveBeenCalledWith(
       Role,
       expect.objectContaining({
-        slug: EUserRole.SENSEI,
-        isSystem: true,
+        code: EUserRole.SENSEI,
+        name: "Sensei",
       }),
     );
     expect(em.create).toHaveBeenCalledWith(
       Role,
       expect.objectContaining({
-        slug: EUserRole.MENTEE,
-        isSystem: true,
+        code: EUserRole.MENTEE,
+        name: "Mentee",
       }),
     );
     expect(em.flush).toHaveBeenCalled();
@@ -65,16 +64,14 @@ describe("Seed20260723000001_Roles", () => {
 
   it("updates existing role fields without creating duplicates", async () => {
     const existing = roleFactory.makeEntity({
-      id: 1,
-      slug: EUserRole.SUPERADMIN,
+      id: "00000000-0000-0000-0000-000000000001",
+      code: EUserRole.SUPERADMIN,
       name: "Stale Name",
-      description: "Stale",
-      isSystem: false,
     });
 
     const em = mockDeep<EntityManager>();
     em.findOne.mockImplementation(async (_entity, where) => {
-      if ((where as { slug?: EUserRole }).slug === EUserRole.SUPERADMIN) {
+      if ((where as { code?: EUserRole }).code === EUserRole.SUPERADMIN) {
         return existing as never;
       }
       return null as never;
@@ -84,11 +81,9 @@ describe("Seed20260723000001_Roles", () => {
     await new Seed20260723000001_Roles().run(em);
 
     expect(existing.name).toBe("Superadmin");
-    expect(existing.description).toBe("Platform superadmin with full access");
-    expect(existing.isSystem).toBe(true);
     expect(em.create).not.toHaveBeenCalledWith(
       Role,
-      expect.objectContaining({ slug: EUserRole.SUPERADMIN }),
+      expect.objectContaining({ code: EUserRole.SUPERADMIN }),
     );
   });
 });
