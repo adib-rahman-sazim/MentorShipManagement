@@ -14,12 +14,12 @@ import {
 } from "@/modules/permissions/permissions.catalog.constants";
 import {
   EPermission,
+  EPermissionCode,
   EPermissionConditionType,
   EResource,
 } from "@/modules/permissions/permissions.enums";
 import { PermissionFactory } from "@/test/utils/factories/permissions.factory";
 import { RoleFactory } from "@/test/utils/factories/roles.factory";
-import { createPermission } from "@/utils/permission-string/permission-string.helpers";
 
 describe("Seed20260723000002_Permissions", () => {
   let orm: MikroORM;
@@ -47,7 +47,7 @@ describe("Seed20260723000002_Permissions", () => {
   });
 
   it("updates drifted permission fields and restores missing role permission links", async () => {
-    const manageCode = createPermission(EResource.ALL, EPermission.MANAGE);
+    const manageCode = EPermissionCode.CAN_MANAGE_ALL;
     const stalePermission = permissionFactory.makeEntity({
       id: 1,
       code: manageCode,
@@ -115,7 +115,7 @@ describe("Seed20260723000002_Permissions", () => {
   });
 
   it("does not recreate an existing role permission link", async () => {
-    const manageCode = createPermission(EResource.ALL, EPermission.MANAGE);
+    const manageCode = EPermissionCode.CAN_MANAGE_ALL;
     const managePermission = permissionFactory.makeEntity({
       id: 1,
       code: manageCode,

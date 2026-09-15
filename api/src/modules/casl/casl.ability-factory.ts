@@ -6,8 +6,8 @@ import { Permission } from "@/common/entities/permissions.entity";
 import type { EUserRole } from "@/common/enums/roles.enums";
 import type { IAbilityContext } from "@/modules/casl/casl.interfaces";
 import {
-  DEFAULT_PERMISSION_DEFINITIONS,
   DEFAULT_ROLE_PERMISSION_CODES,
+  PERMISSION_DEFINITIONS_BY_CODE,
 } from "@/modules/permissions/permissions.catalog.constants";
 import { EResource } from "@/modules/permissions/permissions.enums";
 
@@ -68,12 +68,9 @@ export class CaslAbilityFactory {
 
   private resolvePermissionsFromCatalog(role: EUserRole): Permission[] {
     const permittedCodes = new Set(DEFAULT_ROLE_PERMISSION_CODES[role] ?? []);
-    const definitionsByCode = new Map(
-      DEFAULT_PERMISSION_DEFINITIONS.map((definition) => [definition.code, definition]),
-    );
 
     return [...permittedCodes]
-      .map((code) => definitionsByCode.get(code))
+      .map((code) => PERMISSION_DEFINITIONS_BY_CODE.get(code))
       .filter((definition): definition is NonNullable<typeof definition> => !!definition)
       .map(
         (definition) =>

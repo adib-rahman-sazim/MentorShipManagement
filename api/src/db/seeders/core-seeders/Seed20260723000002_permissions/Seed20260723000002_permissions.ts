@@ -15,7 +15,12 @@ export class Seed20260723000002_Permissions extends Seeder {
     const permissionsByCode = new Map<string, Permission>();
 
     for (const definition of DEFAULT_PERMISSION_DEFINITIONS) {
-      let permission = await em.findOne(Permission, { code: definition.code });
+      let permission =
+        (await em.findOne(Permission, { code: definition.code })) ??
+        (await em.findOne(Permission, {
+          resource: definition.resource,
+          action: definition.action,
+        }));
       if (!permission) {
         permission = em.create(Permission, {
           code: definition.code,
@@ -26,6 +31,7 @@ export class Seed20260723000002_Permissions extends Seeder {
           description: definition.description ?? null,
         });
       } else {
+        permission.code = definition.code;
         permission.resource = definition.resource;
         permission.action = definition.action;
         permission.conditionType = definition.conditionType;
@@ -43,7 +49,7 @@ export class Seed20260723000002_Permissions extends Seeder {
         continue;
       }
 
-      const desiredCodes = new Set(DEFAULT_ROLE_PERMISSION_CODES[roleCode] ?? []);
+      const desiredCodes = new Set<string>(DEFAULT_ROLE_PERMISSION_CODES[roleCode] ?? []);
       const existingLinks = await em.find(
         RolePermission,
         { role: { id: role.id } },
