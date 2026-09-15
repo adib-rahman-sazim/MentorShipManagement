@@ -11,11 +11,12 @@ import { RedisModule } from "@/modules/redis/redis.module";
 
 import { CaslAbilityFactory } from "./casl.ability-factory";
 import { CaslCacheService } from "./casl-cache.service";
+import { Mentorship } from "@/common/entities/mentorships.entity";
 
 @Global()
 @Module({
   imports: [
-    MikroOrmModule.forFeature([Permission, Role, RolePermission, UserPermissionOverride]),
+    MikroOrmModule.forFeature([Mentorship,Permission, Role, RolePermission, UserPermissionOverride]),
     RedisModule,
   ],
   providers: [CaslAbilityFactory, CaslCacheService, EffectivePermissionsService],
