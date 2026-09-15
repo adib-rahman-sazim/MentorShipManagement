@@ -7,10 +7,14 @@ import { Session } from "./sessions.entity";
 import { UserPermissionOverride } from "./user-permission-overrides.entity";
 import { User } from "./users.entity";
 import { Verification } from "./verifications.entity";
+import { Mentorship } from "./mentorships.entity";
+import { MentorshipDraft } from "./mentorship-drafts.entity";
 
 export const ENTITIES = [
   CustomBaseEntity,
   Account,
+  Mentorship,
+  MentorshipDraft,
   Permission,
   Role,
   RolePermission,
@@ -19,3 +23,4 @@ export const ENTITIES = [
   UserPermissionOverride,
   Verification,
 ];
+
