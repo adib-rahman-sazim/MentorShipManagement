@@ -9,9 +9,11 @@ import { SeedManager } from "@mikro-orm/seeder";
 import * as fs from "fs";
 import * as path from "path";
 
+import { ENTITIES } from "../common/entities/entities.constants";
+
 const ormConfig = defineConfig({
-  entities: [path.resolve(process.cwd(), "dist/**/*.entity.js")],
-  entitiesTs: [path.resolve(process.cwd(), "src/**/*.entity.ts")],
+  // Explicit classes rather than globs — see entities.constants.ts for why.
+  entities: ENTITIES,
 
   metadataProvider: ReflectMetadataProvider,
 

@@ -11,10 +11,7 @@ declare global {
       image?: string | null;
       createdAt: Date;
       updatedAt: Date;
-      firstName: string;
-      lastName: string;
       state?: string | null;
-      firstLoginAt?: Date | null;
       role?: EUserRole;
     }
 

@@ -14,17 +14,18 @@ import { Role } from "@/common/entities/roles.entity";
 import { Session } from "@/common/entities/sessions.entity";
 import { User } from "@/common/entities/users.entity";
 import { Verification } from "@/common/entities/verifications.entity";
-import type { IEmailService } from "@/modules/emails/email-service.interfaces";
-import { EMAIL_SERVICE_TOKEN } from "@/modules/emails/emails.constants";
-import { EmailsModule } from "@/modules/emails/emails.module";
 
 import { createAuthInstance } from "./auth.config";
-import { BETTER_AUTH_BASE_PATH } from "./auth.constants";
+import {
+  AUTH_CORS_ALLOWED_HEADERS,
+  AUTH_CORS_ALLOWED_METHODS,
+  BETTER_AUTH_BASE_PATH,
+} from "./auth.constants";
 import type { IBetterAuthInstance } from "./auth.interfaces";
 import { AuthService } from "./auth.service";
 
 @Module({
-  imports: [MikroOrmModule.forFeature([User, Session, Account, Verification, Role]), EmailsModule],
+  imports: [MikroOrmModule.forFeature([User, Session, Account, Verification, Role])],
   providers: [AuthService],
   exports: [AuthService],
 })
@@ -36,12 +37,8 @@ export class AuthModule implements NestModule, OnModuleInit {
     private readonly authService: AuthService,
     private readonly adapter: HttpAdapterHost,
     @Inject(MikroORM) private readonly orm: PostgreSqlMikroORM,
-    @Inject(EMAIL_SERVICE_TOKEN) private readonly emailService: IEmailService,
   ) {
-    this.auth = createAuthInstance({
-      orm: this.orm,
-      emailService: this.emailService,
-    });
+    this.auth = createAuthInstance({ orm: this.orm });
     this.authService.setAuth(this.auth);
   }
 
@@ -57,11 +54,8 @@ export class AuthModule implements NestModule, OnModuleInit {
     const authHandler = (req: Request, res: Response) => {
       res.setHeader("Access-Control-Allow-Origin", allowedOrigin);
       res.setHeader("Access-Control-Allow-Credentials", "true");
-      res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
-      res.setHeader(
-        "Access-Control-Allow-Headers",
-        "Content-Type, Authorization, X-Requested-With, Accept, Origin",
-      );
+      res.setHeader("Access-Control-Allow-Methods", AUTH_CORS_ALLOWED_METHODS);
+      res.setHeader("Access-Control-Allow-Headers", AUTH_CORS_ALLOWED_HEADERS);
 
       if (req.method === "OPTIONS") {
         res.status(204).end();

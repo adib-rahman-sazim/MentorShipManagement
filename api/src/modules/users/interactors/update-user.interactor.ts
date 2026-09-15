@@ -4,18 +4,19 @@ import type { User } from "@/common/entities/users.entity";
 import type { IBaseInteractor } from "@/common/interfaces/base-interactor.interfaces";
 
 import { USER_ERROR_MESSAGES } from "../users.constants";
-import type { IUpdateUserContext, IUserResponse } from "../users.interfaces";
+import type { IUpdateUserContext } from "../users.interfaces";
 import { UsersRepository } from "../users.repository";
+import type { UserResponse } from "../users.responses";
 import { UsersSerializer } from "../users.serializer";
 
 @Injectable()
-export class UpdateUserInteractor implements IBaseInteractor<IUpdateUserContext, IUserResponse> {
+export class UpdateUserInteractor implements IBaseInteractor<IUpdateUserContext, UserResponse> {
   constructor(
     private readonly usersRepository: UsersRepository,
     private readonly usersSerializer: UsersSerializer,
   ) {}
 
-  async execute({ userId, dto }: IUpdateUserContext): Promise<IUserResponse> {
+  async execute({ userId, dto }: IUpdateUserContext): Promise<UserResponse> {
     const user = await this.usersRepository.findById(userId);
 
     if (!user) {

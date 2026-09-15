@@ -73,7 +73,7 @@ export const mikroOrmAdapter = (
 
           await em.persistAndFlush(entity);
 
-          return adapterUtils.normalizeOutput(metadata, entity, select) as typeof data;
+          return adapterUtils.normalizeOutput(metadata, entity, select) as any;
         },
 
         async count({ model, where }): Promise<number> {
@@ -95,7 +95,6 @@ export const mikroOrmAdapter = (
           if (!entity) {
             return null;
           }
-
           return adapterUtils.normalizeOutput(metadata, entity, select) as any;
         },
 
