@@ -9,6 +9,8 @@ export const USER_ERROR_MESSAGES = {
   CANNOT_DELETE_SELF: "You cannot delete your own account",
   CANNOT_ASSIGN_SUPERADMIN: "Only a superadmin can assign the superadmin role",
   CANNOT_DEACTIVATE_SELF: "You cannot deactivate your own account",
+  SUPERADMIN_ALREADY_EXISTS: "A superadmin already exists; only one is permitted",
+  CANNOT_DEMOTE_SUPERADMIN: "The superadmin role cannot be removed from the only superadmin",
 } as const;
 
 export const ROLE_FIELD = "role";

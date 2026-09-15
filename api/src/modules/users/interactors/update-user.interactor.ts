@@ -10,7 +10,11 @@ import type { IUpdateUserContext } from "../users.interfaces";
 import { UsersRepository } from "../users.repository";
 import type { UserResponse } from "../users.responses";
 import { UsersSerializer } from "../users.serializer";
-import { assertActorCanAssignRole } from "../users-role-assignment.helpers";
+import {
+  assertActorCanAssignRole,
+  assertSuperadminNotDemoted,
+  assertSuperadminSlotFree,
+} from "../users-role-assignment.helpers";
 
 @Injectable()
 export class UpdateUserInteractor implements IBaseInteractor<IUpdateUserContext, UserResponse> {
@@ -50,6 +54,14 @@ export class UpdateUserInteractor implements IBaseInteractor<IUpdateUserContext,
 
       if (dto.role !== undefined && dto.role !== user.role.code) {
         assertActorCanAssignRole(actorRole, dto.role);
+        assertSuperadminNotDemoted(user.role.code, dto.role);
+
+        await assertSuperadminSlotFree(
+          dto.role,
+          em,
+          { usersRepository: this.usersRepository, rolesRepository: this.rolesRepository },
+          userId,
+        );
 
         const role = await this.rolesRepository.findByCode(dto.role, em);
 
