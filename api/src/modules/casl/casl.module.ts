@@ -2,6 +2,7 @@ import { Global, Module } from "@nestjs/common";
 
 import { MikroOrmModule } from "@mikro-orm/nestjs";
 
+import { Mentorship } from "@/common/entities/mentorships.entity";
 import { Permission } from "@/common/entities/permissions.entity";
 import { Role } from "@/common/entities/roles.entity";
 import { RolePermission } from "@/common/entities/roles-permissions.entity";
@@ -11,12 +12,17 @@ import { RedisModule } from "@/modules/redis/redis.module";
 
 import { CaslAbilityFactory } from "./casl.ability-factory";
 import { CaslCacheService } from "./casl-cache.service";
-import { Mentorship } from "@/common/entities/mentorships.entity";
 
 @Global()
 @Module({
   imports: [
-    MikroOrmModule.forFeature([Mentorship,Permission, Role, RolePermission, UserPermissionOverride]),
+    MikroOrmModule.forFeature([
+      Mentorship,
+      Permission,
+      Role,
+      RolePermission,
+      UserPermissionOverride,
+    ]),
     RedisModule,
   ],
   providers: [CaslAbilityFactory, CaslCacheService, EffectivePermissionsService],
