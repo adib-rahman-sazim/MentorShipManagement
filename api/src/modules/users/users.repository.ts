@@ -5,6 +5,8 @@ import dayjs from "dayjs";
 
 import { Session } from "@/common/entities/sessions.entity";
 import { User } from "@/common/entities/users.entity";
+import { EUserRole } from "@/common/enums/roles.enums";
+import { EUserState } from "@/common/enums/users.enums";
 import { CustomSQLBaseRepository } from "@/common/repository/custom-sql-base.repository";
 
 import { NOT_SOFT_DELETED } from "./users.constants";
@@ -31,6 +33,14 @@ export class UsersRepository extends CustomSQLBaseRepository<User> {
       { id, ...NOT_SOFT_DELETED },
       { lockMode: LockMode.PESSIMISTIC_WRITE },
     );
+  }
+
+  findActiveSuperadmin(em?: EntityManager): Promise<User | null> {
+    return this.getScopedRepository(em).findOne({
+      role: { code: EUserRole.SUPERADMIN },
+      state: EUserState.ACTIVE,
+      ...NOT_SOFT_DELETED,
+    });
   }
 
   async findAllPaginated(
