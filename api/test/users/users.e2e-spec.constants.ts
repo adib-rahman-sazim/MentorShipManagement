@@ -5,6 +5,7 @@ export const SIGN_IN_ROUTE = "/api/v1/auth/sign-in/email";
 export const SUPERADMIN_EMAIL = "superadmin@e2e.test";
 export const SENSEI_EMAIL = "sensei@e2e.test";
 export const MENTEE_EMAIL = "mentee@e2e.test";
+export const MENTOR_EMAIL = "mentor@e2e.test";
 export const VICTIM_EMAIL = "victim@e2e.test";
 export const PROVISIONED_EMAIL = "provisioned@e2e.test";
 export const PROVISIONED_NAME = "Provisioned Mentor";

@@ -1,74 +1,110 @@
 import { EUserRole } from "@/common/enums/roles.enums";
-import { createPermission } from "@/utils/permission-string/permission-string.helpers";
 
-import { permissionCodesFromPairs, toPermissionDefinition } from "./permissions.catalog.helpers";
-import { EPermission, EResource } from "./permissions.enums";
+import { toPermissionDefinition } from "./permissions.catalog.helpers";
+import { EPermission, EPermissionCode, EResource } from "./permissions.enums";
 import type { IPermissionDefinition } from "./permissions.interfaces";
 
-const DOMAIN_RESOURCES = [EResource.USER, EResource.ROLE, EResource.PERMISSIONS] as const;
-
-const DOMAIN_ACTIONS = [
-  EPermission.LIST,
-  EPermission.READ,
-  EPermission.CREATE,
-  EPermission.UPDATE,
-  EPermission.DELETE,
-] as const;
-
-const PAGE_RESOURCES = [EResource.DASHBOARD, EResource.SETTINGS, EResource.USER] as const;
-
 export const DEFAULT_PERMISSION_DEFINITIONS: IPermissionDefinition[] = [
-  toPermissionDefinition(EResource.ALL, EPermission.MANAGE, "Full platform manage"),
-  ...DOMAIN_RESOURCES.flatMap((resource) =>
-    DOMAIN_ACTIONS.map((action) => toPermissionDefinition(resource, action)),
+  toPermissionDefinition(
+    EPermissionCode.CAN_MANAGE_ALL,
+    EResource.ALL,
+    EPermission.MANAGE,
+    "Full platform manage",
   ),
-  ...PAGE_RESOURCES.map((resource) =>
-    toPermissionDefinition(resource, EPermission.PAGE_VIEW, `View ${resource} page`),
+  toPermissionDefinition(EPermissionCode.CAN_LIST_USERS, EResource.USER, EPermission.LIST),
+  toPermissionDefinition(EPermissionCode.CAN_READ_USER, EResource.USER, EPermission.READ),
+  toPermissionDefinition(EPermissionCode.CAN_CREATE_USER, EResource.USER, EPermission.CREATE),
+  toPermissionDefinition(EPermissionCode.CAN_UPDATE_USER, EResource.USER, EPermission.UPDATE),
+  toPermissionDefinition(EPermissionCode.CAN_DELETE_USER, EResource.USER, EPermission.DELETE),
+  toPermissionDefinition(EPermissionCode.CAN_LIST_ROLES, EResource.ROLE, EPermission.LIST),
+  toPermissionDefinition(EPermissionCode.CAN_READ_ROLE, EResource.ROLE, EPermission.READ),
+  toPermissionDefinition(EPermissionCode.CAN_CREATE_ROLE, EResource.ROLE, EPermission.CREATE),
+  toPermissionDefinition(EPermissionCode.CAN_UPDATE_ROLE, EResource.ROLE, EPermission.UPDATE),
+  toPermissionDefinition(EPermissionCode.CAN_DELETE_ROLE, EResource.ROLE, EPermission.DELETE),
+  toPermissionDefinition(
+    EPermissionCode.CAN_LIST_PERMISSIONS,
+    EResource.PERMISSIONS,
+    EPermission.LIST,
+  ),
+  toPermissionDefinition(
+    EPermissionCode.CAN_READ_PERMISSION,
+    EResource.PERMISSIONS,
+    EPermission.READ,
+  ),
+  toPermissionDefinition(
+    EPermissionCode.CAN_CREATE_PERMISSION,
+    EResource.PERMISSIONS,
+    EPermission.CREATE,
+  ),
+  toPermissionDefinition(
+    EPermissionCode.CAN_UPDATE_PERMISSION,
+    EResource.PERMISSIONS,
+    EPermission.UPDATE,
+  ),
+  toPermissionDefinition(
+    EPermissionCode.CAN_DELETE_PERMISSION,
+    EResource.PERMISSIONS,
+    EPermission.DELETE,
+  ),
+  toPermissionDefinition(
+    EPermissionCode.CAN_ASSIGN_MENTOR,
+    EResource.MENTORSHIP,
+    EPermission.ASSIGN,
+  ),
+  toPermissionDefinition(EPermissionCode.CAN_CREATE_DRAFT, EResource.DRAFT, EPermission.CREATE),
+  toPermissionDefinition(EPermissionCode.CAN_REVIEW_DRAFT, EResource.DRAFT, EPermission.REVIEW),
+  toPermissionDefinition(EPermissionCode.CAN_APPROVE_DRAFT, EResource.DRAFT, EPermission.APPROVE),
+  toPermissionDefinition(
+    EPermissionCode.CAN_VIEW_DASHBOARD,
+    EResource.DASHBOARD,
+    EPermission.PAGE_VIEW,
+    "View dashboard page",
+  ),
+  toPermissionDefinition(
+    EPermissionCode.CAN_VIEW_SETTINGS,
+    EResource.SETTINGS,
+    EPermission.PAGE_VIEW,
+    "View settings page",
+  ),
+  toPermissionDefinition(
+    EPermissionCode.CAN_VIEW_USERS_PAGE,
+    EResource.USER,
+    EPermission.PAGE_VIEW,
+    "View user page",
+  ),
+  toPermissionDefinition(
+    EPermissionCode.CAN_VIEW_MENTORSHIP_GRAPH,
+    EResource.MENTORSHIP_GRAPH,
+    EPermission.PAGE_VIEW,
+    "View mentorship_graph page",
   ),
 ];
 
-const ALL_PAGE_VIEWS = PAGE_RESOURCES.map((resource) =>
-  createPermission(resource, EPermission.PAGE_VIEW),
-);
+const HIERARCHY_PAGE_VIEW_CODES = [
+  EPermissionCode.CAN_VIEW_DASHBOARD,
+  EPermissionCode.CAN_VIEW_SETTINGS,
+  EPermissionCode.CAN_VIEW_MENTORSHIP_GRAPH,
+];
 
-const SENSEI_PAGE_VIEWS = [EResource.DASHBOARD, EResource.SETTINGS, EResource.USER].map(
-  (resource) => createPermission(resource, EPermission.PAGE_VIEW),
-);
+const MMS_DOMAIN_CODES = [
+  EPermissionCode.CAN_ASSIGN_MENTOR,
+  EPermissionCode.CAN_CREATE_DRAFT,
+  EPermissionCode.CAN_REVIEW_DRAFT,
+  EPermissionCode.CAN_APPROVE_DRAFT,
+];
 
-const MENTOR_PAGE_VIEWS = [EResource.DASHBOARD, EResource.SETTINGS, EResource.USER].map(
-  (resource) => createPermission(resource, EPermission.PAGE_VIEW),
-);
-
-const MENTEE_PAGE_VIEWS = [EResource.DASHBOARD, EResource.SETTINGS].map((resource) =>
-  createPermission(resource, EPermission.PAGE_VIEW),
-);
-
-export const DEFAULT_ROLE_PERMISSION_CODES: Record<EUserRole, string[]> = {
-  [EUserRole.SUPERADMIN]: [createPermission(EResource.ALL, EPermission.MANAGE), ...ALL_PAGE_VIEWS],
+export const DEFAULT_ROLE_PERMISSION_CODES: Record<EUserRole, EPermissionCode[]> = {
+  [EUserRole.SUPERADMIN]: [EPermissionCode.CAN_MANAGE_ALL],
   [EUserRole.SENSEI]: [
-    ...SENSEI_PAGE_VIEWS,
-    ...permissionCodesFromPairs(
-      [EResource.USER, EPermission.LIST],
-      [EResource.USER, EPermission.READ],
-      [EResource.USER, EPermission.CREATE],
-      [EResource.USER, EPermission.UPDATE],
-      [EResource.ROLE, EPermission.LIST],
-      [EResource.ROLE, EPermission.READ],
-      [EResource.PERMISSIONS, EPermission.LIST],
-      [EResource.PERMISSIONS, EPermission.READ],
-    ),
+    ...HIERARCHY_PAGE_VIEW_CODES,
+    ...MMS_DOMAIN_CODES,
+    EPermissionCode.CAN_LIST_USERS,
+    EPermissionCode.CAN_READ_USER,
   ],
-  [EUserRole.MENTOR]: [
-    ...MENTOR_PAGE_VIEWS,
-    ...permissionCodesFromPairs(
-      [EResource.USER, EPermission.LIST],
-      [EResource.USER, EPermission.READ],
-      [EResource.ROLE, EPermission.LIST],
-      [EResource.ROLE, EPermission.READ],
-    ),
-  ],
-  [EUserRole.MENTEE]: [
-    ...MENTEE_PAGE_VIEWS,
-    ...permissionCodesFromPairs([EResource.USER, EPermission.READ]),
-  ],
+  [EUserRole.MENTOR]: [...HIERARCHY_PAGE_VIEW_CODES],
+  [EUserRole.MENTEE]: [...HIERARCHY_PAGE_VIEW_CODES, EPermissionCode.CAN_READ_USER],
 };
+
+export const PERMISSION_DEFINITIONS_BY_CODE = new Map<EPermissionCode, IPermissionDefinition>(
+  DEFAULT_PERMISSION_DEFINITIONS.map((definition) => [definition.code, definition]),
+);

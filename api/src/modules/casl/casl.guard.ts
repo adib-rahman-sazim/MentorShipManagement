@@ -8,8 +8,8 @@ import { PERMISSIONS_KEY } from "@/common/decorators/auth/permissions.decorator.
 import type { IPermissionsOptions } from "@/common/decorators/auth/permissions.decorator.interfaces";
 import { EUserRole } from "@/common/enums/roles.enums";
 import { CaslAbilityFactory } from "@/modules/casl/casl.ability-factory";
-import { EPermission, EResource } from "@/modules/permissions/permissions.enums";
-import { parsePermissionString } from "@/utils/permission-string/permission-string.helpers";
+import { PERMISSION_DEFINITIONS_BY_CODE } from "@/modules/permissions/permissions.catalog.constants";
+import type { EPermissionCode } from "@/modules/permissions/permissions.enums";
 
 @Injectable()
 export class CaslPermissionsGuard implements CanActivate {
@@ -19,12 +19,12 @@ export class CaslPermissionsGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const metadata = this.reflector.getAllAndOverride<IPermissionsOptions | string[]>(
+    const metadata = this.reflector.getAllAndOverride<IPermissionsOptions | EPermissionCode[]>(
       PERMISSIONS_KEY,
       [context.getHandler(), context.getClass()],
     );
 
-    let permissions: string[];
+    let permissions: EPermissionCode[];
 
     if (Array.isArray(metadata)) {
       permissions = metadata;
@@ -51,13 +51,15 @@ export class CaslPermissionsGuard implements CanActivate {
 
     request.ability = ability;
 
-    for (const requiredPerm of permissions) {
-      const parsed = parsePermissionString(requiredPerm);
-      const action = parsed.action as EPermission;
-      const resourceType = parsed.resource as EResource;
+    for (const requiredCode of permissions) {
+      const definition = PERMISSION_DEFINITIONS_BY_CODE.get(requiredCode);
 
-      if (!ability.can(action, resourceType)) {
-        throw new ForbiddenException(`Missing required permission: ${requiredPerm}`);
+      if (!definition) {
+        throw new ForbiddenException(`Unknown required permission: ${requiredCode}`);
+      }
+
+      if (!ability.can(definition.action, definition.resource)) {
+        throw new ForbiddenException(`Missing required permission: ${requiredCode}`);
       }
     }
 

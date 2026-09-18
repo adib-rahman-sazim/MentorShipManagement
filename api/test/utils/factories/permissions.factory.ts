@@ -4,6 +4,7 @@ import { Factory } from "@mikro-orm/seeder";
 import { Permission } from "@/common/entities/permissions.entity";
 import {
   EPermission,
+  EPermissionCode,
   EPermissionConditionType,
   EResource,
 } from "@/modules/permissions/permissions.enums";
@@ -13,7 +14,7 @@ export class PermissionFactory extends Factory<Permission> {
 
   protected definition(): EntityData<Permission> {
     return {
-      code: "user:read:allow",
+      code: EPermissionCode.CAN_READ_USER,
       resource: EResource.USER,
       action: EPermission.READ,
       conditionType: EPermissionConditionType.NONE,
