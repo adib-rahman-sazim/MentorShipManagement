@@ -1,11 +1,18 @@
 import { Injectable } from "@nestjs/common";
 
 import type { TAppAbility } from "@/modules/casl/casl.types";
-import type { EPermission, EResource } from "@/modules/permissions/permissions.enums";
+import type { UserPermissionOverridesResponse } from "@/modules/permissions/permissions.dtos";
+import type {
+  EPermission,
+  EPermissionCode,
+  EResource,
+} from "@/modules/permissions/permissions.enums";
 import type {
   IGetMyCaslRulesResult,
   INormalizedCaslRule,
+  IUserPermissionsViewInput,
 } from "@/modules/permissions/permissions.interfaces";
+import { resolvePermissionSource } from "@/modules/permissions/user-permission-overrides.helpers";
 
 @Injectable()
 export class PermissionsSerializer {
@@ -33,5 +40,34 @@ export class PermissionsSerializer {
 
   serializeEmptyRules(): IGetMyCaslRulesResult {
     return { rules: [] };
+  }
+
+  serializeUserPermissions({
+    user,
+    allPermissions,
+    effectiveCodes,
+    grantedCodes,
+    revokedCodes,
+  }: IUserPermissionsViewInput): UserPermissionOverridesResponse {
+    const sourceInput = {
+      effectiveCodes: new Set(effectiveCodes),
+      grantedCodes: new Set(grantedCodes),
+      revokedCodes: new Set(revokedCodes),
+    };
+
+    const permissions = allPermissions.map((permission) => ({
+      code: permission.code as EPermissionCode,
+      resource: permission.resource as EResource,
+      action: permission.action as EPermission,
+      ...(permission.description && { description: permission.description }),
+      source: resolvePermissionSource(permission.code, sourceInput),
+      effective: sourceInput.effectiveCodes.has(permission.code),
+    }));
+
+    return {
+      userId: user.id,
+      role: user.role.code,
+      permissions,
+    };
   }
 }
