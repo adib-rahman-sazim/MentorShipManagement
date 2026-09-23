@@ -25,7 +25,10 @@ export enum EResource {
 
 export enum EPermissionConditionType {
   NONE = "none",
+  SELF = "self",
   SUBTREE = "subtree",
+  HIERARCHY = "hierarchy",
+  NOT_AUTHOR = "not_author",
 }
 
 export enum EPermissionCode {
