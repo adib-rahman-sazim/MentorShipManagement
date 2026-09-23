@@ -6,8 +6,10 @@ import type { Permission } from "@/common/entities/permissions.entity";
 import type { IAbilityContext } from "@/modules/casl/casl.interfaces";
 import { MENTORSHIP_SUBTREE_MAX_DEPTH } from "@/modules/mentorships/mentorships.constants";
 import { MentorshipsRepository } from "@/modules/mentorships/mentorships.repository";
+import type { IPolicyScope } from "@/modules/permissions/contextual-policies.interfaces";
 import { EffectivePermissionsService } from "@/modules/permissions/effective-permissions.service";
 import { EPermissionConditionType, EResource } from "@/modules/permissions/permissions.enums";
+import { buildPolicyConditions } from "@/modules/permissions/policy-resolution.helpers";
 
 import type { TAppAbility, TAppRawRule } from "./casl.types";
 import { CaslCacheService } from "./casl-cache.service";
@@ -27,47 +29,65 @@ export class CaslAbilityFactory {
       return this.buildAbilityFromRules(cachedRules);
     }
 
-    const permissions = await this.effectivePermissionsService.resolveForUser(context);
-    const subtreeUserIds = await this.resolveSubtreeUserIds(context.userId, permissions);
-    const resolvedRules = this.toResolvedRules(permissions, subtreeUserIds);
+    const { permissions, holdsAllManage } =
+      await this.effectivePermissionsService.resolveForUser(context);
+
+    const scope = await this.resolveScope(context.userId, permissions, holdsAllManage);
+    const resolvedRules = this.toResolvedRules(permissions, scope, holdsAllManage);
     await this.caslCacheService.setRules(cacheKey, resolvedRules);
 
     return this.buildAbilityFromRules(resolvedRules);
   }
 
   async invalidateForMentorshipChange(userId: string): Promise<void> {
-    const ancestorUserIds = await this.mentorshipsRepository.findAncestorUserIds(
-      userId,
-      MENTORSHIP_SUBTREE_MAX_DEPTH,
-    );
+    const [ancestorUserIds, descendantUserIds] = await Promise.all([
+      this.mentorshipsRepository.findAncestorUserIds(userId, MENTORSHIP_SUBTREE_MAX_DEPTH),
+      this.mentorshipsRepository.findDescendantUserIds(userId, MENTORSHIP_SUBTREE_MAX_DEPTH),
+    ]);
 
-    await this.caslCacheService.invalidateUsers([userId, ...ancestorUserIds]);
+    await this.caslCacheService.invalidateUsers([
+      userId,
+      ...ancestorUserIds,
+      ...descendantUserIds,
+    ]);
   }
 
-  private async resolveSubtreeUserIds(
+  private resolveConditionType(
+    permission: Permission,
+    holdsAllManage: boolean,
+  ): EPermissionConditionType {
+    return holdsAllManage ? EPermissionConditionType.NONE : permission.conditionType;
+  }
+
+  private async resolveScope(
     userId: string,
     permissions: Permission[],
-  ): Promise<string[]> {
-    const needsSubtree = permissions.some(
-      (permission) => permission.conditionType === EPermissionConditionType.SUBTREE,
-    );
+    holdsAllManage: boolean,
+  ): Promise<IPolicyScope> {
+    const unscoped: IPolicyScope = { actorId: userId, subtreeUserIds: [], chainUserIds: [] };
 
-    if (!needsSubtree) {
-      return [];
+    if (holdsAllManage) {
+      return unscoped;
     }
 
-    return this.mentorshipsRepository.findDescendantUserIds(userId, MENTORSHIP_SUBTREE_MAX_DEPTH);
-  }
+    const conditionTypes = new Set(permissions.map((permission) => permission.conditionType));
+    const needsChain = conditionTypes.has(EPermissionConditionType.HIERARCHY);
+    const needsSubtree = needsChain || conditionTypes.has(EPermissionConditionType.SUBTREE);
 
-  private buildConditions(
-    conditionType: EPermissionConditionType,
-    subtreeUserIds: string[],
-  ): Record<string, unknown> | undefined {
-    if (conditionType !== EPermissionConditionType.SUBTREE) {
-      return undefined;
+    if (!needsSubtree && !needsChain) {
+      return unscoped;
     }
 
-    return { id: { $in: subtreeUserIds } };
+    const [subtreeUserIds, chainUserIds] = await Promise.all([
+      needsSubtree
+        ? this.mentorshipsRepository.findDescendantUserIds(userId, MENTORSHIP_SUBTREE_MAX_DEPTH)
+        : [],
+      needsChain
+        ? this.mentorshipsRepository.findAncestorUserIds(userId, MENTORSHIP_SUBTREE_MAX_DEPTH)
+        : [],
+    ]);
+
+    return { actorId: userId, subtreeUserIds, chainUserIds };
   }
 
   private buildAbilityFromRules(rules: TAppRawRule[]): TAppAbility {
@@ -87,13 +107,18 @@ export class CaslAbilityFactory {
     return build();
   }
 
-  private toResolvedRules(permissions: Permission[], subtreeUserIds: string[]): TAppRawRule[] {
+  private toResolvedRules(
+    permissions: Permission[],
+    scope: IPolicyScope,
+    holdsAllManage: boolean,
+  ): TAppRawRule[] {
     const deduplicated = new Map<string, TAppRawRule>();
 
     for (const permission of permissions) {
+      const conditionType = this.resolveConditionType(permission, holdsAllManage);
       const subject = permission.resource === EResource.ALL ? "all" : permission.resource;
-      const dedupeKey = `${permission.denied}|${permission.action}|${permission.resource}|${permission.conditionType}`;
-      const conditions = this.buildConditions(permission.conditionType, subtreeUserIds);
+      const dedupeKey = `${permission.denied}|${permission.action}|${permission.resource}|${conditionType}`;
+      const conditions = buildPolicyConditions(conditionType, scope);
 
       deduplicated.set(dedupeKey, {
         action: permission.action,
