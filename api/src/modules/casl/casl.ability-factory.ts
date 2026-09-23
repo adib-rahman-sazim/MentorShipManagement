@@ -45,11 +45,7 @@ export class CaslAbilityFactory {
       this.mentorshipsRepository.findDescendantUserIds(userId, MENTORSHIP_SUBTREE_MAX_DEPTH),
     ]);
 
-    await this.caslCacheService.invalidateUsers([
-      userId,
-      ...ancestorUserIds,
-      ...descendantUserIds,
-    ]);
+    await this.caslCacheService.invalidateUsers([userId, ...ancestorUserIds, ...descendantUserIds]);
   }
 
   private resolveConditionType(

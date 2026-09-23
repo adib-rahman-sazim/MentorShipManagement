@@ -1,4 +1,4 @@
-import { Global, Module } from "@nestjs/common";
+import { Global, Module, type OnModuleInit } from "@nestjs/common";
 
 import { MikroOrmModule } from "@mikro-orm/nestjs";
 
@@ -12,6 +12,7 @@ import { RedisModule } from "@/modules/redis/redis.module";
 
 import { CaslAbilityFactory } from "./casl.ability-factory";
 import { CaslCacheService } from "./casl-cache.service";
+import { assertContextualPoliciesComplete } from "@/modules/permissions/policy-resolution.helpers";
 
 @Global()
 @Module({
@@ -28,4 +29,8 @@ import { CaslCacheService } from "./casl-cache.service";
   providers: [CaslAbilityFactory, CaslCacheService, EffectivePermissionsService],
   exports: [CaslAbilityFactory, CaslCacheService, MikroOrmModule, EffectivePermissionsService],
 })
-export class CaslModule {}
+export class CaslModule implements OnModuleInit {
+  onModuleInit(): void {
+    assertContextualPoliciesComplete();
+  }
+}

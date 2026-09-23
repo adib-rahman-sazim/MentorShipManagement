@@ -54,7 +54,7 @@ export interface IResolvedPermissionCodes {
   effectiveCodes: string[];
   grantedCodes: string[];
   revokedCodes: string[];
-  holdsAllManage: boolean; 
+  holdsAllManage: boolean;
 }
 
 export interface IUserPermissionsViewInput extends IResolvedPermissionCodes {
@@ -85,12 +85,12 @@ export interface IReplaceUserPermissionOverridesContext {
   dto: ReplaceUserPermissionOverridesDto;
 }
 
-export interface IExpandedAllManageInput {   
+export interface IExpandedAllManageInput {
   roleCodes: string[];
   grantedCodes: string[];
 }
 
-export interface IEffectivePermissionsResult {   
+export interface IEffectivePermissionsResult {
   permissions: Permission[];
   holdsAllManage: boolean;
 }
