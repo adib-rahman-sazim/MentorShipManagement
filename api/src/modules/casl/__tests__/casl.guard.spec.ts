@@ -13,6 +13,8 @@ import { EPermission, EPermissionCode, EResource } from "@/modules/permissions/p
 
 const USER_ID = "00000000-0000-0000-0000-000000000001";
 
+const SUBJECT_ID = "00000000-0000-0000-0000-0000000000a1";
+
 const UNKNOWN_CODE = "can_do_something_undefined" as EPermissionCode;
 
 const buildContext = (request: Partial<Request>): ExecutionContext =>
@@ -73,6 +75,23 @@ describe("CaslPermissionsGuard", () => {
       `Unknown required permission: ${UNKNOWN_CODE}`,
     );
     expect(ability.can).not.toHaveBeenCalled();
+  });
+
+  it("checks the named instance when a subject param is declared", async () => {
+    const { ability, guard } = buildGuard(
+      { permissions: [EPermissionCode.CAN_UPDATE_USER], subjectIdParam: "id" },
+      true,
+    );
+    const withParams = {
+      user: { id: USER_ID, role: EUserRole.SENSEI },
+      params: { id: SUBJECT_ID },
+    } as unknown as Request;
+
+    await expect(guard.canActivate(buildContext(withParams))).resolves.toBe(true);
+    expect(ability.can).toHaveBeenCalledWith(EPermission.UPDATE, {
+      __caslSubjectType__: EResource.USER,
+      id: SUBJECT_ID,
+    });
   });
 
   it("refuses a request without a known role", async () => {

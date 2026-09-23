@@ -2,9 +2,12 @@ import { HttpStatus, type INestApplication } from "@nestjs/common";
 
 import type { Connection, EntityManager, IDatabaseDriver, MikroORM } from "@mikro-orm/core";
 
+import dayjs from "dayjs";
 import request from "supertest";
 
+import { Mentorship } from "@/common/entities/mentorships.entity";
 import type { User } from "@/common/entities/users.entity";
+import { EMentorshipRelationshipType, EMentorshipStatus } from "@/common/enums/mentorships.enums";
 import { EUserRole } from "@/common/enums/roles.enums";
 import { EUserState } from "@/common/enums/users.enums";
 
@@ -89,24 +92,44 @@ describe("Users (E2E)", () => {
       role: EUserRole.MENTEE,
     });
 
-  const arrangeSensei = async (): Promise<string> => {
-    await createUserInDb(dbService, {
+  const arrangeSenseiWithUser = async (): Promise<{ token: string; user: User }> => {
+    const user = await createUserInDb(dbService, {
       email: SENSEI_EMAIL,
       password: E2E_PASSWORD,
       role: EUserRole.SENSEI,
     });
 
-    return signIn(SENSEI_EMAIL);
+    return { token: await signIn(SENSEI_EMAIL), user };
   };
 
-  const arrangeMentor = async (): Promise<string> => {
-    await createUserInDb(dbService, {
+  const arrangeSensei = async (): Promise<string> => (await arrangeSenseiWithUser()).token;
+
+  const arrangeMentorWithUser = async (): Promise<{ token: string; user: User }> => {
+    const user = await createUserInDb(dbService, {
       email: MENTOR_EMAIL,
       password: E2E_PASSWORD,
       role: EUserRole.MENTOR,
     });
 
-    return signIn(MENTOR_EMAIL);
+    return { token: await signIn(MENTOR_EMAIL), user };
+  };
+
+  const arrangeMentor = async (): Promise<string> => (await arrangeMentorWithUser()).token;
+
+  const arrangeMentorship = async (
+    supervisor: User,
+    subordinate: User,
+    relationshipType: EMentorshipRelationshipType,
+  ): Promise<void> => {
+    dbService.create(Mentorship, {
+      supervisor,
+      subordinate,
+      relationshipType,
+      status: EMentorshipStatus.ACTIVE,
+      startedAt: dayjs().toDate(),
+    });
+
+    await dbService.flush();
   };
 
   const provisionPayload = (overrides: Record<string, unknown> = {}) => ({
@@ -299,9 +322,13 @@ describe("Users (E2E)", () => {
         .expect(HttpStatus.OK);
     });
 
-    it("lets a sensei read a user", async () => {
-      const senseiToken = await arrangeSensei();
+    it("lets a sensei read someone indirectly below them", async () => {
+      const { token: senseiToken, user: sensei } = await arrangeSenseiWithUser();
+      const { user: mentor } = await arrangeMentorWithUser();
       const mentee = await arrangeMentee();
+
+      await arrangeMentorship(sensei, mentor, EMentorshipRelationshipType.SENSEI_MENTOR);
+      await arrangeMentorship(mentor, mentee, EMentorshipRelationshipType.MENTOR_MENTEE);
 
       await request(httpServer)
         .get(userRoute(mentee.id))
@@ -340,7 +367,7 @@ describe("Users (E2E)", () => {
         .expect(HttpStatus.FORBIDDEN);
     });
 
-    it("forbids a mentor from reading a user", async () => {
+    it("forbids a mentor from reading someone outside their hierarchy", async () => {
       const mentorToken = await arrangeMentor();
       const mentee = await arrangeMentee();
 
@@ -350,15 +377,15 @@ describe("Users (E2E)", () => {
         .expect(HttpStatus.FORBIDDEN);
     });
 
-    it("lets a mentee read a user", async () => {
+    it("lets a mentee read their own mentor", async () => {
       const mentee = await arrangeMentee();
       const menteeToken = await signIn(MENTEE_EMAIL);
-      const target = await arrangeMentee(VICTIM_EMAIL);
+      const { user: mentor } = await arrangeMentorWithUser();
 
-      expect(mentee.id).not.toBe(target.id);
+      await arrangeMentorship(mentor, mentee, EMentorshipRelationshipType.MENTOR_MENTEE);
 
       await request(httpServer)
-        .get(userRoute(target.id))
+        .get(userRoute(mentor.id))
         .set("Authorization", `Bearer ${menteeToken}`)
         .expect(HttpStatus.OK);
     });

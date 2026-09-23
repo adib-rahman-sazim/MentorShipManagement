@@ -1,0 +1,1 @@
+export type TPolicyConditions = Record<string, unknown> | undefined;
