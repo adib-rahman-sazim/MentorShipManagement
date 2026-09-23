@@ -16,12 +16,16 @@ export class MentorshipHierarchyService {
     return this.mentorshipsRepository.findDescendantUserIds(userId, MENTORSHIP_SUBTREE_MAX_DEPTH);
   }
 
-  async invalidateForMentorshipChange(userId: string): Promise<void> {
-    const ancestorUserIds = await this.mentorshipsRepository.findAncestorUserIds(
-      userId,
-      MENTORSHIP_SUBTREE_MAX_DEPTH,
-    );
+  findChainUserIds(userId: string): Promise<string[]> {
+    return this.mentorshipsRepository.findAncestorUserIds(userId, MENTORSHIP_SUBTREE_MAX_DEPTH);
+  }
 
-    await this.caslCacheService.invalidateUsers([userId, ...ancestorUserIds]);
+  async invalidateForMentorshipChange(userId: string): Promise<void> {
+    const [ancestorUserIds, descendantUserIds] = await Promise.all([
+      this.findChainUserIds(userId),
+      this.findSubtreeUserIds(userId),
+    ]);
+
+    await this.caslCacheService.invalidateUsers([userId, ...ancestorUserIds, ...descendantUserIds]);
   }
 }

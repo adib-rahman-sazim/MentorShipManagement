@@ -5,8 +5,10 @@ import { AbilityBuilder, createMongoAbility } from "@casl/ability";
 import type { Permission } from "@/common/entities/permissions.entity";
 import type { IAbilityContext } from "@/modules/casl/casl.interfaces";
 import { MentorshipHierarchyService } from "@/modules/mentorships/mentorship-hierarchy.service";
+import type { IPolicyScope } from "@/modules/permissions/contextual-policies.interfaces";
 import { EffectivePermissionsService } from "@/modules/permissions/effective-permissions.service";
 import { EPermissionConditionType, EResource } from "@/modules/permissions/permissions.enums";
+import { buildPolicyConditions } from "@/modules/permissions/policy-resolution.helpers";
 
 import type { TAppAbility, TAppRawRule } from "./casl.types";
 import { CaslCacheService } from "./casl-cache.service";
@@ -26,38 +28,48 @@ export class CaslAbilityFactory {
       return this.buildAbilityFromRules(cachedRules);
     }
 
-    const permissions = await this.effectivePermissionsService.resolveForUser(context);
-    const subtreeUserIds = await this.resolveSubtreeUserIds(context.userId, permissions);
-    const resolvedRules = this.toResolvedRules(permissions, subtreeUserIds);
+    const { permissions, holdsAllManage } =
+      await this.effectivePermissionsService.resolveForUser(context);
+
+    const scope = await this.resolveScope(context.userId, permissions, holdsAllManage);
+    const resolvedRules = this.toResolvedRules(permissions, scope, holdsAllManage);
     await this.caslCacheService.setRules(cacheKey, resolvedRules);
 
     return this.buildAbilityFromRules(resolvedRules);
   }
 
-  private async resolveSubtreeUserIds(
-    userId: string,
-    permissions: Permission[],
-  ): Promise<string[]> {
-    const needsSubtree = permissions.some(
-      (permission) => permission.conditionType === EPermissionConditionType.SUBTREE,
-    );
-
-    if (!needsSubtree) {
-      return [];
-    }
-
-    return this.mentorshipHierarchyService.findSubtreeUserIds(userId);
+  private resolveConditionType(
+    permission: Permission,
+    holdsAllManage: boolean,
+  ): EPermissionConditionType {
+    return holdsAllManage ? EPermissionConditionType.NONE : permission.conditionType;
   }
 
-  private buildConditions(
-    conditionType: EPermissionConditionType,
-    subtreeUserIds: string[],
-  ): Record<string, unknown> | undefined {
-    if (conditionType !== EPermissionConditionType.SUBTREE) {
-      return undefined;
+  private async resolveScope(
+    userId: string,
+    permissions: Permission[],
+    holdsAllManage: boolean,
+  ): Promise<IPolicyScope> {
+    const unscoped: IPolicyScope = { actorId: userId, subtreeUserIds: [], chainUserIds: [] };
+
+    if (holdsAllManage) {
+      return unscoped;
     }
 
-    return { id: { $in: subtreeUserIds } };
+    const conditionTypes = new Set(permissions.map((permission) => permission.conditionType));
+    const needsChain = conditionTypes.has(EPermissionConditionType.HIERARCHY);
+    const needsSubtree = needsChain || conditionTypes.has(EPermissionConditionType.SUBTREE);
+
+    if (!needsSubtree && !needsChain) {
+      return unscoped;
+    }
+
+    const [subtreeUserIds, chainUserIds] = await Promise.all([
+      needsSubtree ? this.mentorshipHierarchyService.findSubtreeUserIds(userId) : [],
+      needsChain ? this.mentorshipHierarchyService.findChainUserIds(userId) : [],
+    ]);
+
+    return { actorId: userId, subtreeUserIds, chainUserIds };
   }
 
   private buildAbilityFromRules(rules: TAppRawRule[]): TAppAbility {
@@ -77,13 +89,18 @@ export class CaslAbilityFactory {
     return build();
   }
 
-  private toResolvedRules(permissions: Permission[], subtreeUserIds: string[]): TAppRawRule[] {
+  private toResolvedRules(
+    permissions: Permission[],
+    scope: IPolicyScope,
+    holdsAllManage: boolean,
+  ): TAppRawRule[] {
     const deduplicated = new Map<string, TAppRawRule>();
 
     for (const permission of permissions) {
+      const conditionType = this.resolveConditionType(permission, holdsAllManage);
       const subject = permission.resource === EResource.ALL ? "all" : permission.resource;
-      const dedupeKey = `${permission.denied}|${permission.action}|${permission.resource}|${permission.conditionType}`;
-      const conditions = this.buildConditions(permission.conditionType, subtreeUserIds);
+      const dedupeKey = `${permission.denied}|${permission.action}|${permission.resource}|${conditionType}`;
+      const conditions = buildPolicyConditions(conditionType, scope);
 
       deduplicated.set(dedupeKey, {
         action: permission.action,
