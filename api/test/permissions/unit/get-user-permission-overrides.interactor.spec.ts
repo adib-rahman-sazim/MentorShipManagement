@@ -66,6 +66,7 @@ describe("GetUserPermissionOverridesInteractor", () => {
       effectiveCodes: [],
       grantedCodes: [],
       revokedCodes: [],
+      holdsAllManage: false,
     });
     permissionsSerializer.serializeUserPermissions.mockReturnValue(
       {} as UserPermissionOverridesResponse,

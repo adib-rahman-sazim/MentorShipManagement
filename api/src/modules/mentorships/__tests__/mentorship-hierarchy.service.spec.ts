@@ -10,6 +10,10 @@ const ANCESTOR_USER_IDS = [
   "00000000-0000-0000-0000-0000000000b1",
   "00000000-0000-0000-0000-0000000000b2",
 ];
+const DESCENDANT_USER_IDS = [
+  "00000000-0000-0000-0000-0000000000a1",
+  "00000000-0000-0000-0000-0000000000a2",
+];
 
 describe("MentorshipHierarchyService", () => {
   afterEach(() => {
@@ -19,6 +23,7 @@ describe("MentorshipHierarchyService", () => {
   const buildService = () => {
     const mentorshipsRepository = mockDeep<MentorshipsRepository>();
     mentorshipsRepository.findAncestorUserIds.mockResolvedValue(ANCESTOR_USER_IDS);
+    mentorshipsRepository.findDescendantUserIds.mockResolvedValue(DESCENDANT_USER_IDS);
 
     const caslCacheService = mockDeep<CaslCacheService>();
     caslCacheService.invalidateUsers.mockResolvedValue(undefined);
@@ -31,7 +36,7 @@ describe("MentorshipHierarchyService", () => {
   };
 
   describe("invalidateForMentorshipChange", () => {
-    it("clears the cache for the user and everyone above them", async () => {
+    it("clears the cache for the user and everyone above and below them", async () => {
       const { service, caslCacheService, mentorshipsRepository } = buildService();
 
       await service.invalidateForMentorshipChange(USER_ID);
@@ -40,9 +45,14 @@ describe("MentorshipHierarchyService", () => {
         USER_ID,
         MENTORSHIP_SUBTREE_MAX_DEPTH,
       );
+      expect(mentorshipsRepository.findDescendantUserIds).toHaveBeenCalledExactlyOnceWith(
+        USER_ID,
+        MENTORSHIP_SUBTREE_MAX_DEPTH,
+      );
       expect(caslCacheService.invalidateUsers).toHaveBeenCalledExactlyOnceWith([
         USER_ID,
         ...ANCESTOR_USER_IDS,
+        ...DESCENDANT_USER_IDS,
       ]);
     });
   });
