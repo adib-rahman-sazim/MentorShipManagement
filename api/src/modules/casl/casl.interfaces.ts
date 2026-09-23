@@ -9,4 +9,5 @@ export interface ISubjectWithFields {
   __caslSubjectType__?: string;
   id?: string;
   userId?: string;
+  createdBy?: string;
 }
