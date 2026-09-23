@@ -56,7 +56,11 @@ describe("CaslAbilityFactory", () => {
   const buildPermission = (overrides: Partial<Permission>): Permission =>
     permissionFactory.makeEntity({ id: nextPermissionId++, ...overrides });
 
-  const buildFactory = (permissions: Permission[], cachedRules: TAppRawRule[] | null = null) => {
+  const buildFactory = (
+    permissions: Permission[],
+    cachedRules: TAppRawRule[] | null = null,
+    holdsAllManage = false,
+  ) => {
     const caslCacheService = mockDeep<CaslCacheService>();
     caslCacheService.buildUserCacheKey.mockReturnValue(`casl:user:${USER_ID}`);
     caslCacheService.getRules.mockResolvedValue(cachedRules);
@@ -64,7 +68,7 @@ describe("CaslAbilityFactory", () => {
     caslCacheService.invalidateUsers.mockResolvedValue(undefined);
 
     const effectivePermissionsService = mockDeep<EffectivePermissionsService>();
-    effectivePermissionsService.resolveForUser.mockResolvedValue(permissions);
+    effectivePermissionsService.resolveForUser.mockResolvedValue({ permissions, holdsAllManage });
 
     const mentorshipsRepository = mockDeep<MentorshipsRepository>();
     mentorshipsRepository.findDescendantUserIds.mockResolvedValue(SUBTREE_USER_IDS);
@@ -240,19 +244,59 @@ describe("CaslAbilityFactory", () => {
     });
   });
 
+  describe("hierarchy resolution", () => {
+    const readUserHierarchyPermission = () =>
+      buildPermission({
+        code: EPermissionCode.CAN_READ_USER,
+        resource: EResource.USER,
+        action: EPermission.READ,
+        conditionType: EPermissionConditionType.HIERARCHY,
+      });
+
+    it("carries people above and below in one id list", async () => {
+      const { factory, caslCacheService } = buildFactory([readUserHierarchyPermission()]);
+
+      await factory.createForUser(ABILITY_CONTEXT);
+
+      expect(cachedRulesFrom(caslCacheService)[0].conditions).toEqual({
+        id: { $in: [...SUBTREE_USER_IDS, ...ANCESTOR_USER_IDS] },
+      });
+    });
+
+    it("does not query upward for a subtree-only permission", async () => {
+      const { factory, mentorshipsRepository } = buildFactory([updateUserSubtreePermission()]);
+
+      await factory.createForUser(ABILITY_CONTEXT);
+
+      expect(mentorshipsRepository.findAncestorUserIds).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("the manage-all holder", () => {
+    it("is never scoped by a condition the wildcard expanded into", async () => {
+      const { factory, caslCacheService, mentorshipsRepository } = buildFactory(
+        [updateUserSubtreePermission()],
+        null,
+        true,
+      );
+
+      await factory.createForUser(ABILITY_CONTEXT);
+
+      expect(cachedRulesFrom(caslCacheService)[0].conditions).toBeUndefined();
+      expect(mentorshipsRepository.findDescendantUserIds).not.toHaveBeenCalled();
+    });
+  });
+
   describe("invalidateForMentorshipChange", () => {
-    it("clears the cache for the user and everyone above them", async () => {
-      const { factory, caslCacheService, mentorshipsRepository } = buildFactory([]);
+    it("clears the cache for the user and everyone above and below them", async () => {
+      const { factory, caslCacheService } = buildFactory([]);
 
       await factory.invalidateForMentorshipChange(USER_ID);
 
-      expect(mentorshipsRepository.findAncestorUserIds).toHaveBeenCalledExactlyOnceWith(
-        USER_ID,
-        MENTORSHIP_SUBTREE_MAX_DEPTH,
-      );
       expect(caslCacheService.invalidateUsers).toHaveBeenCalledExactlyOnceWith([
         USER_ID,
         ...ANCESTOR_USER_IDS,
+        ...SUBTREE_USER_IDS,
       ]);
     });
   });

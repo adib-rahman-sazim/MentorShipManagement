@@ -8,11 +8,11 @@ import { Role } from "@/common/entities/roles.entity";
 import { RolePermission } from "@/common/entities/roles-permissions.entity";
 import { UserPermissionOverride } from "@/common/entities/user-permission-overrides.entity";
 import { EffectivePermissionsService } from "@/modules/permissions/effective-permissions.service";
+import { assertContextualPoliciesComplete } from "@/modules/permissions/policy-resolution.helpers";
 import { RedisModule } from "@/modules/redis/redis.module";
 
 import { CaslAbilityFactory } from "./casl.ability-factory";
 import { CaslCacheService } from "./casl-cache.service";
-import { assertContextualPoliciesComplete } from "@/modules/permissions/policy-resolution.helpers";
 
 @Global()
 @Module({

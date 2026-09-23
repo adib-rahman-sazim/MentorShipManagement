@@ -2,9 +2,12 @@ import { HttpStatus, type INestApplication } from "@nestjs/common";
 
 import type { Connection, EntityManager, IDatabaseDriver, MikroORM } from "@mikro-orm/core";
 
+import dayjs from "dayjs";
 import request from "supertest";
 
+import { Mentorship } from "@/common/entities/mentorships.entity";
 import type { User } from "@/common/entities/users.entity";
+import { EMentorshipRelationshipType, EMentorshipStatus } from "@/common/enums/mentorships.enums";
 import { EUserRole } from "@/common/enums/roles.enums";
 import {
   EPermissionCode,
@@ -85,6 +88,15 @@ describe("Permission overrides (E2E)", () => {
       password: E2E_PASSWORD,
       role: EUserRole.MENTEE,
     });
+
+    dbService.create(Mentorship, {
+      supervisor: mentor,
+      subordinate: subject,
+      relationshipType: EMentorshipRelationshipType.MENTOR_MENTEE,
+      status: EMentorshipStatus.ACTIVE,
+      startedAt: dayjs().toDate(),
+    });
+    await dbService.flush();
   });
 
   const signIn = async (email: string): Promise<string> => {

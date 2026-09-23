@@ -53,7 +53,7 @@ describe("EffectivePermissionsService (Integration)", () => {
     );
 
   const resolveCodes = async (user: User, role: EUserRole): Promise<string[]> => {
-    const permissions = await buildService().resolveForUser({ userId: user.id, role });
+    const { permissions } = await buildService().resolveForUser({ userId: user.id, role });
 
     return permissions.map((permission) => permission.code);
   };

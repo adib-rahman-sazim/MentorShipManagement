@@ -66,7 +66,7 @@ describe("EffectivePermissionsService", () => {
   };
 
   const resolveCodes = async (role = EUserRole.MENTEE): Promise<string[]> => {
-    const permissions = await service.resolveForUser({ userId: SUBJECT_USER_ID, role });
+    const { permissions } = await service.resolveForUser({ userId: SUBJECT_USER_ID, role });
 
     return permissions.map((permission) => permission.code);
   };
@@ -154,12 +154,33 @@ describe("EffectivePermissionsService", () => {
     const update = makePermission(USER_UPDATE_CODE, EPermission.UPDATE);
     arrangeRepositories({ allPermissions: [read, update], rolePermissions: [read] });
 
-    const permissions = await service.resolveForUser({
+    const { permissions } = await service.resolveForUser({
       userId: SUBJECT_USER_ID,
       role: EUserRole.MENTEE,
     });
 
     expect(permissions).toHaveLength(1);
     expect(permissions[0]).toBe(read);
+  });
+
+  it("reports the wildcard so the factory can leave its permissions unscoped", async () => {
+    arrangeRepositories({ allPermissions: [], rolePermissions: [] });
+
+    const withoutWildcard = await service.resolveForUser({
+      userId: SUBJECT_USER_ID,
+      role: EUserRole.MENTEE,
+    });
+
+    expect(withoutWildcard.holdsAllManage).toBe(false);
+
+    const allManage = makePermission(ALL_MANAGE_PERMISSION_CODE, EPermission.MANAGE, EResource.ALL);
+    arrangeRepositories({ allPermissions: [allManage], rolePermissions: [allManage] });
+
+    const withWildcard = await service.resolveForUser({
+      userId: SUBJECT_USER_ID,
+      role: EUserRole.SUPERADMIN,
+    });
+
+    expect(withWildcard.holdsAllManage).toBe(true);
   });
 });
