@@ -1,7 +1,15 @@
 import { EUserRole } from "@/common/enums/roles.enums";
 
-import { toPermissionDefinition } from "./permissions.catalog.helpers";
-import { EPermission, EPermissionCode, EResource } from "./permissions.enums";
+import {
+  toPermissionDefinition,
+  toScopedPermissionDefinition,
+} from "./permissions.catalog.helpers";
+import {
+  EPermission,
+  EPermissionCode,
+  EPermissionConditionType,
+  EResource,
+} from "./permissions.enums";
 import type { IPermissionDefinition } from "./permissions.interfaces";
 
 export const ALL_MANAGE_PERMISSION_CODE = EPermissionCode.CAN_MANAGE_ALL;
@@ -14,10 +22,25 @@ export const DEFAULT_PERMISSION_DEFINITIONS: IPermissionDefinition[] = [
     "Full platform manage",
   ),
   toPermissionDefinition(EPermissionCode.CAN_LIST_USERS, EResource.USER, EPermission.LIST),
-  toPermissionDefinition(EPermissionCode.CAN_READ_USER, EResource.USER, EPermission.READ),
+  toScopedPermissionDefinition(
+    EPermissionCode.CAN_READ_USER,
+    EResource.USER,
+    EPermission.READ,
+    EPermissionConditionType.HIERARCHY,
+  ),
   toPermissionDefinition(EPermissionCode.CAN_CREATE_USER, EResource.USER, EPermission.CREATE),
-  toPermissionDefinition(EPermissionCode.CAN_UPDATE_USER, EResource.USER, EPermission.UPDATE),
-  toPermissionDefinition(EPermissionCode.CAN_DELETE_USER, EResource.USER, EPermission.DELETE),
+  toScopedPermissionDefinition(
+    EPermissionCode.CAN_UPDATE_USER,
+    EResource.USER,
+    EPermission.UPDATE,
+    EPermissionConditionType.SUBTREE,
+  ),
+  toScopedPermissionDefinition(
+    EPermissionCode.CAN_DELETE_USER,
+    EResource.USER,
+    EPermission.DELETE,
+    EPermissionConditionType.SUBTREE,
+  ),
   toPermissionDefinition(EPermissionCode.CAN_LIST_ROLES, EResource.ROLE, EPermission.LIST),
   toPermissionDefinition(EPermissionCode.CAN_READ_ROLE, EResource.ROLE, EPermission.READ),
   toPermissionDefinition(EPermissionCode.CAN_CREATE_ROLE, EResource.ROLE, EPermission.CREATE),
@@ -103,7 +126,7 @@ export const DEFAULT_ROLE_PERMISSION_CODES: Record<EUserRole, EPermissionCode[]>
     EPermissionCode.CAN_LIST_USERS,
     EPermissionCode.CAN_READ_USER,
   ],
-  [EUserRole.MENTOR]: [...HIERARCHY_PAGE_VIEW_CODES],
+  [EUserRole.MENTOR]: [...HIERARCHY_PAGE_VIEW_CODES, EPermissionCode.CAN_READ_USER],
   [EUserRole.MENTEE]: [...HIERARCHY_PAGE_VIEW_CODES, EPermissionCode.CAN_READ_USER],
 };
 

@@ -19,3 +19,18 @@ export const toPermissionDefinition = (
   denied: false,
   description,
 });
+
+export const toScopedPermissionDefinition = (
+  code: EPermissionCode,
+  resource: EResource,
+  action: EPermission,
+  conditionType: EPermissionConditionType,
+  description?: string,
+): IPermissionDefinition => ({
+  code,
+  resource,
+  action,
+  conditionType,
+  denied: false,
+  description,
+});
