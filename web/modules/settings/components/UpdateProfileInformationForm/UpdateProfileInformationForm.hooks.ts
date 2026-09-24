@@ -4,19 +4,21 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { useUpdateUserProfileMutation } from "@/shared/redux/rtk-apis/user-profiles/user-profiles.api";
-import {
-  ICurrentUserProfileResponse,
-  IUpdateProfileDto,
-} from "@/shared/redux/rtk-apis/user-profiles/user-profiles.interfaces";
+import { IUserResponse } from "@/shared/typedefs";
 import { parseApiErrorMessage } from "@/shared/utils/errors";
 
+import {
+  TOAST_MESSAGE_PROFILE_UPDATE_FAILED,
+  TOAST_MESSAGE_PROFILE_UPDATED,
+} from "./UpdateProfileInformationForm.constants";
 import {
   getUpdateProfileInformationInitialValues,
   updateProfileInformationValidationSchemaResolver,
 } from "./UpdateProfileInformationForm.helpers";
+import { TUpdateProfileInformationFormFields } from "./UpdateProfileInformationForm.types";
 
-export const useUpdateUserProfileInformationForm = (userProfile?: ICurrentUserProfileResponse) => {
-  const form = useForm<IUpdateProfileDto>({
+export const useUpdateUserProfileInformationForm = (userProfile?: IUserResponse) => {
+  const form = useForm<TUpdateProfileInformationFormFields>({
     defaultValues: getUpdateProfileInformationInitialValues(userProfile),
     mode: "onBlur",
     resolver: updateProfileInformationValidationSchemaResolver,
@@ -26,18 +28,15 @@ export const useUpdateUserProfileInformationForm = (userProfile?: ICurrentUserPr
     form.reset(getUpdateProfileInformationInitialValues(userProfile));
   }, [userProfile, form]);
 
-  const [updateUserProfileMutation, { reset }] = useUpdateUserProfileMutation();
+  const [updateUserProfileMutation] = useUpdateUserProfileMutation();
 
-  const onSubmit = async (updatedValues: IUpdateProfileDto) => {
+  const onSubmit = async (updatedValues: TUpdateProfileInformationFormFields) => {
     try {
-      await updateUserProfileMutation(updatedValues);
-
+      await updateUserProfileMutation(updatedValues).unwrap();
       form.reset(updatedValues);
-      reset();
-
-      toast.success("Profile information updated successfully");
+      toast.success(TOAST_MESSAGE_PROFILE_UPDATED);
     } catch (error) {
-      toast.error("Failed to update profile information", {
+      toast.error(TOAST_MESSAGE_PROFILE_UPDATE_FAILED, {
         description: parseApiErrorMessage(error),
       });
     }

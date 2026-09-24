@@ -1,12 +1,11 @@
+import GeneralInformation from "@/modules/settings/components/GeneralInformation";
+import ProfileInformation from "@/modules/settings/components/ProfileInformation";
+import { useUpdateUserProfileInformationForm } from "@/modules/settings/components/UpdateProfileInformationForm";
 import LoadingSpinner from "@/shared/components/LoadingSpinner";
 import { Button } from "@/shared/components/shadui/button";
 import { Form } from "@/shared/components/shadui/form";
 import FormSkeleton from "@/shared/components/skeletons/FormSkeleton";
 import { useGetUserProfileQuery } from "@/shared/redux/rtk-apis/user-profiles/user-profiles.api";
-
-import GeneralInformation from "../../components/GeneralInformation";
-import ProfileInformation from "../../components/ProfileInformation";
-import { useUpdateUserProfileInformationForm } from "../../components/UpdateProfileInformationForm";
 
 const SettingsContainer = () => {
   const { data, isLoading } = useGetUserProfileQuery();
@@ -29,7 +28,7 @@ const SettingsContainer = () => {
         <form className="w-full" onSubmit={form.handleSubmit(onSubmit)}>
           <GeneralInformation userProfile={data} />
 
-          <ProfileInformation userProfile={data} form={form} />
+          <ProfileInformation form={form} />
 
           <Button type="submit" className="mt-6" disabled={!form.formState.isDirty}>
             {isSubmitting ? <LoadingSpinner /> : null}
