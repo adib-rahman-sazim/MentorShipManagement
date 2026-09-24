@@ -1,36 +1,39 @@
+import { useEffect } from "react";
+
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-import {
-  useUpdateMemberRoleMutation,
-  useUpdateSystemRolesMutation,
-} from "@/shared/redux/rtk-apis/members/members.api";
+import { useUpdateUserMutation } from "@/shared/redux/rtk-apis/users/users.api";
 import { parseApiErrorMessage } from "@/shared/utils/errors";
 
-import { SYSTEM_ROLES } from "./ChangeUserRoleForm.constants";
 import {
-  changeUserRoleDefaultValues,
+  TOAST_MESSAGE_USER_ROLE_UPDATE_FAILED,
+  TOAST_MESSAGE_USER_ROLE_UPDATED,
+} from "./ChangeUserRoleForm.constants";
+import {
   changeUserRoleValidationSchemaResolver,
+  getChangeUserRoleDefaultValues,
 } from "./ChangeUserRoleForm.helpers";
+import { IUseChangeUserRoleFormParams } from "./ChangeUserRoleForm.interfaces";
 import type { TChangeUserRoleFormFields } from "./ChangeUserRoleForm.types";
 
 export const useChangeUserRoleForm = ({
   userId,
+  currentRole,
   onSuccess,
   onError,
-}: {
-  userId?: string;
-  onSuccess?: () => void;
-  onError?: () => void;
-}) => {
+}: IUseChangeUserRoleFormParams) => {
   const form = useForm<TChangeUserRoleFormFields>({
-    defaultValues: changeUserRoleDefaultValues,
+    defaultValues: getChangeUserRoleDefaultValues(currentRole),
     mode: "onSubmit",
     resolver: changeUserRoleValidationSchemaResolver,
   });
 
-  const [updateMemberRole, { reset: resetOrgMutation }] = useUpdateMemberRoleMutation();
-  const [updateSystemRoles, { reset: resetSystemMutation }] = useUpdateSystemRolesMutation();
+  useEffect(() => {
+    form.reset(getChangeUserRoleDefaultValues(currentRole));
+  }, [form, currentRole]);
+
+  const [updateUser] = useUpdateUserMutation();
 
   const onSubmit = async (data: TChangeUserRoleFormFields) => {
     if (!userId) {
@@ -38,33 +41,12 @@ export const useChangeUserRoleForm = ({
     }
 
     try {
-      if (SYSTEM_ROLES.has(data.role)) {
-        await updateSystemRoles({
-          userId,
-          roleSlugs: [data.role],
-        }).unwrap();
-      } else {
-        await updateMemberRole({
-          userId,
-          roleSlugs: [data.role],
-        }).unwrap();
-      }
-
-      form.reset();
-      resetOrgMutation();
-      resetSystemMutation();
-
-      toast.success("User role updated successfully");
-
-      if (onSuccess) {
-        onSuccess();
-      }
+      await updateUser({ id: userId, role: data.role }).unwrap();
+      toast.success(TOAST_MESSAGE_USER_ROLE_UPDATED);
+      onSuccess?.();
     } catch (error) {
-      if (onError) {
-        onError();
-      }
-
-      toast.error("Failed to update user role", {
+      onError?.();
+      toast.error(TOAST_MESSAGE_USER_ROLE_UPDATE_FAILED, {
         description: parseApiErrorMessage(error),
       });
     }
