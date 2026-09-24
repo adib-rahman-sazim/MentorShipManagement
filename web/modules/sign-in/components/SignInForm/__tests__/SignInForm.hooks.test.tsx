@@ -47,7 +47,7 @@ const VALID_PASSWORD = "correct-horse";
 const INVALID_EMAIL = "not-an-email";
 const TOO_SHORT_PASSWORD = "short";
 
-const SAFE_REDIRECT = "/dashboard/customers";
+const SAFE_REDIRECT = "/settings";
 const PROTOCOL_RELATIVE_REDIRECT = "//evil.example.com";
 const ABSOLUTE_REDIRECT = "https://evil.example.com";
 
