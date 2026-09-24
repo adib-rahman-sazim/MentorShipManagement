@@ -1,3 +1,10 @@
+export interface IAuthErrorResponse {
+  errorCode?: EAuthErrorCode;
+  errors: object[];
+  message: string;
+  statusCode: number;
+}
+
 export interface ICreateUserDto {
   /** @format email */
   email: string;
@@ -15,6 +22,11 @@ export interface ICreateUserDto {
 
 export interface IDeleteUserParams {
   id: string;
+}
+
+export enum EAuthErrorCode {
+  ACCOUNT_DEACTIVATED = "ACCOUNT_DEACTIVATED",
+  ACCOUNT_NOT_FOUND = "ACCOUNT_NOT_FOUND",
 }
 
 export enum EFeatureFlagKey {

@@ -13,6 +13,7 @@ import type { Request } from "express";
 import { IS_PUBLIC_KEY } from "@/common/decorators/auth/public.decorator.constants";
 import { EUserState } from "@/common/enums/users.enums";
 import { AUTH_ERROR_MESSAGES } from "@/modules/auth/auth.constants";
+import { EAuthErrorCode } from "@/modules/auth/auth.enums";
 import { AuthService } from "@/modules/auth/auth.service";
 
 @Injectable()
@@ -53,11 +54,17 @@ export class SessionGuard implements CanActivate {
       }
 
       if (session.user.deletedAt) {
-        throw new ForbiddenException(AUTH_ERROR_MESSAGES.ACCOUNT_NOT_FOUND);
+        throw new ForbiddenException({
+          message: AUTH_ERROR_MESSAGES.ACCOUNT_NOT_FOUND,
+          errorCode: EAuthErrorCode.ACCOUNT_NOT_FOUND,
+        });
       }
 
       if (session.user.state === EUserState.INACTIVE) {
-        throw new ForbiddenException(AUTH_ERROR_MESSAGES.ACCOUNT_DEACTIVATED);
+        throw new ForbiddenException({
+          message: AUTH_ERROR_MESSAGES.ACCOUNT_DEACTIVATED,
+          errorCode: EAuthErrorCode.ACCOUNT_DEACTIVATED,
+        });
       }
 
       if (!session.user.role) {
