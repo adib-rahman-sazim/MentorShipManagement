@@ -1,6 +1,5 @@
 export interface IFeatureFlagIdentifyProperties {
   email?: string;
-  organizationId?: string | null;
   role?: string | null;
 }
 

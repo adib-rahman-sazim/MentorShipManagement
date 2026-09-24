@@ -1,5 +1,8 @@
-export interface IInviteUserDialogProps {
+export interface ICreateUserDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  organizationId?: string;
+}
+
+export interface IUseCreateUserFormParams {
+  onSuccess: () => void;
 }

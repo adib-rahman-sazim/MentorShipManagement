@@ -1,3 +1,6 @@
-import { EUserRole } from "@/shared/redux/rtk-apis/roles/roles.enums";
+export const CHANGE_USER_ROLE_LABEL = "Role";
+export const CHANGE_USER_ROLE_PLACEHOLDER = "Select a role";
+export const CHANGE_USER_ROLE_REQUIRED_MESSAGE = "Role is required.";
 
-export const SYSTEM_ROLES = new Set<EUserRole>([EUserRole.SUPER_ADMIN, EUserRole.MANAGER]);
+export const TOAST_MESSAGE_USER_ROLE_UPDATED = "User role updated";
+export const TOAST_MESSAGE_USER_ROLE_UPDATE_FAILED = "Failed to update user role";

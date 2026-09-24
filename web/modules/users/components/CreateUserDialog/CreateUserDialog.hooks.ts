@@ -1,123 +1,47 @@
-import { useEffect, useMemo } from "react";
-
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-import { useAbilityContext } from "@/shared/providers/AbilityProvider";
-import { useCreateInvitationMutation } from "@/shared/redux/rtk-apis/invitations/invitations.api";
-import { ICreateInvitationDto } from "@/shared/redux/rtk-apis/invitations/invitations.interfaces";
-import { useGetOrganizationsQuery } from "@/shared/redux/rtk-apis/organizations/organizations.api";
-import { EUserRole } from "@/shared/redux/rtk-apis/roles/roles.enums";
+import { useCreateUserMutation } from "@/shared/redux/rtk-apis/users/users.api";
 import { parseApiErrorMessage } from "@/shared/utils/errors";
 
-import { INVITE_ORGANIZATIONS_PAGE_SIZE } from "./CreateUserDialog.constants";
 import {
-  buildCreateInvitationPayload,
-  getInviteRoleOptionsForAbility,
-  inviteUserFormInitialValues,
-  inviteUserFormResolver,
+  TOAST_MESSAGE_USER_CREATE_FAILED,
+  TOAST_MESSAGE_USER_CREATED,
+} from "./CreateUserDialog.constants";
+import {
+  buildCreateUserPayload,
+  createUserFormInitialValues,
+  createUserFormResolver,
 } from "./CreateUserDialog.helpers";
+import { IUseCreateUserFormParams } from "./CreateUserDialog.interfaces";
+import { TCreateUserFormFields } from "./CreateUserDialog.types";
 
-export const useInviteUserForm = ({
-  onOpenChange,
-  organizationId,
-}: {
-  onOpenChange: (open: boolean) => void;
-  organizationId?: string;
-}) => {
-  const { ability } = useAbilityContext();
-  const roleOptions = useMemo(
-    () => getInviteRoleOptionsForAbility((action, resource) => ability.can(action, resource)),
-    [ability],
-  );
-
-  const {
-    data: organizationsPage,
-    isLoading: isOrganizationsLoading,
-    isFetching: isOrganizationsFetching,
-  } = useGetOrganizationsQuery(
-    { page: 1, limit: INVITE_ORGANIZATIONS_PAGE_SIZE },
-    { skip: Boolean(organizationId) },
-  );
-
-  const organizationOptions = useMemo(
-    () =>
-      (organizationsPage?.data ?? []).map((organization) => ({
-        value: organization.id,
-        label: organization.name,
-      })),
-    [organizationsPage?.data],
-  );
-
-  const form = useForm<ICreateInvitationDto>({
-    defaultValues: {
-      ...inviteUserFormInitialValues,
-      role: organizationId
-        ? EUserRole.CUSTOMER
-        : (roleOptions[0]?.value ?? inviteUserFormInitialValues.role),
-      organizationId,
-    },
-    resolver: inviteUserFormResolver,
+export const useCreateUserForm = ({ onSuccess }: IUseCreateUserFormParams) => {
+  const form = useForm<TCreateUserFormFields>({
+    defaultValues: createUserFormInitialValues,
+    resolver: createUserFormResolver,
   });
 
-  const watchedRole = form.watch("role");
+  const [createUser] = useCreateUserMutation();
 
-  useEffect(() => {
-    const defaultRole = organizationId
-      ? EUserRole.CUSTOMER
-      : (roleOptions[0]?.value ?? inviteUserFormInitialValues.role);
-    form.reset({
-      ...inviteUserFormInitialValues,
-      role: defaultRole,
-      organizationId,
-    });
-  }, [form, organizationId, roleOptions]);
-
-  useEffect(() => {
-    if (watchedRole !== EUserRole.CUSTOMER) {
-      form.setValue("organizationId", undefined);
-      return;
-    }
-
-    if (organizationId) {
-      form.setValue("organizationId", organizationId);
-    }
-  }, [form, organizationId, watchedRole]);
-
-  const [createInvitation] = useCreateInvitationMutation();
-
-  const onSubmit = async (values: ICreateInvitationDto) => {
+  const onSubmit = async (values: TCreateUserFormFields) => {
     try {
-      const result = await createInvitation(
-        buildCreateInvitationPayload(values, organizationId),
-      ).unwrap();
-      if (result.success) {
-        toast.success("Invitation sent successfully");
-        form.reset({
-          ...inviteUserFormInitialValues,
-          role: roleOptions[0]?.value ?? inviteUserFormInitialValues.role,
-          organizationId,
-        });
-        onOpenChange(false);
-      } else {
-        toast.error("Failed to invite user", {
-          description: result.message,
-        });
-      }
+      await createUser(buildCreateUserPayload(values)).unwrap();
+      toast.success(TOAST_MESSAGE_USER_CREATED);
+      form.reset(createUserFormInitialValues);
+      onSuccess();
     } catch (error) {
-      toast.error("Failed to invite user", {
+      toast.error(TOAST_MESSAGE_USER_CREATE_FAILED, {
         description: parseApiErrorMessage(error),
       });
     }
   };
 
+  const resetForm = () => form.reset(createUserFormInitialValues);
+
   return {
     form,
     onSubmit: form.handleSubmit(onSubmit),
-    roleOptions,
-    watchedRole,
-    organizationOptions,
-    isOrganizationsLoading: isOrganizationsLoading || isOrganizationsFetching,
-    hasOrganizationOptions: organizationOptions.length > 0,
+    resetForm,
   };
 };

@@ -11,7 +11,7 @@ import SignedInUserAvatarAndMenu from "@/shared/components/NavigationBar/compone
 import { Button } from "@/shared/components/shadui/button";
 import { Separator } from "@/shared/components/shadui/separator";
 import { Sheet, SheetContent, SheetTrigger } from "@/shared/components/shadui/sheet";
-import { HOME_ROUTE, PRICING_ROUTE, SIGN_IN_ROUTE } from "@/shared/constants/routes.constants";
+import { HOME_ROUTE, SIGN_IN_ROUTE } from "@/shared/constants/routes.constants";
 import { useAuth } from "@/shared/providers/AuthProvider";
 
 const NavigationBar = () => {
@@ -42,7 +42,6 @@ const NavigationBar = () => {
             <Link href="/about">About</Link>
             <Link href="/products">Products</Link>
             <Link href="/contact">Contact</Link>
-            <Link href={PRICING_ROUTE}>Pricing</Link>
           </nav>
         </div>
 

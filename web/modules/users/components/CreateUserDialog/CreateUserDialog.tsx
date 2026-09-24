@@ -1,3 +1,5 @@
+import { ASSIGNABLE_USER_ROLE_OPTIONS, USER_STATE_OPTIONS } from "@/modules/users/users.constants";
+import { PasswordInput } from "@/shared/components/Form/PasswordInput";
 import LoadingSpinner from "@/shared/components/LoadingSpinner";
 import { Button } from "@/shared/components/shadui/button";
 import {
@@ -23,71 +25,59 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/shadui/select";
-import { EUserRole } from "@/shared/redux/rtk-apis/roles/roles.enums";
 
 import {
-  INVITE_ORGANIZATION_EMPTY_PLACEHOLDER,
-  INVITE_ORGANIZATION_LOADING_PLACEHOLDER,
-  INVITE_ORGANIZATION_SELECT_LABEL,
-  INVITE_ORGANIZATION_SELECT_PLACEHOLDER,
+  CREATE_USER_DIALOG_DESCRIPTION,
+  CREATE_USER_DIALOG_TITLE,
+  CREATE_USER_EMAIL_LABEL,
+  CREATE_USER_EMAIL_PLACEHOLDER,
+  CREATE_USER_NAME_LABEL,
+  CREATE_USER_NAME_PLACEHOLDER,
+  CREATE_USER_PASSWORD_LABEL,
+  CREATE_USER_PASSWORD_PLACEHOLDER,
+  CREATE_USER_ROLE_LABEL,
+  CREATE_USER_ROLE_PLACEHOLDER,
+  CREATE_USER_STATE_LABEL,
+  CREATE_USER_STATE_PLACEHOLDER,
+  CREATE_USER_SUBMIT_LABEL,
 } from "./CreateUserDialog.constants";
-import { useInviteUserForm } from "./CreateUserDialog.hooks";
-import { IInviteUserDialogProps } from "./CreateUserDialog.interfaces";
+import { useCreateUserForm } from "./CreateUserDialog.hooks";
+import { ICreateUserDialogProps } from "./CreateUserDialog.interfaces";
 
-const InviteUserDialog = ({ isOpen, onOpenChange, organizationId }: IInviteUserDialogProps) => {
-  const {
-    form,
-    onSubmit,
-    roleOptions,
-    watchedRole,
-    organizationOptions,
-    isOrganizationsLoading,
-    hasOrganizationOptions,
-  } = useInviteUserForm({ onOpenChange, organizationId });
+const CreateUserDialog = ({ isOpen, onOpenChange }: ICreateUserDialogProps) => {
+  const { form, onSubmit, resetForm } = useCreateUserForm({
+    onSuccess: () => onOpenChange(false),
+  });
   const isSubmitting = form.formState.isSubmitting;
-  const shouldShowOrganizationSelect = watchedRole === EUserRole.CUSTOMER && !organizationId;
 
-  let organizationSelectPlaceholder = INVITE_ORGANIZATION_EMPTY_PLACEHOLDER;
-  if (isOrganizationsLoading) {
-    organizationSelectPlaceholder = INVITE_ORGANIZATION_LOADING_PLACEHOLDER;
-  } else if (hasOrganizationOptions) {
-    organizationSelectPlaceholder = INVITE_ORGANIZATION_SELECT_PLACEHOLDER;
-  }
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      resetForm();
+    }
+    onOpenChange(open);
+  };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Invite User</DialogTitle>
-          <DialogDescription>
-            Send an invitation email to add a new user
-            {organizationId ? " to this organization" : ""}.
-          </DialogDescription>
+          <DialogTitle>{CREATE_USER_DIALOG_TITLE}</DialogTitle>
+          <DialogDescription>{CREATE_USER_DIALOG_DESCRIPTION}</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={onSubmit} className="space-y-4">
             <FormField
               control={form.control}
-              name="firstName"
+              name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>First Name</FormLabel>
+                  <FormLabel>{CREATE_USER_NAME_LABEL}</FormLabel>
                   <FormControl>
-                    <Input disabled={isSubmitting} placeholder="First Name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="lastName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Last Name</FormLabel>
-                  <FormControl>
-                    <Input disabled={isSubmitting} placeholder="Last Name" {...field} />
+                    <Input
+                      disabled={isSubmitting}
+                      placeholder={CREATE_USER_NAME_PLACEHOLDER}
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -99,9 +89,33 @@ const InviteUserDialog = ({ isOpen, onOpenChange, organizationId }: IInviteUserD
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>{CREATE_USER_EMAIL_LABEL}</FormLabel>
                   <FormControl>
-                    <Input disabled={isSubmitting} placeholder="Email" type="email" {...field} />
+                    <Input
+                      disabled={isSubmitting}
+                      placeholder={CREATE_USER_EMAIL_PLACEHOLDER}
+                      type="email"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{CREATE_USER_PASSWORD_LABEL}</FormLabel>
+                  <FormControl>
+                    <PasswordInput
+                      disabled={isSubmitting}
+                      placeholder={CREATE_USER_PASSWORD_PLACEHOLDER}
+                      autoComplete="new-password"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -113,24 +127,25 @@ const InviteUserDialog = ({ isOpen, onOpenChange, organizationId }: IInviteUserD
               name="role"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Role</FormLabel>
+                  <FormLabel>{CREATE_USER_ROLE_LABEL}</FormLabel>
                   <Select
                     onValueChange={field.onChange}
-                    value={field.value ?? undefined}
+                    value={field.value}
                     disabled={isSubmitting}
                   >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue
-                          placeholder="Select a role"
+                          placeholder={CREATE_USER_ROLE_PLACEHOLDER}
                           renderValue={(value) =>
-                            roleOptions.find((opt) => opt.value === value)?.label ?? String(value)
+                            ASSIGNABLE_USER_ROLE_OPTIONS.find((option) => option.value === value)
+                              ?.label ?? String(value)
                           }
                         />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {roleOptions.map((option) => (
+                      {ASSIGNABLE_USER_ROLE_OPTIONS.map((option) => (
                         <SelectItem key={option.value} value={option.value}>
                           {option.label}
                         </SelectItem>
@@ -142,46 +157,44 @@ const InviteUserDialog = ({ isOpen, onOpenChange, organizationId }: IInviteUserD
               )}
             />
 
-            {shouldShowOrganizationSelect ? (
-              <FormField
-                control={form.control}
-                name="organizationId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{INVITE_ORGANIZATION_SELECT_LABEL}</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value ?? undefined}
-                      disabled={isSubmitting || isOrganizationsLoading || !hasOrganizationOptions}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue
-                            placeholder={organizationSelectPlaceholder}
-                            renderValue={(value) =>
-                              organizationOptions.find((opt) => opt.value === value)?.label ??
-                              String(value)
-                            }
-                          />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {organizationOptions.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            ) : null}
+            <FormField
+              control={form.control}
+              name="state"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{CREATE_USER_STATE_LABEL}</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    disabled={isSubmitting}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={CREATE_USER_STATE_PLACEHOLDER}
+                          renderValue={(value) =>
+                            USER_STATE_OPTIONS.find((option) => option.value === value)?.label ??
+                            String(value)
+                          }
+                        />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {USER_STATE_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting ? <LoadingSpinner /> : null}
-              Send Invitation
+              {CREATE_USER_SUBMIT_LABEL}
             </Button>
           </form>
         </Form>
@@ -190,4 +203,4 @@ const InviteUserDialog = ({ isOpen, onOpenChange, organizationId }: IInviteUserD
   );
 };
 
-export default InviteUserDialog;
+export default CreateUserDialog;

@@ -1,4 +1,4 @@
-import { IUserResponse } from "@/shared/redux/rtk-apis/users/users.interfaces";
+import { IUserResponse } from "@/shared/typedefs";
 
 export interface IToggleUserStateDialogProps {
   user?: IUserResponse | null;

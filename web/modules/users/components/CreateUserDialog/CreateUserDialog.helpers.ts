@@ -1,91 +1,62 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
-import { ICreateInvitationDto } from "@/shared/redux/rtk-apis/invitations/invitations.interfaces";
-import { EUserRole } from "@/shared/redux/rtk-apis/roles/roles.enums";
-import { EPermission, EResource } from "@/shared/typedefs";
+import {
+  ROLE_NOT_ASSIGNABLE_MESSAGE,
+  USER_EMAIL_MAX_LENGTH,
+  USER_NAME_MAX_LENGTH,
+  USER_PASSWORD_MAX_LENGTH,
+  USER_PASSWORD_MIN_LENGTH,
+} from "@/modules/users/users.constants";
+import { isAssignableUserRole } from "@/modules/users/users.helpers";
+import { EUserRole, EUserState, ICreateUserDto } from "@/shared/typedefs";
 
 import {
-  INVITE_ORGANIZATION_NOT_ALLOWED_MESSAGE,
-  INVITE_ORGANIZATION_REQUIRED_MESSAGE,
-  INVITE_USER_ROLE_OPTIONS,
+  CREATE_USER_EMAIL_INVALID_MESSAGE,
+  CREATE_USER_EMAIL_TOO_LONG_MESSAGE,
+  CREATE_USER_NAME_MIN_LENGTH,
+  CREATE_USER_NAME_REQUIRED_MESSAGE,
+  CREATE_USER_NAME_TOO_LONG_MESSAGE,
+  CREATE_USER_PASSWORD_TOO_LONG_MESSAGE,
+  CREATE_USER_PASSWORD_TOO_SHORT_MESSAGE,
 } from "./CreateUserDialog.constants";
+import type { TCreateUserFormFields } from "./CreateUserDialog.types";
 
-export const inviteUserFormInitialValues: ICreateInvitationDto = {
+export const createUserFormValidationSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(CREATE_USER_NAME_MIN_LENGTH, CREATE_USER_NAME_REQUIRED_MESSAGE)
+    .max(USER_NAME_MAX_LENGTH, CREATE_USER_NAME_TOO_LONG_MESSAGE),
+  email: z
+    .string()
+    .trim()
+    .max(USER_EMAIL_MAX_LENGTH, CREATE_USER_EMAIL_TOO_LONG_MESSAGE)
+    .email(CREATE_USER_EMAIL_INVALID_MESSAGE),
+  password: z
+    .string()
+    .min(USER_PASSWORD_MIN_LENGTH, CREATE_USER_PASSWORD_TOO_SHORT_MESSAGE)
+    .max(USER_PASSWORD_MAX_LENGTH, CREATE_USER_PASSWORD_TOO_LONG_MESSAGE),
+  role: z.nativeEnum(EUserRole).refine(isAssignableUserRole, ROLE_NOT_ASSIGNABLE_MESSAGE),
+  state: z.nativeEnum(EUserState),
+});
+
+export const createUserFormResolver = zodResolver(createUserFormValidationSchema);
+
+export const createUserFormInitialValues: TCreateUserFormFields = {
+  name: "",
   email: "",
-  firstName: "",
-  lastName: "",
-  role: EUserRole.CUSTOMER,
+  password: "",
+  role: EUserRole.MENTEE,
+  state: EUserState.ACTIVE,
 };
 
-export const inviteUserFormValidationSchema: z.ZodType<ICreateInvitationDto> = z
-  .object({
-    email: z.string().email("Invalid email").min(1, "Required"),
-    firstName: z.string().min(1, "Required"),
-    lastName: z.string().min(1, "Required"),
-    role: z.nativeEnum(EUserRole),
-    organizationId: z.string().uuid().optional(),
-  })
-  .superRefine((data, ctx) => {
-    if (data.role === EUserRole.CUSTOMER) {
-      if (!data.organizationId) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: INVITE_ORGANIZATION_REQUIRED_MESSAGE,
-          path: ["organizationId"],
-        });
-      }
-      return;
-    }
-
-    if (data.organizationId) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: INVITE_ORGANIZATION_NOT_ALLOWED_MESSAGE,
-        path: ["organizationId"],
-      });
-    }
-  });
-
-export const inviteUserFormResolver = zodResolver(inviteUserFormValidationSchema);
-
-export const getInviteRoleOptionsForAbility = (
-  can: (action: EPermission, resource: EResource | "all") => boolean,
-): Array<{ value: EUserRole; label: string }> => {
-  const isSuperuserUi =
-    can(EPermission.MANAGE, EResource.ALL) || can(EPermission.DELETE, EResource.ORGANIZATION);
-
-  if (isSuperuserUi) {
-    return INVITE_USER_ROLE_OPTIONS;
-  }
-
-  const isManagerLike =
-    can(EPermission.CREATE, EResource.INVITATION) && can(EPermission.UPDATE, EResource.USER);
-
-  if (isManagerLike) {
-    return INVITE_USER_ROLE_OPTIONS.filter((option) => option.value !== EUserRole.SUPER_ADMIN);
-  }
-
-  return INVITE_USER_ROLE_OPTIONS.filter((option) => option.value === EUserRole.CUSTOMER);
-};
-
-export const buildCreateInvitationPayload = (
-  values: ICreateInvitationDto,
-  organizationIdProp?: string,
-): ICreateInvitationDto => {
-  const payload: ICreateInvitationDto = {
+export function buildCreateUserPayload(values: TCreateUserFormFields): ICreateUserDto {
+  return {
+    name: values.name,
     email: values.email,
-    firstName: values.firstName,
-    lastName: values.lastName,
+    password: values.password,
     role: values.role,
+    state: values.state,
   };
-
-  if (values.role === EUserRole.CUSTOMER) {
-    const organizationId = organizationIdProp ?? values.organizationId;
-    if (organizationId) {
-      payload.organizationId = organizationId;
-    }
-  }
-
-  return payload;
-};
+}

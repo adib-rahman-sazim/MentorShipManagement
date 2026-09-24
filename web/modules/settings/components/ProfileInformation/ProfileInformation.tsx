@@ -1,18 +1,13 @@
 import { UseFormReturn } from "react-hook-form";
 
+import UpdateProfileInformationFormFields from "@/modules/settings/components/UpdateProfileInformationForm";
+import { TUpdateProfileInformationFormFields } from "@/modules/settings/components/UpdateProfileInformationForm/UpdateProfileInformationForm.types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/shadui/card";
-import {
-  ICurrentUserProfileResponse,
-  IUpdateProfileDto,
-} from "@/shared/redux/rtk-apis/user-profiles/user-profiles.interfaces";
-
-import UpdateProfileInformationFormFields from "../UpdateProfileInformationForm";
 
 const ProfileInformation = ({
   form,
 }: {
-  userProfile: ICurrentUserProfileResponse;
-  form: UseFormReturn<IUpdateProfileDto>;
+  form: UseFormReturn<TUpdateProfileInformationFormFields>;
 }) => (
   <Card>
     <CardHeader>
