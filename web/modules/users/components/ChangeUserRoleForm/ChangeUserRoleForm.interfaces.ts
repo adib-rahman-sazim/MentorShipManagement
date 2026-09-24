@@ -7,6 +7,7 @@ import { TChangeUserRoleFormFields } from "./ChangeUserRoleForm.types";
 export interface IUseChangeUserRoleFormParams {
   userId?: string;
   currentRole?: EUserRole;
+  isOpen?: boolean;
   onSuccess?: () => void;
   onError?: () => void;
 }

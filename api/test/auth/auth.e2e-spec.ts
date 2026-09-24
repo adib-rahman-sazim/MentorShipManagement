@@ -2,10 +2,13 @@ import { HttpStatus, type INestApplication } from "@nestjs/common";
 
 import type { Connection, EntityManager, IDatabaseDriver, MikroORM } from "@mikro-orm/core";
 
+import dayjs from "dayjs";
 import request from "supertest";
 
+import { User } from "@/common/entities/users.entity";
 import { EUserRole } from "@/common/enums/roles.enums";
 import { EUserState } from "@/common/enums/users.enums";
+import { EAuthErrorCode } from "@/modules/auth/auth.enums";
 
 import { bootstrapTestServer } from "../utils/bootstrap";
 import { truncateTables } from "../utils/db";
@@ -117,6 +120,27 @@ describe("Auth (E2E)", () => {
       });
 
       await signIn().expect(HttpStatus.FORBIDDEN);
+    });
+
+    it.each([
+      [EAuthErrorCode.ACCOUNT_DEACTIVATED, { state: EUserState.INACTIVE }],
+      [EAuthErrorCode.ACCOUNT_NOT_FOUND, { deletedAt: dayjs().toDate() }],
+    ])("ends a live session with %s", async (errorCode, userChange) => {
+      const user = await createUserInDb(dbService, {
+        email: SENSEI_EMAIL,
+        password: SENSEI_PASSWORD,
+        role: EUserRole.SENSEI,
+      });
+      const { body } = await signIn().expect(HttpStatus.OK);
+
+      await dbService.nativeUpdate(User, { id: user.id }, userChange);
+
+      const meResponse = await request(httpServer)
+        .get(ME_ROUTE)
+        .set("Authorization", `Bearer ${body.token}`)
+        .expect(HttpStatus.FORBIDDEN);
+
+      expect(meResponse.body.errorCode).toBe(errorCode);
     });
   });
 

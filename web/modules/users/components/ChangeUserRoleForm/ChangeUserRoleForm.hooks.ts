@@ -20,6 +20,7 @@ import type { TChangeUserRoleFormFields } from "./ChangeUserRoleForm.types";
 export const useChangeUserRoleForm = ({
   userId,
   currentRole,
+  isOpen,
   onSuccess,
   onError,
 }: IUseChangeUserRoleFormParams) => {
@@ -30,8 +31,10 @@ export const useChangeUserRoleForm = ({
   });
 
   useEffect(() => {
-    form.reset(getChangeUserRoleDefaultValues(currentRole));
-  }, [form, currentRole]);
+    if (isOpen) {
+      form.reset(getChangeUserRoleDefaultValues(currentRole));
+    }
+  }, [form, isOpen, currentRole]);
 
   const [updateUser] = useUpdateUserMutation();
 
