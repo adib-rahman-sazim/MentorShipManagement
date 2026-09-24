@@ -9,7 +9,7 @@ import {
 
 import projectApi from "../api.config";
 import { transformPaginationMeta } from "./users.helpers";
-import { TUpdateUserArgs } from "./users.type";
+import { TUpdateUserArgs } from "./users.types";
 
 const usersApi = projectApi.injectEndpoints({
   endpoints: (builder) => ({
