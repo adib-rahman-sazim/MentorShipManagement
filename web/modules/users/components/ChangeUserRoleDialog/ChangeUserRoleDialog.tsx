@@ -21,6 +21,7 @@ const ChangeUserRoleDialog = ({
   const { form, onSubmit } = useChangeUserRoleForm({
     userId: user?.id,
     currentRole: user?.role,
+    isOpen,
     onSuccess: () => onOpenChange(false),
   });
 
