@@ -1,3 +1,5 @@
+import ChangeUserRoleFormFields from "@/modules/users/components/ChangeUserRoleForm";
+import { useChangeUserRoleForm } from "@/modules/users/components/ChangeUserRoleForm/ChangeUserRoleForm.hooks";
 import { Button } from "@/shared/components/shadui/button";
 import {
   Dialog,
@@ -8,19 +10,17 @@ import {
 } from "@/shared/components/shadui/dialog";
 import { Form } from "@/shared/components/shadui/form";
 
-import { useChangeUserRoleForm } from "../ChangeUserRoleForm/ChangeUserRoleForm.hooks";
-import ChangeUserRoleFormFields from "../ChangeUserRoleForm/ChangeUserRoleFormFields";
 import { TChangeUserRoleDialogProps } from "./ChangeUserRoleDialog.types";
 
 const ChangeUserRoleDialog = ({
   user,
   isOpen,
   onOpenChange,
-  roles,
   onCancel,
 }: TChangeUserRoleDialogProps) => {
   const { form, onSubmit } = useChangeUserRoleForm({
     userId: user?.id,
+    currentRole: user?.role,
     onSuccess: () => onOpenChange(false),
   });
 
@@ -38,7 +38,7 @@ const ChangeUserRoleDialog = ({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
-            <ChangeUserRoleFormFields form={form} roles={roles} />
+            <ChangeUserRoleFormFields form={form} />
 
             <DialogFooter className="mt-4">
               <Button variant="outline" onClick={handleOnCancel} type="button">

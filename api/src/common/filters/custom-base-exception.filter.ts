@@ -3,6 +3,8 @@ import { Catch, HttpException, Logger } from "@nestjs/common";
 
 import type { Response } from "express";
 
+import { getErrorCode } from "./custom-base-exception.filter.helpers";
+
 @Catch(HttpException)
 export class CustomBaseExceptionFilter implements ExceptionFilter {
   constructor(private readonly logger: Logger) {}
@@ -12,6 +14,7 @@ export class CustomBaseExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const status = exception.getStatus();
     const cause = exception.cause ?? [];
+    const errorCode = getErrorCode(exception);
 
     this.logger.error(exception.message, exception.stack, {
       statusCode: status,
@@ -25,6 +28,7 @@ export class CustomBaseExceptionFilter implements ExceptionFilter {
         statusCode: status,
         errors: cause,
         message: exception.message,
+        errorCode,
       });
     }
 
@@ -32,6 +36,7 @@ export class CustomBaseExceptionFilter implements ExceptionFilter {
       statusCode: status,
       errors: [exception.cause],
       message: exception.message,
+      errorCode,
     });
   }
 }

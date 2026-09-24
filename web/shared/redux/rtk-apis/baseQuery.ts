@@ -10,15 +10,13 @@ import { toast } from "sonner";
 
 import { ACCESS_TOKEN_LOCAL_STORAGE_KEY } from "@/shared/constants/app.constants";
 import { API_BASE_URL } from "@/shared/constants/env.constants";
-import { HTTP_STATUS_FORBIDDEN, HTTP_STATUS_UNAUTHORIZED } from "@/shared/constants/http.constants";
+import { HTTP_STATUS_UNAUTHORIZED } from "@/shared/constants/http.constants";
 import { SIGN_IN_ROUTE } from "@/shared/constants/routes.constants";
-import {
-  TOAST_MESSAGE_ACCOUNT_DEACTIVATED,
-  TOAST_MESSAGE_SESSION_EXPIRED,
-} from "@/shared/constants/toastMessages.constants";
+import { TOAST_MESSAGE_SESSION_EXPIRED } from "@/shared/constants/toastMessages.constants";
 import { signOut } from "@/shared/lib/auth-client";
 
-import { shouldShowAuthErrorToast } from "./baseQuery.helpers";
+import { AUTH_ERROR_CODE_TOAST_MESSAGES } from "./baseQuery.constants";
+import { getSessionTerminatingErrorCode, shouldShowAuthErrorToast } from "./baseQuery.helpers";
 
 const baseQuery = fetchBaseQuery({
   baseUrl: API_BASE_URL,
@@ -37,9 +35,6 @@ const baseQuery = fetchBaseQuery({
 const isUnauthorizedError = (error?: FetchBaseQueryError) =>
   error && error.status === HTTP_STATUS_UNAUTHORIZED;
 
-const isForbiddenError = (error?: FetchBaseQueryError) =>
-  error && error.status === HTTP_STATUS_FORBIDDEN;
-
 const baseQueryWithErrorHandling = async (args: string | FetchArgs, api: BaseQueryApi) => {
   const result = await baseQuery(args, api, {});
 
@@ -55,13 +50,15 @@ const baseQueryWithErrorHandling = async (args: string | FetchArgs, api: BaseQue
     Router.push(SIGN_IN_ROUTE);
   }
 
-  if (isForbiddenError(result.error) && Router.pathname !== SIGN_IN_ROUTE) {
+  const sessionTerminatingErrorCode = getSessionTerminatingErrorCode(result.error);
+
+  if (sessionTerminatingErrorCode && Router.pathname !== SIGN_IN_ROUTE) {
     const hasAccessToken = Boolean(localStorage.getItem(ACCESS_TOKEN_LOCAL_STORAGE_KEY));
 
     await signOut();
 
     if (shouldShowAuthErrorToast(hasAccessToken)) {
-      toast.error(TOAST_MESSAGE_ACCOUNT_DEACTIVATED);
+      toast.error(AUTH_ERROR_CODE_TOAST_MESSAGES[sessionTerminatingErrorCode]);
     }
 
     Router.push(SIGN_IN_ROUTE);
