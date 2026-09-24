@@ -1,23 +1,15 @@
-import { TApiResponse, TPaginationMetadata } from "@/shared/typedefs";
-
-import projectApi from "../api.config";
 import {
-  IBackendPaginationMeta,
-  IInviteUserDto,
+  ICreateUserDto,
   IListUsersParams,
   IPaginatedUsersResponse,
-  IUpdateUserDto,
   IUserResponse,
-} from "./users.interfaces";
+  TApiResponse,
+  TPaginatedResponse,
+} from "@/shared/typedefs";
 
-const transformPaginationMeta = (meta: IBackendPaginationMeta): TPaginationMetadata => ({
-  currentPage: meta.page,
-  itemsPerPage: meta.limit,
-  totalItems: meta.total,
-  totalPages: meta.totalPages,
-  hasNextPage: meta.page < meta.totalPages,
-  hasPreviousPage: meta.page > 1,
-});
+import projectApi from "../api.config";
+import { transformPaginationMeta } from "./users.helpers";
+import { TUpdateUserArgs } from "./users.type";
 
 const usersApi = projectApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -27,15 +19,15 @@ const usersApi = projectApi.injectEndpoints({
       providesTags: ["UserProfile"],
     }),
 
-    getUsers: builder.query<IPaginatedUsersResponse, IListUsersParams>({
+    getUsers: builder.query<TPaginatedResponse<IUserResponse>, IListUsersParams>({
       query: (params) => ({
         url: "users",
         method: "GET",
         params,
       }),
       transformResponse: (
-        response: TApiResponse<{ data: IUserResponse[]; meta: IBackendPaginationMeta }>,
-      ): IPaginatedUsersResponse => ({
+        response: TApiResponse<IPaginatedUsersResponse>,
+      ): TPaginatedResponse<IUserResponse> => ({
         data: response.data.data,
         meta: transformPaginationMeta(response.data.meta),
       }),
@@ -48,28 +40,27 @@ const usersApi = projectApi.injectEndpoints({
           : [{ type: "Users" as const, id: "LIST" }],
     }),
 
-    updateUser: builder.mutation<IUserResponse, IUpdateUserDto & { id: string }>({
-      query: ({ id, ...data }) => ({
+    createUser: builder.mutation<IUserResponse, ICreateUserDto>({
+      query: (body) => ({
+        url: "users",
+        method: "POST",
+        body,
+      }),
+      transformResponse: (response: TApiResponse<IUserResponse>) => response.data,
+      invalidatesTags: [{ type: "Users" as const, id: "LIST" }],
+    }),
+
+    updateUser: builder.mutation<IUserResponse, TUpdateUserArgs>({
+      query: ({ id, ...body }) => ({
         url: `users/${id}`,
         method: "PATCH",
-        body: data,
+        body,
       }),
       transformResponse: (response: TApiResponse<IUserResponse>) => response.data,
       invalidatesTags: (result) => [
         { type: "User" as const, id: result?.id },
         { type: "Users" as const, id: "LIST" },
       ],
-    }),
-
-    inviteUser: builder.mutation<{ success: boolean; message: string }, IInviteUserDto>({
-      query: (data) => ({
-        url: "users",
-        method: "POST",
-        body: data,
-      }),
-      transformResponse: (response: TApiResponse<{ success: boolean; message: string }>) =>
-        response.data,
-      invalidatesTags: [{ type: "Users" as const, id: "LIST" }],
     }),
   }),
   overrideExisting: false,
@@ -79,6 +70,6 @@ export const {
   useMeQuery,
   useLazyMeQuery,
   useGetUsersQuery,
+  useCreateUserMutation,
   useUpdateUserMutation,
-  useInviteUserMutation,
 } = usersApi;

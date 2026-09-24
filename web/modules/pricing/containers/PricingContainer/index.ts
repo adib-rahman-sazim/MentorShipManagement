@@ -1,1 +1,0 @@
-export { PricingContainer } from "./PricingContainer";
