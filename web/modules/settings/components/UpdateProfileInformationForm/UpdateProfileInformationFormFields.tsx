@@ -8,66 +8,34 @@ import {
   FormMessage,
 } from "@/shared/components/shadui/form";
 import { Input } from "@/shared/components/shadui/input";
-import { IUpdateProfileDto } from "@/shared/redux/rtk-apis/user-profiles/user-profiles.interfaces";
+
+import {
+  PROFILE_NAME_LABEL,
+  PROFILE_NAME_PLACEHOLDER,
+} from "./UpdateProfileInformationForm.constants";
+import { TUpdateProfileInformationFormFields } from "./UpdateProfileInformationForm.types";
 
 const UpdateProfileInformationFormFields = ({
   form,
 }: {
-  form: UseFormReturn<IUpdateProfileDto>;
+  form: UseFormReturn<TUpdateProfileInformationFormFields>;
 }) => {
   const isSubmitting = form.formState.isSubmitting;
 
   return (
-    <>
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <FormField
-            control={form.control}
-            name="firstName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>First Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="First Name" disabled={isSubmitting} {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        <div>
-          <FormField
-            control={form.control}
-            name="lastName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Last Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Last Name" disabled={isSubmitting} {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-      </div>
-      <div>
-        <FormField
-          disabled={isSubmitting}
-          control={form.control}
-          name="lastName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Last Name</FormLabel>
-              <FormControl>
-                <Input placeholder="Last Name" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
-    </>
+    <FormField
+      control={form.control}
+      name="name"
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>{PROFILE_NAME_LABEL}</FormLabel>
+          <FormControl>
+            <Input placeholder={PROFILE_NAME_PLACEHOLDER} disabled={isSubmitting} {...field} />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
   );
 };
 
