@@ -12,25 +12,23 @@ describe("postAuthRedirect", () => {
 
   describe("isSafePostAuthRedirect", () => {
     it("allows relative app paths", () => {
-      expect(isSafePostAuthRedirect("/invite/accept?token=abc")).toBe(true);
+      expect(isSafePostAuthRedirect("/users?page=2")).toBe(true);
       expect(isSafePostAuthRedirect("/dashboard")).toBe(true);
     });
 
     it("rejects absolute and protocol-relative URLs", () => {
       expect(isSafePostAuthRedirect("https://evil.example/phish")).toBe(false);
       expect(isSafePostAuthRedirect("//evil.example/phish")).toBe(false);
-      expect(isSafePostAuthRedirect("invite/accept")).toBe(false);
+      expect(isSafePostAuthRedirect("users")).toBe(false);
     });
   });
 
   describe("persistPostAuthRedirect and consumePostAuthRedirect", () => {
     it("persists and consumes a safe redirect once", () => {
-      persistPostAuthRedirect("/invite/accept?token=abc");
+      persistPostAuthRedirect("/users?page=2");
 
-      expect(window.sessionStorage.getItem(POST_AUTH_REDIRECT_STORAGE_KEY)).toBe(
-        "/invite/accept?token=abc",
-      );
-      expect(consumePostAuthRedirect()).toBe("/invite/accept?token=abc");
+      expect(window.sessionStorage.getItem(POST_AUTH_REDIRECT_STORAGE_KEY)).toBe("/users?page=2");
+      expect(consumePostAuthRedirect()).toBe("/users?page=2");
       expect(consumePostAuthRedirect()).toBeNull();
     });
 
