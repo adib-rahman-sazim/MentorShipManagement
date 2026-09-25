@@ -47,6 +47,7 @@ export class EffectivePermissionsService {
 
     return {
       allPermissions,
+      roleCodes,
       effectiveCodes,
       grantedCodes,
       revokedCodes,

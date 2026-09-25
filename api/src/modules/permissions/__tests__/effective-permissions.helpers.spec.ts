@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { resolveEffectivePermissionCodes } from "@/modules/permissions/effective-permissions.helpers";
+import {
+  resolveEffectivePermissionCodes,
+  resolveRoleDefaultCodes,
+} from "@/modules/permissions/effective-permissions.helpers";
 import { ALL_MANAGE_PERMISSION_CODE } from "@/modules/permissions/permissions.catalog.constants";
 import { EPermissionCode } from "@/modules/permissions/permissions.enums";
 import type { IEffectivePermissionCodesInput } from "@/modules/permissions/permissions.interfaces";
@@ -99,5 +102,19 @@ describe("resolveEffectivePermissionCodes", () => {
         buildInput({ roleCodes: [USER_UPDATE, USER_DELETE, USER_READ] }),
       ),
     ).toEqual([USER_DELETE, USER_READ, USER_UPDATE]);
+  });
+});
+
+describe("resolveRoleDefaultCodes", () => {
+  it("returns only what the role grants on its own", () => {
+    expect(resolveRoleDefaultCodes({ roleCodes: [USER_READ], allCodes: ALL_CODES })).toEqual([
+      USER_READ,
+    ]);
+  });
+
+  it("expands all:manage into the rest of the catalog", () => {
+    expect(
+      resolveRoleDefaultCodes({ roleCodes: [ALL_MANAGE_PERMISSION_CODE], allCodes: ALL_CODES }),
+    ).toEqual([USER_READ, USER_UPDATE, USER_DELETE].sort());
   });
 });

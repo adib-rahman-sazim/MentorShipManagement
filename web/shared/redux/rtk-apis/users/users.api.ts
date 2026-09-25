@@ -40,6 +40,12 @@ const usersApi = projectApi.injectEndpoints({
           : [{ type: "Users" as const, id: "LIST" }],
     }),
 
+    getUser: builder.query<IUserResponse, string>({
+      query: (id) => `users/${id}`,
+      transformResponse: (response: TApiResponse<IUserResponse>) => response.data,
+      providesTags: (_result, _error, id) => [{ type: "User" as const, id }],
+    }),
+
     createUser: builder.mutation<IUserResponse, ICreateUserDto>({
       query: (body) => ({
         url: "users",
@@ -60,6 +66,7 @@ const usersApi = projectApi.injectEndpoints({
       invalidatesTags: (result) => [
         { type: "User" as const, id: result?.id },
         { type: "Users" as const, id: "LIST" },
+        { type: "UserPermissions" as const, id: result?.id },
       ],
     }),
   }),
@@ -70,6 +77,7 @@ export const {
   useMeQuery,
   useLazyMeQuery,
   useGetUsersQuery,
+  useGetUserQuery,
   useCreateUserMutation,
   useUpdateUserMutation,
 } = usersApi;

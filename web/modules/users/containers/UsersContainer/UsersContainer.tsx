@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 
+import { useRouter } from "next/router";
+
 import { ColumnDef } from "@tanstack/react-table";
 import { MoreVertical } from "lucide-react";
 import { parseAsInteger, parseAsStringEnum, useQueryStates } from "nuqs";
@@ -27,12 +29,16 @@ import {
   SelectValue,
 } from "@/shared/components/shadui/select";
 import TableCheckBox from "@/shared/components/Table/TableCheckbox";
+import { USER_PERMISSIONS_ROUTE } from "@/shared/constants/routes.constants";
+import { useCan } from "@/shared/providers/AbilityProvider/AbilityProvider.hooks";
 import { useGetUsersQuery } from "@/shared/redux/rtk-apis/users/users.api";
-import { EUserState, IUserResponse } from "@/shared/typedefs";
+import { EPermission, EResource, EUserState, IUserResponse } from "@/shared/typedefs";
 
 import { USERS_PAGE_SIZE_OPTIONS } from "./UsersContainer.constants";
 
 const UsersContainer = () => {
+  const router = useRouter();
+  const { isAllowed: canViewPermissions } = useCan(EPermission.READ, EResource.PERMISSIONS);
   const [{ page, limit, userState }, setQueryStates] = useQueryStates({
     page: parseAsInteger.withDefault(1),
     limit: parseAsInteger.withDefault(10),
@@ -57,6 +63,10 @@ const UsersContainer = () => {
   const handleChangeRoleClick = (user: IUserResponse) => {
     setSelectedUser(user);
     setIsChangeRoleDialogOpen(true);
+  };
+
+  const handlePermissionsClick = (user: IUserResponse) => {
+    void router.push({ pathname: USER_PERMISSIONS_ROUTE, query: { userId: user.id } });
   };
 
   const handleDialogClose = () => {
@@ -111,8 +121,10 @@ const UsersContainer = () => {
     {
       id: "actions",
       header: "Actions",
-      cell: ({ row }) =>
-        isAssignableUserRole(row.original.role) ? (
+      cell: ({ row }) => {
+        const isAssignable = isAssignableUserRole(row.original.role);
+
+        return canViewPermissions || isAssignable ? (
           <DropdownMenu>
             <DropdownMenuTrigger>
               <Button variant="ghost" className="h-8 w-8 p-0">
@@ -120,16 +132,27 @@ const UsersContainer = () => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => handleChangeRoleClick(row.original)}>
-                Change Role
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => handleToggleStateClick(row.original)}>
-                {row.original.state === EUserState.ACTIVE ? "Deactivate" : "Activate"}
-              </DropdownMenuItem>
+              {canViewPermissions ? (
+                <DropdownMenuItem onClick={() => handlePermissionsClick(row.original)}>
+                  Permissions
+                </DropdownMenuItem>
+              ) : null}
+              {canViewPermissions && isAssignable ? <DropdownMenuSeparator /> : null}
+              {isAssignable ? (
+                <>
+                  <DropdownMenuItem onClick={() => handleChangeRoleClick(row.original)}>
+                    Change Role
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => handleToggleStateClick(row.original)}>
+                    {row.original.state === EUserState.ACTIVE ? "Deactivate" : "Activate"}
+                  </DropdownMenuItem>
+                </>
+              ) : null}
             </DropdownMenuContent>
           </DropdownMenu>
-        ) : null,
+        ) : null;
+      },
     },
   ];
 

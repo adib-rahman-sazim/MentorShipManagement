@@ -82,6 +82,9 @@ export class UserPermissionEntryResponse {
 
   @ApiProperty()
   effective!: boolean;
+
+  @ApiProperty()
+  roleDefault!: boolean;
 }
 
 export class UserPermissionOverridesResponse {
@@ -90,6 +93,9 @@ export class UserPermissionOverridesResponse {
 
   @ApiProperty({ enum: EUserRole, enumName: "EUserRole" })
   role!: EUserRole;
+
+  @ApiProperty()
+  editable!: boolean;
 
   @ApiProperty({ type: [UserPermissionEntryResponse] })
   permissions!: UserPermissionEntryResponse[];
