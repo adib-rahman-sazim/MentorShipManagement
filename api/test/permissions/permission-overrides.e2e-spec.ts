@@ -132,13 +132,16 @@ describe("Permission overrides (E2E)", () => {
 
       expect(response.body.data.userId).toBe(mentor.id);
       expect(response.body.data.role).toBe(EUserRole.MENTOR);
+      expect(response.body.data.editable).toBe(true);
       expect(findEntry(response.body, EPermissionCode.CAN_VIEW_DASHBOARD)).toMatchObject({
         source: EPermissionSource.ROLE,
         effective: true,
+        roleDefault: true,
       });
       expect(findEntry(response.body, EPermissionCode.CAN_UPDATE_USER)).toMatchObject({
         source: EPermissionSource.NONE,
         effective: false,
+        roleDefault: false,
       });
     });
 
@@ -147,9 +150,11 @@ describe("Permission overrides (E2E)", () => {
 
       const response = await readOverrides(token, superadmin.id).expect(HttpStatus.OK);
 
+      expect(response.body.data.editable).toBe(false);
       expect(findEntry(response.body, EPermissionCode.CAN_UPDATE_USER)).toMatchObject({
         source: EPermissionSource.ROLE,
         effective: true,
+        roleDefault: true,
       });
     });
 
@@ -198,6 +203,7 @@ describe("Permission overrides (E2E)", () => {
       expect(findEntry(revoked.body, EPermissionCode.CAN_VIEW_DASHBOARD)).toMatchObject({
         source: EPermissionSource.REVOKED,
         effective: false,
+        roleDefault: true,
       });
       expect(findEntry(revoked.body, EPermissionCode.CAN_UPDATE_USER)).toMatchObject({
         source: EPermissionSource.NONE,
