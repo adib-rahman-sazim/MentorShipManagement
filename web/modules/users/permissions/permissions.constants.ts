@@ -5,7 +5,19 @@ import type { IPermissionDetails, IPermissionGroupDefinition } from "./permissio
 
 export const USER_ID_QUERY_PARAM = "userId";
 
-export const HIDDEN_PERMISSION_CODES: readonly EPermissionCode[] = [EPermissionCode.CAN_MANAGE_ALL];
+export const HIDDEN_PERMISSION_CODES: readonly EPermissionCode[] = [
+  EPermissionCode.CAN_MANAGE_ALL,
+  EPermissionCode.CAN_LIST_ROLES,
+  EPermissionCode.CAN_READ_ROLE,
+  EPermissionCode.CAN_CREATE_ROLE,
+  EPermissionCode.CAN_UPDATE_ROLE,
+  EPermissionCode.CAN_DELETE_ROLE,
+  EPermissionCode.CAN_LIST_PERMISSIONS,
+  EPermissionCode.CAN_READ_PERMISSION,
+  EPermissionCode.CAN_CREATE_PERMISSION,
+  EPermissionCode.CAN_UPDATE_PERMISSION,
+  EPermissionCode.CAN_DELETE_PERMISSION,
+];
 
 export const PERMISSION_DETAILS: Record<EPermissionCode, IPermissionDetails> = {
   [EPermissionCode.CAN_MANAGE_ALL]: {
@@ -139,30 +151,6 @@ export const PERMISSION_GROUPS: IPermissionGroupDefinition[] = [
       EPermissionCode.CAN_CREATE_DRAFT,
       EPermissionCode.CAN_REVIEW_DRAFT,
       EPermissionCode.CAN_APPROVE_DRAFT,
-    ],
-  },
-  {
-    group: EPermissionGroup.ROLES,
-    title: "Roles",
-    description: "Managing the roles themselves.",
-    codes: [
-      EPermissionCode.CAN_LIST_ROLES,
-      EPermissionCode.CAN_READ_ROLE,
-      EPermissionCode.CAN_CREATE_ROLE,
-      EPermissionCode.CAN_UPDATE_ROLE,
-      EPermissionCode.CAN_DELETE_ROLE,
-    ],
-  },
-  {
-    group: EPermissionGroup.PERMISSIONS,
-    title: "Permissions",
-    description: "Managing permissions, including this screen.",
-    codes: [
-      EPermissionCode.CAN_LIST_PERMISSIONS,
-      EPermissionCode.CAN_READ_PERMISSION,
-      EPermissionCode.CAN_CREATE_PERMISSION,
-      EPermissionCode.CAN_UPDATE_PERMISSION,
-      EPermissionCode.CAN_DELETE_PERMISSION,
     ],
   },
 ];
