@@ -51,6 +51,7 @@ export interface IEffectivePermissionCodesInput {
 
 export interface IResolvedPermissionCodes {
   allPermissions: Permission[];
+  roleCodes: string[];
   effectiveCodes: string[];
   grantedCodes: string[];
   revokedCodes: string[];
@@ -83,6 +84,11 @@ export interface IReplaceUserPermissionOverridesContext {
   actorId: string;
   actorRole: EUserRole;
   dto: ReplaceUserPermissionOverridesDto;
+}
+
+export interface IRoleDefaultCodesInput {
+  roleCodes: string[];
+  allCodes: string[];
 }
 
 export interface IExpandedAllManageInput {

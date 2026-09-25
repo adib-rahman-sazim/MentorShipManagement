@@ -5,6 +5,7 @@ import type { EPermissionOverrideEffect } from "./permissions.enums";
 import type {
   IEffectivePermissionCodesInput,
   IExpandedAllManageInput,
+  IRoleDefaultCodesInput,
 } from "./permissions.interfaces";
 
 export function permissionCodesByEffect(
@@ -33,6 +34,15 @@ export function resolveEffectivePermissionCodes({
   }
 
   return [...effectiveCodeSet].sort();
+}
+
+export function resolveRoleDefaultCodes({ roleCodes, allCodes }: IRoleDefaultCodesInput): string[] {
+  return resolveEffectivePermissionCodes({
+    roleCodes,
+    grantedCodes: [],
+    revokedCodes: [],
+    allCodes,
+  });
 }
 
 export function holdsExpandedAllManage({

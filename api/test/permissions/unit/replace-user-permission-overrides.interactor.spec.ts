@@ -103,6 +103,7 @@ describe("ReplaceUserPermissionOverridesInteractor", () => {
     overridesRepository.transactional.mockImplementation((callback) => callback(entityManager));
     effectivePermissionsService.resolveCodesForUser.mockResolvedValue({
       allPermissions: [],
+      roleCodes: [],
       effectiveCodes: [],
       grantedCodes: [],
       revokedCodes: [],
