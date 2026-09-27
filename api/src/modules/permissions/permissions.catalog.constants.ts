@@ -29,12 +29,7 @@ export const DEFAULT_PERMISSION_DEFINITIONS: IPermissionDefinition[] = [
     EPermissionConditionType.HIERARCHY,
   ),
   toPermissionDefinition(EPermissionCode.CAN_CREATE_USER, EResource.USER, EPermission.CREATE),
-  toScopedPermissionDefinition(
-    EPermissionCode.CAN_UPDATE_USER,
-    EResource.USER,
-    EPermission.UPDATE,
-    EPermissionConditionType.SUBTREE,
-  ),
+  toPermissionDefinition(EPermissionCode.CAN_UPDATE_USER, EResource.USER, EPermission.UPDATE),
   toScopedPermissionDefinition(
     EPermissionCode.CAN_DELETE_USER,
     EResource.USER,

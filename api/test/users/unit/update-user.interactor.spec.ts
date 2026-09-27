@@ -23,6 +23,7 @@ const TARGET_USER_ID = "66666666-6666-4666-8666-666666666666";
 const ACTOR_ID = "99999999-9999-4999-8999-999999999999";
 const MENTEE_ROLE_ID = "77777777-7777-4777-8777-777777777777";
 const MENTOR_ROLE_ID = "88888888-8888-4888-8888-888888888888";
+const SUPERADMIN_ROLE_ID = "55555555-5555-4555-8555-555555555555";
 
 describe("UpdateUserInteractor", () => {
   let orm: MikroORM;
@@ -42,6 +43,19 @@ describe("UpdateUserInteractor", () => {
       name: "Mock Mentee",
       state: EUserState.ACTIVE,
       role: orm.em.merge(Role, { id: MENTEE_ROLE_ID, code: EUserRole.MENTEE, name: "Mentee" }),
+    });
+
+  const makeSuperadmin = (): User =>
+    userFactory.makeEntity({
+      id: TARGET_USER_ID,
+      email: "superadmin@sazim.io",
+      name: "Mock Superadmin",
+      state: EUserState.ACTIVE,
+      role: orm.em.merge(Role, {
+        id: SUPERADMIN_ROLE_ID,
+        code: EUserRole.SUPERADMIN,
+        name: "Superadmin",
+      }),
     });
 
   beforeAll(() => {
@@ -126,5 +140,38 @@ describe("UpdateUserInteractor", () => {
 
     expect(rolesRepository.findByCode).not.toHaveBeenCalled();
     expect(usersRepository.flush).not.toHaveBeenCalled();
+  });
+
+  it("rejects anyone changing the superadmin's account", async () => {
+    const superadmin = makeSuperadmin();
+    usersRepository.findById.mockResolvedValue(superadmin);
+
+    await expect(
+      interactor.execute({
+        userId: TARGET_USER_ID,
+        dto: { state: EUserState.INACTIVE },
+        actorRole: EUserRole.SENSEI,
+        actorId: ACTOR_ID,
+      }),
+    ).rejects.toThrow(new ForbiddenException(USER_ERROR_MESSAGES.SUPERADMIN_NOT_MODIFIABLE));
+
+    expect(superadmin.state).toBe(EUserState.ACTIVE);
+    expect(usersRepository.deleteSessionsForUser).not.toHaveBeenCalled();
+  });
+
+  it("rejects the superadmin changing their own account through this route", async () => {
+    const superadmin = makeSuperadmin();
+    usersRepository.findById.mockResolvedValue(superadmin);
+
+    await expect(
+      interactor.execute({
+        userId: TARGET_USER_ID,
+        dto: { name: "Renamed" },
+        actorRole: EUserRole.SUPERADMIN,
+        actorId: TARGET_USER_ID,
+      }),
+    ).rejects.toThrow(new ForbiddenException(USER_ERROR_MESSAGES.SUPERADMIN_NOT_MODIFIABLE));
+
+    expect(superadmin.name).toBe("Mock Superadmin");
   });
 });

@@ -35,7 +35,7 @@ const MENTEE_CODES = [
   "can_read_user",
 ];
 
-const SUBTREE_SCOPED_CODES = ["can_update_user", "can_delete_user"];
+const SUBTREE_SCOPED_CODES = ["can_delete_user"];
 
 const HIERARCHY_SCOPED_CODES = ["can_read_user"];
 
@@ -110,7 +110,7 @@ describe("permissions catalog", () => {
     expect(sorted(definedCodes)).toEqual(sorted(Object.values(EPermissionCode)));
   });
 
-  it("scopes user writes to the actor's subtree", () => {
+  it("scopes user deletes to the actor's subtree", () => {
     const scoped = DEFAULT_PERMISSION_DEFINITIONS.filter(
       ({ conditionType }) => conditionType === EPermissionConditionType.SUBTREE,
     ).map(({ code }) => code);

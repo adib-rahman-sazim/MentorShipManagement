@@ -39,6 +39,7 @@ describe("Contextual policies (E2E)", () => {
   let httpServer: THttpServer;
   let orm: MikroORM<IDatabaseDriver<Connection>>;
 
+  let superadmin: User;
   let sensei: User;
   let mentor: User;
   let mentee: User;
@@ -79,7 +80,7 @@ describe("Contextual policies (E2E)", () => {
     dbService.clear();
     await seedPermissionCatalogInDb(dbService);
 
-    await createUserInDb(dbService, {
+    superadmin = await createUserInDb(dbService, {
       email: SUPERADMIN_EMAIL,
       password: E2E_PASSWORD,
       role: EUserRole.SUPERADMIN,
@@ -142,7 +143,7 @@ describe("Contextual policies (E2E)", () => {
         reason: GRANT_REASON,
       });
 
-  describe("writes reach downward only", () => {
+  describe("updates are not limited to the hierarchy", () => {
     const grantedSenseiToken = async (): Promise<string> => {
       const superadminToken = await signIn(SUPERADMIN_EMAIL);
       await grantUpdateUser(superadminToken, sensei.id).expect(HttpStatus.OK);
@@ -154,15 +155,16 @@ describe("Contextual policies (E2E)", () => {
       await rename(await grantedSenseiToken(), mentee.id).expect(HttpStatus.OK);
     });
 
-    it("refuses a sensei for someone outside their hierarchy", async () => {
-      await rename(await grantedSenseiToken(), outsider.id).expect(HttpStatus.FORBIDDEN);
+    it("lets a sensei update someone outside their hierarchy", async () => {
+      await rename(await grantedSenseiToken(), outsider.id).expect(HttpStatus.OK);
     });
 
-    it("refuses a mentor writing upward to their sensei", async () => {
-      const superadminToken = await signIn(SUPERADMIN_EMAIL);
-      await grantUpdateUser(superadminToken, mentor.id).expect(HttpStatus.OK);
+    it("refuses a sensei changing the superadmin", async () => {
+      await rename(await grantedSenseiToken(), superadmin.id).expect(HttpStatus.FORBIDDEN);
+    });
 
-      await rename(await signIn(MENTOR_EMAIL), sensei.id).expect(HttpStatus.FORBIDDEN);
+    it("refuses a sensei who was never granted the permission", async () => {
+      await rename(await signIn(SENSEI_EMAIL), outsider.id).expect(HttpStatus.FORBIDDEN);
     });
   });
 
