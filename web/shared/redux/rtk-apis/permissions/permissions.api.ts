@@ -1,16 +1,19 @@
-import { IUserPermissionOverridesResponse, TApiResponse } from "@/shared/typedefs";
+import {
+  IGetMyCaslRulesResponse,
+  IUserPermissionOverridesResponse,
+  TApiResponse,
+} from "@/shared/typedefs";
 
 import projectApi from "../api.config";
 import { CASL_CACHE_TTL_SECONDS } from "./permissions.constants";
-import { IMyCaslRulesResponse } from "./permissions.interfaces";
 import { TReplaceUserPermissionOverridesArgs } from "./permissions.types";
 
 const permissionsApi = projectApi.injectEndpoints({
   endpoints: (builder) => ({
-    getMyPermissions: builder.query<IMyCaslRulesResponse, string>({
+    getMyPermissions: builder.query<IGetMyCaslRulesResponse, string>({
       // Custom cache key argument; RTK uses it for cache identity only.
       query: (_cacheKey) => "permissions/my",
-      transformResponse: (response: TApiResponse<IMyCaslRulesResponse>) => response.data,
+      transformResponse: (response: TApiResponse<IGetMyCaslRulesResponse>) => response.data,
       providesTags: ["Permissions"],
       keepUnusedDataFor: CASL_CACHE_TTL_SECONDS,
     }),

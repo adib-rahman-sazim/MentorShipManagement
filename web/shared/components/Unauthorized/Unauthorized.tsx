@@ -4,7 +4,7 @@ import { ArrowLeft, LogOut } from "lucide-react";
 
 import { Button } from "@/shared/components/shadui/button";
 import { useSignOut } from "@/shared/hooks/useSignOut";
-import { useAbilityContext } from "@/shared/providers/AbilityProvider";
+import { canPerform, useAbilityContext } from "@/shared/providers/AbilityProvider";
 
 import {
   UNAUTHORIZED_DESCRIPTION,
@@ -21,9 +21,10 @@ const Unauthorized = () => {
   const { signOut } = useSignOut();
 
   const handleGoBack = () => {
-    router.push(getDefaultAuthorizedRoute((action, resource) => ability.can(action, resource)));
+    router.push(
+      getDefaultAuthorizedRoute((action, resource) => canPerform(ability, action, resource)),
+    );
   };
-
   const handleSignOut = () => {
     void signOut();
   };

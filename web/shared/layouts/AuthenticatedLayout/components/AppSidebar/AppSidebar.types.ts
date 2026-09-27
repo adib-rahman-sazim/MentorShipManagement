@@ -1,10 +1,10 @@
 import { LucideIcon } from "lucide-react";
 
-import { EResource } from "@/shared/typedefs";
+import type { TAppResource } from "@/shared/providers/AbilityProvider/AbilityProvider.types";
 
 export type TSidebarMenuItem = {
   title: string;
   url: string;
   icon: LucideIcon;
-  resource: EResource;
+  resource: TAppResource;
 };

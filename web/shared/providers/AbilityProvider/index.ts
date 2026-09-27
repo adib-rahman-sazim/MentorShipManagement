@@ -4,6 +4,7 @@ export {
   PureAbilityContext,
   useAbilityContext,
 } from "./AbilityProvider";
+export { canPerform } from "./AbilityProvider.helpers";
 export {
   isAllowedForAnyResourceRules,
   useCan,
@@ -13,5 +14,9 @@ export type {
   TAbilityContextType,
   TAbilityProviderProps,
   TAppAbility,
+  TAppResource,
+  TAppSubjectInstance,
+  TCanCheck,
   TReachabilityRule,
+  TSubjectConditions,
 } from "./AbilityProvider.types";

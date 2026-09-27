@@ -1,22 +1,20 @@
 import { useAbility as useCaslAbility } from "@casl/react";
 
-import { EPermission, EResource } from "@/shared/typedefs";
+import { EPermission } from "@/shared/typedefs";
 
 import { PureAbilityContext, useAbilityContext } from "./AbilityProvider";
-import type { TReachabilityRule } from "./AbilityProvider.types";
+import { canPerform } from "./AbilityProvider.helpers";
+import type { TAppResource, TReachabilityRule, TSubjectConditions } from "./AbilityProvider.types";
 
 export const useCan = (
   action: EPermission,
-  resource: EResource | "all",
-  conditions?: Record<string, unknown>,
+  resource: TAppResource,
+  conditions?: TSubjectConditions,
 ) => {
   const { isAbilityLoading, isAbilityError } = useAbilityContext();
   const ability = useCaslAbility(PureAbilityContext);
 
-  const isAllowed =
-    conditions && resource !== "all"
-      ? ability.can(action, { __caslSubjectType__: resource, ...conditions } as never)
-      : ability.can(action, resource);
+  const isAllowed = canPerform(ability, action, resource, conditions);
 
   return { isAllowed, isLoading: isAbilityLoading, isError: isAbilityError };
 };
@@ -49,7 +47,7 @@ export const isAllowedForAnyResourceRules = (rules: TReachabilityRule[]): boolea
   return hasReachableAllowedRule && !hasReachableDeniedRule;
 };
 
-export const useCanForAnyResource = (action: EPermission, resource: EResource | "all") => {
+export const useCanForAnyResource = (action: EPermission, resource: TAppResource) => {
   const { isAbilityLoading, isAbilityError } = useAbilityContext();
   const ability = useCaslAbility(PureAbilityContext);
 

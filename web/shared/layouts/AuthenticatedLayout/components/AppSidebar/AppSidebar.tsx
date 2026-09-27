@@ -17,7 +17,7 @@ import {
 } from "@/shared/components/shadui/sidebar";
 import SidebarSkeleton from "@/shared/components/skeletons/SidebarSkeleton";
 import { useSignOut } from "@/shared/hooks/useSignOut";
-import { useAbilityContext } from "@/shared/providers/AbilityProvider";
+import { canPerform, useAbilityContext } from "@/shared/providers/AbilityProvider";
 import { useAuth } from "@/shared/providers/AuthProvider";
 
 import { getVisibleSidebarMenuItems } from "./AppSidebar.helpers";
@@ -35,7 +35,9 @@ const AppSidebar = () => {
     );
   }
 
-  const menuItems = getVisibleSidebarMenuItems((action, resource) => ability.can(action, resource));
+  const menuItems = getVisibleSidebarMenuItems((action, resource) =>
+    canPerform(ability, action, resource),
+  );
 
   return (
     <Sidebar>
