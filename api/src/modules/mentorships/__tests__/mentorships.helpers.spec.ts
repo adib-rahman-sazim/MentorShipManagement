@@ -11,13 +11,14 @@ import { EUserState } from "@/common/enums/users.enums";
 import { MENTORSHIP_SUBTREE_MAX_DEPTH } from "../mentorships.constants";
 import {
   buildSupervisorBySubordinate,
+  buildTeamTree,
   findAssignmentViolations,
   isInactiveParticipant,
   isSelfMentorship,
   resolveRelationshipType,
   wouldCreateCycle,
 } from "../mentorships.helpers";
-import type { IMentorshipParticipant } from "../mentorships.interfaces";
+import type { IMentorshipParticipant, IMentorshipTeamMember } from "../mentorships.interfaces";
 
 const USER_A_ID = "user-a";
 const USER_B_ID = "user-b";
@@ -183,5 +184,92 @@ describe("findAssignmentViolations", () => {
       EMentorshipViolation.ILLEGAL_ROLE_PAIR,
       EMentorshipViolation.INACTIVE_USER,
     ]);
+  });
+});
+
+describe("buildTeamTree", () => {
+  const SENSEI_ID = "sensei";
+  const MENTOR_A_ID = "mentor-a";
+  const MENTOR_B_ID = "mentor-b";
+  const MENTEE_A1_ID = "mentee-a1";
+  const MENTEE_A2_ID = "mentee-a2";
+  const MENTEE_B1_ID = "mentee-b1";
+  const OUTSIDER_ID = "outsider";
+  const OUTSIDER_MENTEE_ID = "outsider-mentee";
+
+  const teamRow = (
+    supervisorId: string,
+    subordinateId: string,
+    subordinateName: string,
+  ): IMentorshipTeamMember => ({
+    supervisor: { id: supervisorId },
+    subordinate: { id: subordinateId, name: subordinateName },
+  });
+
+  const expectedNode = (subordinateId: string, team: unknown[] = []) => ({
+    mentorship: expect.objectContaining({
+      subordinate: expect.objectContaining({ id: subordinateId }),
+    }),
+    team,
+  });
+
+  const SENSEI_TEAM_ROWS = [
+    teamRow(MENTOR_B_ID, MENTEE_B1_ID, "Farah"),
+    teamRow(MENTOR_A_ID, MENTEE_A2_ID, "Dina"),
+    teamRow(SENSEI_ID, MENTOR_B_ID, "Bilal"),
+    teamRow(MENTOR_A_ID, MENTEE_A1_ID, "Chen"),
+    teamRow(SENSEI_ID, MENTOR_A_ID, "Aisha"),
+  ];
+
+  const SENSEI_TEAM_TREE = [
+    expectedNode(MENTOR_A_ID, [expectedNode(MENTEE_A1_ID), expectedNode(MENTEE_A2_ID)]),
+    expectedNode(MENTOR_B_ID, [expectedNode(MENTEE_B1_ID)]),
+  ];
+
+  it("returns an empty team for no rows", () => {
+    expect(buildTeamTree(SENSEI_ID, [])).toEqual([]);
+  });
+
+  it("nests each mentor's mentees under that mentor, sorted by name", () => {
+    expect(buildTeamTree(SENSEI_ID, SENSEI_TEAM_ROWS)).toEqual(SENSEI_TEAM_TREE);
+  });
+
+  it("starts from the given root, not the top of the rows", () => {
+    expect(buildTeamTree(MENTOR_A_ID, SENSEI_TEAM_ROWS)).toEqual([
+      expectedNode(MENTEE_A1_ID),
+      expectedNode(MENTEE_A2_ID),
+    ]);
+  });
+
+  it("breaks a name tie by id so the order is stable", () => {
+    const rows = [
+      teamRow(MENTOR_A_ID, "mentee-z", "Same Name"),
+      teamRow(MENTOR_A_ID, "mentee-b", "Zed"),
+      teamRow(MENTOR_A_ID, "mentee-a", "Same Name"),
+    ];
+
+    expect(buildTeamTree(MENTOR_A_ID, rows)).toEqual([
+      expectedNode("mentee-a"),
+      expectedNode("mentee-z"),
+      expectedNode("mentee-b"),
+    ]);
+  });
+
+  it("drops rows that are not connected to the root", () => {
+    const rows = [...SENSEI_TEAM_ROWS, teamRow(OUTSIDER_ID, OUTSIDER_MENTEE_ID, "Gita")];
+
+    expect(buildTeamTree(SENSEI_ID, rows)).toEqual(SENSEI_TEAM_TREE);
+  });
+
+  it("terminates on cyclic rows and never lists the root under itself", () => {
+    const rows = [...SENSEI_TEAM_ROWS, teamRow(MENTEE_B1_ID, SENSEI_ID, "Sensei")];
+
+    expect(buildTeamTree(SENSEI_ID, rows)).toEqual(SENSEI_TEAM_TREE);
+  });
+
+  it("lists a person once even if two rows point at them", () => {
+    const rows = [...SENSEI_TEAM_ROWS, teamRow(MENTOR_B_ID, MENTEE_A1_ID, "Chen")];
+
+    expect(buildTeamTree(SENSEI_ID, rows)).toEqual(SENSEI_TEAM_TREE);
   });
 });
