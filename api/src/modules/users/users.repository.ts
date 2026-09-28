@@ -28,10 +28,10 @@ export class UsersRepository extends CustomSQLBaseRepository<User> {
     return this.getScopedRepository(em).findOne({ email }, { populate: ["role"] });
   }
 
-  findByIdForUpdate(id: string, em?: EntityManager): Promise<User> {
-    return this.getScopedRepository(em).findOneOrFail(
+  findByIdForUpdate(id: string, em?: EntityManager): Promise<User | null> {
+    return this.getScopedRepository(em).findOne(
       { id, ...NOT_SOFT_DELETED },
-      { lockMode: LockMode.PESSIMISTIC_WRITE },
+      { populate: ["role"], lockMode: LockMode.PESSIMISTIC_WRITE },
     );
   }
 

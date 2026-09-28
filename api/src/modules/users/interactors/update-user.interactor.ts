@@ -3,6 +3,7 @@ import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/commo
 import { EUserState } from "@/common/enums/users.enums";
 import type { IBaseInteractor } from "@/common/interfaces/base-interactor.interfaces";
 import { CaslCacheService } from "@/modules/casl/casl-cache.service";
+import { MentorshipsRepository } from "@/modules/mentorships/mentorships.repository";
 import { RolesRepository } from "@/modules/permissions/roles.repository";
 
 import { USER_ERROR_MESSAGES } from "../users.constants";
@@ -12,6 +13,7 @@ import type { UserResponse } from "../users.responses";
 import { UsersSerializer } from "../users.serializer";
 import {
   assertActorCanAssignRole,
+  assertNoActiveMentorships,
   assertNotSuperadmin,
   assertSuperadminNotDemoted,
 } from "../users-role-assignment.helpers";
@@ -22,6 +24,7 @@ export class UpdateUserInteractor implements IBaseInteractor<IUpdateUserContext,
   constructor(
     private readonly usersRepository: UsersRepository,
     private readonly rolesRepository: RolesRepository,
+    private readonly mentorshipsRepository: MentorshipsRepository,
     private readonly usersRoleAssignmentService: UsersRoleAssignmentService,
     private readonly usersSerializer: UsersSerializer,
     private readonly caslCacheService: CaslCacheService,
@@ -36,13 +39,30 @@ export class UpdateUserInteractor implements IBaseInteractor<IUpdateUserContext,
     let isDeactivating = false;
 
     const user = await this.usersRepository.transactional(async (em) => {
-      const user = await this.usersRepository.findById(userId, em);
+      const user = await this.usersRepository.findByIdForUpdate(userId, em);
 
       if (!user) {
         throw new NotFoundException(USER_ERROR_MESSAGES.USER_NOT_FOUND);
       }
 
       assertNotSuperadmin(user.role.code);
+
+      const targetRole = dto.role !== undefined && dto.role !== user.role.code ? dto.role : null;
+      isDeactivating = dto.state === EUserState.INACTIVE && user.state !== EUserState.INACTIVE;
+
+      if (targetRole !== null) {
+        assertActorCanAssignRole(actorRole, targetRole);
+        assertSuperadminNotDemoted(user.role.code, targetRole);
+      }
+
+      if (targetRole !== null || isDeactivating) {
+        const hasActiveMentorship = await this.mentorshipsRepository.hasActiveMentorship(
+          userId,
+          em,
+        );
+
+        assertNoActiveMentorships(hasActiveMentorship);
+      }
 
       if (dto.name !== undefined) {
         user.name = dto.name;
@@ -51,17 +71,13 @@ export class UpdateUserInteractor implements IBaseInteractor<IUpdateUserContext,
         user.image = dto.image;
       }
       if (dto.state !== undefined) {
-        isDeactivating = dto.state === EUserState.INACTIVE && user.state !== EUserState.INACTIVE;
         user.state = dto.state;
       }
 
-      if (dto.role !== undefined && dto.role !== user.role.code) {
-        assertActorCanAssignRole(actorRole, dto.role);
-        assertSuperadminNotDemoted(user.role.code, dto.role);
+      if (targetRole !== null) {
+        await this.usersRoleAssignmentService.assertSuperadminSlotFree(targetRole, em, userId);
 
-        await this.usersRoleAssignmentService.assertSuperadminSlotFree(dto.role, em, userId);
-
-        const role = await this.rolesRepository.findByCode(dto.role, em);
+        const role = await this.rolesRepository.findByCode(targetRole, em);
 
         if (!role) {
           throw new NotFoundException(USER_ERROR_MESSAGES.ROLE_NOT_FOUND);

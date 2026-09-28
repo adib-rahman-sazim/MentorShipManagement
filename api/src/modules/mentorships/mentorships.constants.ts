@@ -1,5 +1,6 @@
 import { EMentorshipRelationshipType } from "@/common/enums/mentorships.enums";
 import { EUserRole } from "@/common/enums/roles.enums";
+
 import { ILegalRolePair } from "./mentorships.interfaces";
 
 export const MENTORSHIP_SUBTREE_MAX_DEPTH = 10;

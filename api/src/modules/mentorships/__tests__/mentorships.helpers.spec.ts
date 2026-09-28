@@ -125,7 +125,17 @@ describe("wouldCreateCycle", () => {
     ).toBe(true);
   });
 
-  
+  it("fails closed on a chain longer than maxDepth", () => {
+    const supervisorBySubordinate = buildSupervisorBySubordinate([
+      { supervisorId: "level-1", subordinateId: "level-0" },
+      { supervisorId: "level-2", subordinateId: "level-1" },
+      { supervisorId: "level-3", subordinateId: "level-2" },
+    ]);
+
+    expect(wouldCreateCycle(supervisorBySubordinate, USER_A_ID, "level-0", SHORT_MAX_DEPTH)).toBe(
+      true,
+    );
+  });
 });
 
 describe("isInactiveParticipant", () => {
