@@ -33,6 +33,11 @@ export enum EFeatureFlagKey {
   HEALTH_CHECK = "health_check",
 }
 
+export enum EMentorshipRelationshipType {
+  SENSEI_MENTOR = "SENSEI_MENTOR",
+  MENTOR_MENTEE = "MENTOR_MENTEE",
+}
+
 export enum EPermission {
   PAGE_VIEW = "page_view",
   LIST = "list",
@@ -138,6 +143,44 @@ export interface IListUsersParams {
   page: number;
   search?: string;
   state?: EUserState;
+}
+
+export interface IMentorshipChainLinkResponse {
+  depth: number;
+  /** @format uuid */
+  mentorshipId: string;
+  relationshipType: EMentorshipRelationshipType;
+  /** @format date-time */
+  startedAt: string;
+  supervisor: IMentorshipPersonResponse;
+}
+
+export interface IMentorshipPersonResponse {
+  /** @format uuid */
+  id: string;
+  name: string;
+  role: EUserRole;
+}
+
+export interface IMentorshipTeamNodeResponse {
+  /** @format uuid */
+  mentorshipId: string;
+  relationshipType: EMentorshipRelationshipType;
+  /** @format date-time */
+  startedAt: string;
+  team: IMentorshipTeamNodeResponse[];
+  user: IMentorshipPersonResponse;
+}
+
+export interface IMyMentorshipApiResponse {
+  data: IMyMentorshipResponse;
+  message: string;
+  statusCode: number;
+}
+
+export interface IMyMentorshipResponse {
+  supervisors: IMentorshipChainLinkResponse[];
+  team: IMentorshipTeamNodeResponse[];
 }
 
 export interface INormalizedCaslRuleResponse {
