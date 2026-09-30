@@ -1,12 +1,6 @@
 import { Global, Module } from "@nestjs/common";
 
-import { MikroOrmModule } from "@mikro-orm/nestjs";
-
-import { Permission } from "@/common/entities/permissions.entity";
-import { Role } from "@/common/entities/roles.entity";
-import { RolePermission } from "@/common/entities/roles-permissions.entity";
-import { UserPermissionOverride } from "@/common/entities/user-permission-overrides.entity";
-import { EffectivePermissionsService } from "@/modules/permissions/effective-permissions.service";
+import { EffectivePermissionsModule } from "@/modules/permissions/effective-permissions.module";
 import { RedisModule } from "@/modules/redis/redis.module";
 
 import { CaslAbilityFactory } from "./casl.ability-factory";
@@ -14,11 +8,8 @@ import { CaslCacheService } from "./casl-cache.service";
 
 @Global()
 @Module({
-  imports: [
-    MikroOrmModule.forFeature([Permission, Role, RolePermission, UserPermissionOverride]),
-    RedisModule,
-  ],
-  providers: [CaslAbilityFactory, CaslCacheService, EffectivePermissionsService],
-  exports: [CaslAbilityFactory, CaslCacheService, MikroOrmModule, EffectivePermissionsService],
+  imports: [EffectivePermissionsModule, RedisModule],
+  providers: [CaslAbilityFactory, CaslCacheService],
+  exports: [CaslAbilityFactory, CaslCacheService],
 })
 export class CaslModule {}
