@@ -7,8 +7,7 @@ import { EUserRole } from "@/common/enums/roles.enums";
 import { CaslAbilityFactory } from "@/modules/casl/casl.ability-factory";
 import type { TAppRawRule } from "@/modules/casl/casl.types";
 import { CaslCacheService } from "@/modules/casl/casl-cache.service";
-import { MENTORSHIP_SUBTREE_MAX_DEPTH } from "@/modules/mentorships/mentorships.constants";
-import { MentorshipsRepository } from "@/modules/mentorships/mentorships.repository";
+import { MentorshipHierarchyService } from "@/modules/mentorships/mentorship-hierarchy.service";
 import { EffectivePermissionsService } from "@/modules/permissions/effective-permissions.service";
 import {
   EPermission,
@@ -23,10 +22,6 @@ const USER_ID = "00000000-0000-0000-0000-000000000001";
 const SUBTREE_USER_IDS = [
   "00000000-0000-0000-0000-0000000000a1",
   "00000000-0000-0000-0000-0000000000a2",
-];
-const ANCESTOR_USER_IDS = [
-  "00000000-0000-0000-0000-0000000000b1",
-  "00000000-0000-0000-0000-0000000000b2",
 ];
 const ABILITY_CONTEXT = { userId: USER_ID, role: EUserRole.SENSEI };
 
@@ -61,23 +56,21 @@ describe("CaslAbilityFactory", () => {
     caslCacheService.buildUserCacheKey.mockReturnValue(`casl:user:${USER_ID}`);
     caslCacheService.getRules.mockResolvedValue(cachedRules);
     caslCacheService.setRules.mockResolvedValue(undefined);
-    caslCacheService.invalidateUsers.mockResolvedValue(undefined);
 
     const effectivePermissionsService = mockDeep<EffectivePermissionsService>();
     effectivePermissionsService.resolveForUser.mockResolvedValue(permissions);
 
-    const mentorshipsRepository = mockDeep<MentorshipsRepository>();
-    mentorshipsRepository.findDescendantUserIds.mockResolvedValue(SUBTREE_USER_IDS);
-    mentorshipsRepository.findAncestorUserIds.mockResolvedValue(ANCESTOR_USER_IDS);
+    const mentorshipHierarchyService = mockDeep<MentorshipHierarchyService>();
+    mentorshipHierarchyService.findSubtreeUserIds.mockResolvedValue(SUBTREE_USER_IDS);
 
     return {
       caslCacheService,
       effectivePermissionsService,
-      mentorshipsRepository,
+      mentorshipHierarchyService,
       factory: new CaslAbilityFactory(
         caslCacheService,
         effectivePermissionsService,
-        mentorshipsRepository,
+        mentorshipHierarchyService,
       ),
     };
   };
@@ -103,7 +96,7 @@ describe("CaslAbilityFactory", () => {
 
   describe("cache", () => {
     it("builds from the cached rules without resolving anything", async () => {
-      const { factory, effectivePermissionsService, mentorshipsRepository } = buildFactory(
+      const { factory, effectivePermissionsService, mentorshipHierarchyService } = buildFactory(
         [],
         [{ action: EPermission.READ, subject: EResource.USER }],
       );
@@ -112,7 +105,7 @@ describe("CaslAbilityFactory", () => {
 
       expect(ability.can(EPermission.READ, EResource.USER)).toBe(true);
       expect(effectivePermissionsService.resolveForUser).not.toHaveBeenCalled();
-      expect(mentorshipsRepository.findDescendantUserIds).not.toHaveBeenCalled();
+      expect(mentorshipHierarchyService.findSubtreeUserIds).not.toHaveBeenCalled();
     });
 
     it("still resolves when the cache is unavailable", async () => {
@@ -127,27 +120,26 @@ describe("CaslAbilityFactory", () => {
 
   describe("subtree resolution", () => {
     it("does not query the hierarchy when no permission is subtree scoped", async () => {
-      const { factory, caslCacheService, mentorshipsRepository } = buildFactory([
+      const { factory, caslCacheService, mentorshipHierarchyService } = buildFactory([
         readUserPermission(),
       ]);
 
       await factory.createForUser(ABILITY_CONTEXT);
 
-      expect(mentorshipsRepository.findDescendantUserIds).not.toHaveBeenCalled();
+      expect(mentorshipHierarchyService.findSubtreeUserIds).not.toHaveBeenCalled();
       expect(cachedRulesFrom(caslCacheService)[0].conditions).toBeUndefined();
     });
 
-    it("queries the hierarchy once, at the configured depth, when one is", async () => {
-      const { factory, mentorshipsRepository } = buildFactory([
+    it("queries the hierarchy once for the user when one is", async () => {
+      const { factory, mentorshipHierarchyService } = buildFactory([
         readUserPermission(),
         updateUserSubtreePermission(),
       ]);
 
       await factory.createForUser(ABILITY_CONTEXT);
 
-      expect(mentorshipsRepository.findDescendantUserIds).toHaveBeenCalledExactlyOnceWith(
+      expect(mentorshipHierarchyService.findSubtreeUserIds).toHaveBeenCalledExactlyOnceWith(
         USER_ID,
-        MENTORSHIP_SUBTREE_MAX_DEPTH,
       );
     });
 
@@ -168,10 +160,10 @@ describe("CaslAbilityFactory", () => {
     });
 
     it("attaches an empty id list rather than omitting the condition", async () => {
-      const { factory, caslCacheService, mentorshipsRepository } = buildFactory([
+      const { factory, caslCacheService, mentorshipHierarchyService } = buildFactory([
         updateUserSubtreePermission(),
       ]);
-      mentorshipsRepository.findDescendantUserIds.mockResolvedValue([]);
+      mentorshipHierarchyService.findSubtreeUserIds.mockResolvedValue([]);
 
       await factory.createForUser(ABILITY_CONTEXT);
 
@@ -237,23 +229,6 @@ describe("CaslAbilityFactory", () => {
       await factory.createForUser(ABILITY_CONTEXT);
 
       expect(cachedRulesFrom(caslCacheService)[0].inverted).toBe(true);
-    });
-  });
-
-  describe("invalidateForMentorshipChange", () => {
-    it("clears the cache for the user and everyone above them", async () => {
-      const { factory, caslCacheService, mentorshipsRepository } = buildFactory([]);
-
-      await factory.invalidateForMentorshipChange(USER_ID);
-
-      expect(mentorshipsRepository.findAncestorUserIds).toHaveBeenCalledExactlyOnceWith(
-        USER_ID,
-        MENTORSHIP_SUBTREE_MAX_DEPTH,
-      );
-      expect(caslCacheService.invalidateUsers).toHaveBeenCalledExactlyOnceWith([
-        USER_ID,
-        ...ANCESTOR_USER_IDS,
-      ]);
     });
   });
 });

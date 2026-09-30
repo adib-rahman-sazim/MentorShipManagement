@@ -4,8 +4,7 @@ import { AbilityBuilder, createMongoAbility } from "@casl/ability";
 
 import type { Permission } from "@/common/entities/permissions.entity";
 import type { IAbilityContext } from "@/modules/casl/casl.interfaces";
-import { MENTORSHIP_SUBTREE_MAX_DEPTH } from "@/modules/mentorships/mentorships.constants";
-import { MentorshipsRepository } from "@/modules/mentorships/mentorships.repository";
+import { MentorshipHierarchyService } from "@/modules/mentorships/mentorship-hierarchy.service";
 import { EffectivePermissionsService } from "@/modules/permissions/effective-permissions.service";
 import { EPermissionConditionType, EResource } from "@/modules/permissions/permissions.enums";
 
@@ -17,7 +16,7 @@ export class CaslAbilityFactory {
   constructor(
     private readonly caslCacheService: CaslCacheService,
     private readonly effectivePermissionsService: EffectivePermissionsService,
-    private readonly mentorshipsRepository: MentorshipsRepository,
+    private readonly mentorshipHierarchyService: MentorshipHierarchyService,
   ) {}
 
   async createForUser(context: IAbilityContext): Promise<TAppAbility> {
@@ -35,15 +34,6 @@ export class CaslAbilityFactory {
     return this.buildAbilityFromRules(resolvedRules);
   }
 
-  async invalidateForMentorshipChange(userId: string): Promise<void> {
-    const ancestorUserIds = await this.mentorshipsRepository.findAncestorUserIds(
-      userId,
-      MENTORSHIP_SUBTREE_MAX_DEPTH,
-    );
-
-    await this.caslCacheService.invalidateUsers([userId, ...ancestorUserIds]);
-  }
-
   private async resolveSubtreeUserIds(
     userId: string,
     permissions: Permission[],
@@ -56,7 +46,7 @@ export class CaslAbilityFactory {
       return [];
     }
 
-    return this.mentorshipsRepository.findDescendantUserIds(userId, MENTORSHIP_SUBTREE_MAX_DEPTH);
+    return this.mentorshipHierarchyService.findSubtreeUserIds(userId);
   }
 
   private buildConditions(
