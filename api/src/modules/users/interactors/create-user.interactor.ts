@@ -18,10 +18,8 @@ import type { ICreateUserContext } from "../users.interfaces";
 import { UsersRepository } from "../users.repository";
 import type { UserResponse } from "../users.responses";
 import { UsersSerializer } from "../users.serializer";
-import {
-  assertActorCanAssignRole,
-  assertSuperadminSlotFree,
-} from "../users-role-assignment.helpers";
+import { assertActorCanAssignRole } from "../users-role-assignment.helpers";
+import { UsersRoleAssignmentService } from "../users-role-assignment.service";
 
 @Injectable()
 export class CreateUserInteractor implements IBaseInteractor<ICreateUserContext, UserResponse> {
@@ -29,6 +27,7 @@ export class CreateUserInteractor implements IBaseInteractor<ICreateUserContext,
     private readonly usersRepository: UsersRepository,
     private readonly accountsRepository: AccountsRepository,
     private readonly rolesRepository: RolesRepository,
+    private readonly usersRoleAssignmentService: UsersRoleAssignmentService,
     private readonly usersSerializer: UsersSerializer,
     private readonly caslCacheService: CaslCacheService,
   ) {}
@@ -72,10 +71,7 @@ export class CreateUserInteractor implements IBaseInteractor<ICreateUserContext,
   }
   private provision(dto: CreateUserDto, role: Role, hashedPassword: string): Promise<User> {
     return this.usersRepository.transactional(async (em) => {
-      await assertSuperadminSlotFree(dto.role, em, {
-        usersRepository: this.usersRepository,
-        rolesRepository: this.rolesRepository,
-      });
+      await this.usersRoleAssignmentService.assertSuperadminSlotFree(dto.role, em);
 
       const user = this.usersRepository.createUser(
         {
@@ -104,12 +100,7 @@ export class CreateUserInteractor implements IBaseInteractor<ICreateUserContext,
     hashedPassword: string,
   ): Promise<User> {
     return this.usersRepository.transactional(async (em) => {
-      await assertSuperadminSlotFree(
-        dto.role,
-        em,
-        { usersRepository: this.usersRepository, rolesRepository: this.rolesRepository },
-        user.id,
-      );
+      await this.usersRoleAssignmentService.assertSuperadminSlotFree(dto.role, em, user.id);
 
       user.deletedAt = null;
       user.name = dto.name;

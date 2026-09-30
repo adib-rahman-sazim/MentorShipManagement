@@ -13,15 +13,15 @@ import { UsersSerializer } from "../users.serializer";
 import {
   assertActorCanAssignRole,
   assertSuperadminNotDemoted,
-  assertSuperadminSlotFree,
 } from "../users-role-assignment.helpers";
+import { UsersRoleAssignmentService } from "../users-role-assignment.service";
 
 @Injectable()
 export class UpdateUserInteractor implements IBaseInteractor<IUpdateUserContext, UserResponse> {
   constructor(
     private readonly usersRepository: UsersRepository,
     private readonly rolesRepository: RolesRepository,
-
+    private readonly usersRoleAssignmentService: UsersRoleAssignmentService,
     private readonly usersSerializer: UsersSerializer,
     private readonly caslCacheService: CaslCacheService,
   ) {}
@@ -56,12 +56,7 @@ export class UpdateUserInteractor implements IBaseInteractor<IUpdateUserContext,
         assertActorCanAssignRole(actorRole, dto.role);
         assertSuperadminNotDemoted(user.role.code, dto.role);
 
-        await assertSuperadminSlotFree(
-          dto.role,
-          em,
-          { usersRepository: this.usersRepository, rolesRepository: this.rolesRepository },
-          userId,
-        );
+        await this.usersRoleAssignmentService.assertSuperadminSlotFree(dto.role, em, userId);
 
         const role = await this.rolesRepository.findByCode(dto.role, em);
 

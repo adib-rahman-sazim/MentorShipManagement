@@ -1,6 +1,5 @@
 import type { EUserRole } from "@/common/enums/roles.enums";
 import type { EUserState } from "@/common/enums/users.enums";
-import type { RolesRepository } from "@/modules/permissions/roles.repository";
 
 import type {
   CreateUserDto,
@@ -8,12 +7,6 @@ import type {
   UpdateProfileDto,
   UpdateUserDto,
 } from "./users.dtos";
-import type { UsersRepository } from "./users.repository";
-
-export interface ISuperadminGuardRepositories {
-  usersRepository: UsersRepository;
-  rolesRepository: RolesRepository;
-}
 
 export interface IFindUsersOptions {
   page: number;
