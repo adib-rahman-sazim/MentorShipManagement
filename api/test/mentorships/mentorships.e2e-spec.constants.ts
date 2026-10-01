@@ -1,4 +1,5 @@
 export const MY_MENTORSHIP_ROUTE = "/api/v1/mentorships/me";
+export const MENTORSHIP_GRAPH_ROUTE = "/api/v1/mentorships/graph";
 
 export const E2E_PASSWORD = "Password123";
 
