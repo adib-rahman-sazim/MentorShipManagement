@@ -22,6 +22,7 @@ import {
 } from "@/common/enums/mentorships.enums";
 
 import {
+  MENTORSHIP_DRAFT_DECISION_COMMENT_MAX_LENGTH,
   MENTORSHIP_DRAFT_ERROR_MESSAGES,
   MENTORSHIP_DRAFT_MAX_ITEMS,
   MENTORSHIP_DRAFT_TITLE_MAX_LENGTH,
@@ -78,4 +79,12 @@ export class ListMentorshipDraftsQueryDto extends PaginationArgsDto {
   @Transform(({ obj, key }) => obj[key] === QUERY_PARAM_TRUE || obj[key] === true)
   @IsBoolean()
   mine?: boolean;
+}
+
+export class DecideMentorshipDraftDto {
+  @ApiProperty({ required: false, maxLength: MENTORSHIP_DRAFT_DECISION_COMMENT_MAX_LENGTH })
+  @IsOptional()
+  @IsString()
+  @MaxLength(MENTORSHIP_DRAFT_DECISION_COMMENT_MAX_LENGTH)
+  decisionComment?: string;
 }

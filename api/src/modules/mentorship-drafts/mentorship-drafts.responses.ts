@@ -72,6 +72,28 @@ export class MentorshipDraftInvalidItemsResponse extends AbstractApiResponse {
   errors!: MentorshipDraftItemViolationResponse[];
 }
 
+export class MentorshipDraftStaleItemResponse {
+  @ApiProperty({ format: "uuid" })
+  subordinateId!: string;
+
+  @ApiProperty({ format: "uuid", type: String, nullable: true })
+  expectedSupervisorId!: string | null;
+
+  @ApiProperty({ format: "uuid", type: String, nullable: true })
+  currentSupervisorId!: string | null;
+
+  @ApiProperty({ format: "uuid", type: String, nullable: true })
+  changedByDraftId!: string | null;
+}
+
+export class MentorshipDraftStaleItemsResponse extends AbstractApiResponse {
+  @ApiProperty({ enum: EMentorshipDraftErrorCode, enumName: "EMentorshipDraftErrorCode" })
+  errorCode!: EMentorshipDraftErrorCode;
+
+  @ApiProperty({ type: [MentorshipDraftStaleItemResponse] })
+  errors!: MentorshipDraftStaleItemResponse[];
+}
+
 export class MentorshipDraftPersonResponse {
   @ApiProperty({ format: "uuid" })
   id!: string;

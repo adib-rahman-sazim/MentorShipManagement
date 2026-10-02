@@ -5,7 +5,10 @@ import { MentorshipDraftItem } from "@/common/entities/mentorship-draft-items.en
 import type { MentorshipDraft } from "@/common/entities/mentorship-drafts.entity";
 import { CustomSQLBaseRepository } from "@/common/repository/custom-sql-base.repository";
 
-import { DRAFT_ITEM_PEOPLE_POPULATE } from "./mentorship-drafts.constants";
+import {
+  DRAFT_ITEM_EXPECTED_MENTORSHIP_POPULATE,
+  DRAFT_ITEM_PEOPLE_POPULATE,
+} from "./mentorship-drafts.constants";
 import type { IDraftItemCountRow, IValidatedDraftItem } from "./mentorship-drafts.interfaces";
 
 export class MentorshipDraftItemsRepository extends CustomSQLBaseRepository<MentorshipDraftItem> {
@@ -23,6 +26,16 @@ export class MentorshipDraftItemsRepository extends CustomSQLBaseRepository<Ment
         orderBy: { subordinate: { name: "ASC" }, id: "ASC" },
         populate: DRAFT_ITEM_PEOPLE_POPULATE,
       },
+    );
+  }
+
+  findByDraftIdWithExpectedMentorship(
+    draftId: string,
+    em?: EntityManager,
+  ): Promise<MentorshipDraftItem[]> {
+    return this.getScopedRepository(em).find(
+      { draft: draftId },
+      { populate: DRAFT_ITEM_EXPECTED_MENTORSHIP_POPULATE },
     );
   }
 

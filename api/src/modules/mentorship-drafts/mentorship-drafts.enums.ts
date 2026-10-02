@@ -1,5 +1,6 @@
 export enum EMentorshipDraftErrorCode {
   INVALID_ITEMS = "MENTORSHIP_DRAFT_INVALID_ITEMS",
+  STALE_ITEMS = "MENTORSHIP_DRAFT_STALE_ITEMS",
 }
 
 export enum EMentorshipDraftAction {

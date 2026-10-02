@@ -4,6 +4,7 @@ import type { ObjectQuery } from "@mikro-orm/core";
 
 import type { MentorshipDraftItem } from "@/common/entities/mentorship-draft-items.entity";
 import type { MentorshipDraft } from "@/common/entities/mentorship-drafts.entity";
+import type { Mentorship } from "@/common/entities/mentorships.entity";
 import type { User } from "@/common/entities/users.entity";
 import {
   EMentorshipDraftOperation,
@@ -26,9 +27,13 @@ import type { MentorshipDraftItemDto } from "./mentorship-drafts.dtos";
 import { EMentorshipDraftAction, EMentorshipDraftErrorCode } from "./mentorship-drafts.enums";
 import type {
   IDraftActionContext,
+  IDraftDecisionCheck,
+  IDraftItemExpectation,
   IDraftItemInput,
   IDraftItemsValidationInput,
   IDraftItemViolation,
+  IMentorshipSnapshot,
+  IStaleDraftItem,
 } from "./mentorship-drafts.interfaces";
 
 export function toDraftItemInput(item: MentorshipDraftItemDto): IDraftItemInput {
@@ -214,6 +219,83 @@ export function assertDraftHasItems(itemCount: number): void {
   }
 }
 
+export function canDecideDraft({
+  permission,
+  authorId,
+  actorId,
+  ability,
+}: IDraftDecisionCheck): boolean {
+  return (
+    authorId !== actorId &&
+    ability.can(permission, { __caslSubjectType__: EResource.DRAFT, createdBy: authorId })
+  );
+}
+
+export function assertCanDecideDraft(check: IDraftDecisionCheck): void {
+  if (!canDecideDraft(check)) {
+    throw new ForbiddenException(MENTORSHIP_DRAFT_ERROR_MESSAGES.OWN_DRAFT_DECISION);
+  }
+}
+
+export function toDecisionComment(comment?: string): string | null {
+  const trimmedComment = comment?.trim();
+
+  return trimmedComment ? trimmedComment : null;
+}
+
+export function toMentorshipSnapshot(mentorship: Mentorship): IMentorshipSnapshot {
+  return {
+    id: mentorship.id,
+    supervisorId: mentorship.supervisor.id,
+    startedByDraftId: mentorship.startedByDraft?.id ?? null,
+    endedByDraftId: mentorship.endedByDraft?.id ?? null,
+  };
+}
+
+export function toDraftItemExpectation(item: MentorshipDraftItem): IDraftItemExpectation {
+  return {
+    subordinateId: item.subordinate.id,
+    expectedMentorship: item.expectedCurrentMentorship
+      ? toMentorshipSnapshot(item.expectedCurrentMentorship)
+      : null,
+  };
+}
+
+export function findStaleDraftItems(
+  items: readonly IDraftItemExpectation[],
+  liveMentorshipBySubordinate: ReadonlyMap<string, IMentorshipSnapshot>,
+): IStaleDraftItem[] {
+  return items.flatMap(({ subordinateId, expectedMentorship }) => {
+    const liveMentorship = liveMentorshipBySubordinate.get(subordinateId) ?? null;
+
+    if (liveMentorship?.id === expectedMentorship?.id) {
+      return [];
+    }
+
+    return [
+      {
+        subordinateId,
+        expectedSupervisorId: expectedMentorship?.supervisorId ?? null,
+        currentSupervisorId: liveMentorship?.supervisorId ?? null,
+        changedByDraftId:
+          liveMentorship?.startedByDraftId ?? expectedMentorship?.endedByDraftId ?? null,
+      },
+    ];
+  });
+}
+
+export function assertNoStaleDraftItems(staleItems: IStaleDraftItem[]): void {
+  if (staleItems.length > 0) {
+    throw new ConflictException(
+      {
+        message: MENTORSHIP_DRAFT_ERROR_MESSAGES.STALE_ITEMS,
+        errorCode: EMentorshipDraftErrorCode.STALE_ITEMS,
+      },
+      { cause: staleItems },
+    );
+  }
+}
+
 export function buildVisibleDraftsFilter(actorId: string): ObjectQuery<MentorshipDraft> {
   return { $or: [{ createdBy: actorId }, SUBMITTED_DRAFT] };
 }
@@ -226,7 +308,6 @@ export function resolveAllowedDraftActions({
   ability,
 }: IDraftActionContext): EMentorshipDraftAction[] {
   const isAuthor = authorId === actorId;
-  const draftSubject = { __caslSubjectType__: EResource.DRAFT, createdBy: authorId };
   const canWriteDrafts = ability.can(EPermission.CREATE, EResource.DRAFT);
 
   const actionChecks: [EMentorshipDraftAction, boolean][] = [
@@ -243,14 +324,12 @@ export function resolveAllowedDraftActions({
     ],
     [
       EMentorshipDraftAction.APPROVE,
-      !isAuthor &&
-        ability.can(EPermission.APPROVE, draftSubject) &&
+      canDecideDraft({ permission: EPermission.APPROVE, authorId, actorId, ability }) &&
         canTransitionDraft(status, EMentorshipDraftStatus.APPROVED),
     ],
     [
       EMentorshipDraftAction.REJECT,
-      !isAuthor &&
-        ability.can(EPermission.REVIEW, draftSubject) &&
+      canDecideDraft({ permission: EPermission.REVIEW, authorId, actorId, ability }) &&
         canTransitionDraft(status, EMentorshipDraftStatus.REJECTED),
     ],
     [
