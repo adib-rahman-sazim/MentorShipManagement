@@ -11,6 +11,6 @@ import { EffectivePermissionsService } from "./effective-permissions.service";
 @Module({
   imports: [MikroOrmModule.forFeature([Permission, RolePermission, UserPermissionOverride])],
   providers: [EffectivePermissionsService],
-  exports: [EffectivePermissionsService],
+  exports: [EffectivePermissionsService, MikroOrmModule],
 })
 export class EffectivePermissionsModule {}

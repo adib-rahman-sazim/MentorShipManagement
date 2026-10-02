@@ -17,7 +17,6 @@ import { PermissionFactory } from "../../utils/factories/permissions.factory";
 import { createUserInDb } from "../../utils/helpers/create-user-in-db.helpers";
 import type { THttpServer } from "../../utils/http-server.types";
 import {
-  GRANTED_BY_EMAIL,
   OTHER_PERMISSION_CODE,
   OTHER_SUBJECT_EMAIL,
   OVERRIDE_REASON,
@@ -33,7 +32,6 @@ describe("user_permission_overrides (Integration)", () => {
 
   let subject: User;
   let otherSubject: User;
-  let grantedBy: User;
   let permission: Permission;
   let otherPermission: Permission;
 
@@ -66,11 +64,6 @@ describe("user_permission_overrides (Integration)", () => {
       email: OTHER_SUBJECT_EMAIL,
       role: EUserRole.MENTEE,
     });
-    grantedBy = await createUserInDb(dbService, {
-      email: GRANTED_BY_EMAIL,
-      role: EUserRole.SUPERADMIN,
-    });
-
     permission = new PermissionFactory(dbService).makeEntity({
       code: PERMISSION_CODE,
       action: EPermission.UPDATE,
@@ -93,7 +86,6 @@ describe("user_permission_overrides (Integration)", () => {
       user: overrideUser,
       permission: overridePermission,
       effect,
-      grantedBy,
       reason: OVERRIDE_REASON,
     });
 
@@ -108,7 +100,6 @@ describe("user_permission_overrides (Integration)", () => {
 
     const subjectId = subject.id;
     const permissionId = permission.id;
-    const grantedById = grantedBy.id;
     dbService.clear();
 
     const stored = await dbService.findOneOrFail(UserPermissionOverride, {
@@ -117,7 +108,6 @@ describe("user_permission_overrides (Integration)", () => {
     });
 
     expect(stored.effect).toBe(EPermissionOverrideEffect.ALLOW);
-    expect(stored.grantedBy.id).toBe(grantedById);
     expect(stored.reason).toBe(OVERRIDE_REASON);
     expect(stored.deletedAt).toBeNull();
   });
