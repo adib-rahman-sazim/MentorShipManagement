@@ -1,4 +1,5 @@
 import { EdgeLabel, Graph, GraphLabel, layout, NodeLabel } from "@dagrejs/dagre";
+import type { Viewport, XYPosition } from "@xyflow/react";
 
 import { IMentorshipGraphEdgeResponse, IMentorshipGraphNodeResponse } from "@/shared/typedefs";
 
@@ -15,8 +16,14 @@ import {
   TIER_LABEL_ID_PREFIX,
   TIER_LABEL_OFFSET_Y,
 } from "./graph.constants";
-import { EGraphNodeType } from "./graph.enums";
-import { TGraphLayout, TPersonNode, TTierLabelNode } from "./graph.types";
+import { EGraphNodeType, EGraphSelectionKind } from "./graph.enums";
+import {
+  TGraphLayout,
+  TGraphSelection,
+  TPersonNode,
+  TSelectableElement,
+  TTierLabelNode,
+} from "./graph.types";
 
 export function layoutGraph(
   nodes: IMentorshipGraphNodeResponse[],
@@ -96,4 +103,55 @@ function getTierLabelNodes(personNodes: TPersonNode[]): TTierLabelNode[] {
         ]
       : [];
   });
+}
+
+export function getGraphSelection(
+  personId: string | null,
+  linkId: string | null,
+): TGraphSelection | null {
+  if (personId) {
+    return { kind: EGraphSelectionKind.PERSON, id: personId };
+  }
+
+  if (linkId) {
+    return { kind: EGraphSelectionKind.LINK, id: linkId };
+  }
+
+  return null;
+}
+
+export function getSelectedId(elements: readonly TSelectableElement[]): string | null {
+  return elements.find(({ selected }) => selected)?.id ?? null;
+}
+
+export function markSelected<TElement extends TSelectableElement>(
+  elements: TElement[],
+  selectedId: string | null,
+): TElement[] {
+  return elements.map((element) => {
+    const selected = element.id === selectedId;
+
+    return (element.selected ?? false) === selected ? element : { ...element, selected };
+  });
+}
+
+export function getPersonCenter({ x, y }: XYPosition): XYPosition {
+  return { x: x + PERSON_NODE_WIDTH / 2, y: y + PERSON_NODE_HEIGHT / 2 };
+}
+
+export function isPersonInView(
+  { x, y }: XYPosition,
+  { x: offsetX, y: offsetY, zoom }: Viewport,
+  width: number,
+  height: number,
+): boolean {
+  const left = x * zoom + offsetX;
+  const top = y * zoom + offsetY;
+
+  return (
+    left >= 0 &&
+    top >= 0 &&
+    left + PERSON_NODE_WIDTH * zoom <= width &&
+    top + PERSON_NODE_HEIGHT * zoom <= height
+  );
 }
