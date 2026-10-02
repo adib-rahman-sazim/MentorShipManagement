@@ -51,6 +51,7 @@ export enum EPermissionCode {
   CAN_DELETE_PERMISSION = "can_delete_permission",
   CAN_ASSIGN_MENTOR = "can_assign_mentor",
   CAN_CREATE_DRAFT = "can_create_draft",
+  CAN_READ_DRAFT = "can_read_draft",
   CAN_REVIEW_DRAFT = "can_review_draft",
   CAN_APPROVE_DRAFT = "can_approve_draft",
   CAN_VIEW_DASHBOARD = "can_view_dashboard",

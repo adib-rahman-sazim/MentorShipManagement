@@ -15,6 +15,7 @@ const SENSEI_CODES = [
   "can_view_mentorship_graph",
   "can_assign_mentor",
   "can_create_draft",
+  "can_read_draft",
   "can_review_draft",
   "can_approve_draft",
   "can_list_users",
