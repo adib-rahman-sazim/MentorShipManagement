@@ -10,6 +10,7 @@ import { WinstonModule } from "nest-winston";
 import { AppModule } from "./app.module";
 import { getAllowedMethods, getCorsConfig } from "./common/config/cors.config";
 import { CustomBaseExceptionFilter } from "./common/filters/custom-base-exception.filter";
+import { AuthErrorResponse } from "./modules/auth/auth.responses";
 import getWinstonLoggerTransports from "./utils/logger";
 
 async function bootstrap() {
@@ -50,6 +51,7 @@ async function bootstrap() {
     const documentOptions: SwaggerDocumentOptions = {
       ignoreGlobalPrefix: true,
       operationIdFactory: (_: string, methodKey: string) => methodKey,
+      extraModels: [AuthErrorResponse],
     };
     const document = SwaggerModule.createDocument(app, swaggerConfig, documentOptions);
     SwaggerModule.setup("swagger", app, document);

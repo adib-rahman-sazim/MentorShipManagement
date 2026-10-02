@@ -1,23 +1,34 @@
-import { EUserRole } from "@/shared/redux/rtk-apis/roles/roles.enums";
+import {
+  USER_EMAIL_MAX_LENGTH,
+  USER_NAME_MAX_LENGTH,
+  USER_PASSWORD_MAX_LENGTH,
+  USER_PASSWORD_MIN_LENGTH,
+} from "@/modules/users/users.constants";
 
-export const INVITE_USER_ROLE_OPTIONS: Array<{ value: EUserRole; label: string }> = [
-  { value: EUserRole.SUPER_ADMIN, label: "Super Admin" },
-  { value: EUserRole.MANAGER, label: "Manager" },
-  { value: EUserRole.CUSTOMER, label: "Customer" },
-];
+export const CREATE_USER_DIALOG_TITLE = "Create User";
+export const CREATE_USER_DIALOG_DESCRIPTION =
+  "Create an account and set a password. Share the password with the person directly.";
 
-export const CREATE_USER_ROLE_OPTIONS = INVITE_USER_ROLE_OPTIONS;
+export const CREATE_USER_NAME_LABEL = "Name";
+export const CREATE_USER_NAME_PLACEHOLDER = "Full name";
+export const CREATE_USER_EMAIL_LABEL = "Email";
+export const CREATE_USER_EMAIL_PLACEHOLDER = "name@example.com";
+export const CREATE_USER_PASSWORD_LABEL = "Password";
+export const CREATE_USER_PASSWORD_PLACEHOLDER = "At least 8 characters";
+export const CREATE_USER_ROLE_LABEL = "Role";
+export const CREATE_USER_ROLE_PLACEHOLDER = "Select a role";
+export const CREATE_USER_STATE_LABEL = "State";
+export const CREATE_USER_STATE_PLACEHOLDER = "Select a state";
+export const CREATE_USER_SUBMIT_LABEL = "Create User";
 
-export const INVITE_ORGANIZATIONS_PAGE_SIZE = 100;
+export const CREATE_USER_NAME_REQUIRED_MESSAGE = "Name is required.";
+export const CREATE_USER_NAME_TOO_LONG_MESSAGE = `Name must be at most ${USER_NAME_MAX_LENGTH} characters.`;
+export const CREATE_USER_EMAIL_INVALID_MESSAGE = "Enter a valid email address.";
+export const CREATE_USER_EMAIL_TOO_LONG_MESSAGE = `Email must be at most ${USER_EMAIL_MAX_LENGTH} characters.`;
+export const CREATE_USER_PASSWORD_TOO_SHORT_MESSAGE = `Password must be at least ${USER_PASSWORD_MIN_LENGTH} characters.`;
+export const CREATE_USER_PASSWORD_TOO_LONG_MESSAGE = `Password must be at most ${USER_PASSWORD_MAX_LENGTH} characters.`;
 
-export const INVITE_ORGANIZATION_SELECT_LABEL = "Organization";
+export const CREATE_USER_NAME_MIN_LENGTH = 1;
 
-export const INVITE_ORGANIZATION_SELECT_PLACEHOLDER = "Select an organization";
-
-export const INVITE_ORGANIZATION_LOADING_PLACEHOLDER = "Loading organizations...";
-
-export const INVITE_ORGANIZATION_EMPTY_PLACEHOLDER = "No organizations available";
-
-export const INVITE_ORGANIZATION_REQUIRED_MESSAGE = "Organization is required";
-
-export const INVITE_ORGANIZATION_NOT_ALLOWED_MESSAGE = "Organization is not allowed for this role";
+export const TOAST_MESSAGE_USER_CREATED = "User created";
+export const TOAST_MESSAGE_USER_CREATE_FAILED = "Failed to create user";

@@ -5,19 +5,7 @@ import baseQuery from "@/shared/redux/rtk-apis/baseQuery";
 export const projectApi = createApi({
   reducerPath: "projectApi",
   baseQuery,
-  tagTypes: [
-    "UserProfile",
-    "User",
-    "Users",
-    "Roles",
-    "Payments",
-    "Prices",
-    "Subscriptions",
-    "Permissions",
-    "Invitations",
-    "Organizations",
-    "OrganizationMembers",
-  ],
+  tagTypes: ["UserProfile", "User", "Users", "Permissions"],
   endpoints: () => ({}),
 });
 

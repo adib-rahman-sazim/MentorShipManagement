@@ -8,6 +8,7 @@ import { type DeepMockProxy, mockDeep } from "vitest-mock-extended";
 import { EUserRole } from "@/common/enums/roles.enums";
 import { EUserState } from "@/common/enums/users.enums";
 import { AUTH_ERROR_MESSAGES } from "@/modules/auth/auth.constants";
+import { EAuthErrorCode } from "@/modules/auth/auth.enums";
 import type { AuthService } from "@/modules/auth/auth.service";
 
 import { SessionGuard } from "../session.guard";
@@ -86,28 +87,30 @@ describe("SessionGuard", () => {
       );
     });
 
-    it("should throw ForbiddenException when user state is INACTIVE", async () => {
+    it("should throw ForbiddenException tagged ACCOUNT_DEACTIVATED when user state is INACTIVE", async () => {
       mockAuthService.auth.api.getSession.mockResolvedValue(
         buildSessionPayload({ user: { state: EUserState.INACTIVE } }) as never,
       );
 
-      await expectRejection(
-        guard.canActivate(mockExecutionContext),
-        ForbiddenException,
-        AUTH_ERROR_MESSAGES.ACCOUNT_DEACTIVATED,
-      );
+      const result = guard.canActivate(mockExecutionContext);
+
+      await expectRejection(result, ForbiddenException, AUTH_ERROR_MESSAGES.ACCOUNT_DEACTIVATED);
+      await expect(result).rejects.toMatchObject({
+        response: { errorCode: EAuthErrorCode.ACCOUNT_DEACTIVATED },
+      });
     });
 
-    it("should throw ForbiddenException when the user is soft deleted", async () => {
+    it("should throw ForbiddenException tagged ACCOUNT_NOT_FOUND when the user is soft deleted", async () => {
       mockAuthService.auth.api.getSession.mockResolvedValue(
         buildSessionPayload({ user: { deletedAt: new Date() } }) as never,
       );
 
-      await expectRejection(
-        guard.canActivate(mockExecutionContext),
-        ForbiddenException,
-        AUTH_ERROR_MESSAGES.ACCOUNT_NOT_FOUND,
-      );
+      const result = guard.canActivate(mockExecutionContext);
+
+      await expectRejection(result, ForbiddenException, AUTH_ERROR_MESSAGES.ACCOUNT_NOT_FOUND);
+      await expect(result).rejects.toMatchObject({
+        response: { errorCode: EAuthErrorCode.ACCOUNT_NOT_FOUND },
+      });
     });
 
     it("should throw UnauthorizedException when the session carries no role", async () => {
