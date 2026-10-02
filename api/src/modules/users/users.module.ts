@@ -3,6 +3,7 @@ import { Module } from "@nestjs/common";
 import { MikroOrmModule } from "@mikro-orm/nestjs";
 
 import { Account } from "@/common/entities/accounts.entity";
+import { Mentorship } from "@/common/entities/mentorships.entity";
 import { Role } from "@/common/entities/roles.entity";
 import { User } from "@/common/entities/users.entity";
 
@@ -19,7 +20,7 @@ import { UsersService } from "./users.service";
 import { UsersRoleAssignmentService } from "./users-role-assignment.service";
 
 @Module({
-  imports: [MikroOrmModule.forFeature([User, Account, Role]), AuthModule],
+  imports: [MikroOrmModule.forFeature([User, Account, Role, Mentorship]), AuthModule],
   controllers: [UsersController],
   providers: [
     UsersService,

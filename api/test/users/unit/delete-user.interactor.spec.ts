@@ -1,4 +1,4 @@
-import { ForbiddenException, NotFoundException } from "@nestjs/common";
+import { ConflictException, ForbiddenException, NotFoundException } from "@nestjs/common";
 
 import type { EntityManager, MikroORM } from "@mikro-orm/postgresql";
 
@@ -9,6 +9,7 @@ import { Role } from "@/common/entities/roles.entity";
 import type { User } from "@/common/entities/users.entity";
 import { EUserRole } from "@/common/enums/roles.enums";
 import { CaslCacheService } from "@/modules/casl/casl-cache.service";
+import { MentorshipsRepository } from "@/modules/mentorships/mentorships.repository";
 import { DeleteUserInteractor } from "@/modules/users/interactors/delete-user.interactor";
 import { USER_ERROR_MESSAGES } from "@/modules/users/users.constants";
 import { UsersRepository } from "@/modules/users/users.repository";
@@ -25,6 +26,7 @@ describe("DeleteUserInteractor", () => {
   let userFactory: UserFactory;
 
   let usersRepository: DeepMockProxy<UsersRepository>;
+  let mentorshipsRepository: DeepMockProxy<MentorshipsRepository>;
   let caslCacheService: DeepMockProxy<CaslCacheService>;
   let transactionalEntityManager: DeepMockProxy<EntityManager>;
   let interactor: DeleteUserInteractor;
@@ -48,6 +50,7 @@ describe("DeleteUserInteractor", () => {
 
   beforeEach(() => {
     usersRepository = mockDeep<UsersRepository>();
+    mentorshipsRepository = mockDeep<MentorshipsRepository>();
     caslCacheService = mockDeep<CaslCacheService>();
     transactionalEntityManager = mockDeep<EntityManager>();
 
@@ -55,8 +58,9 @@ describe("DeleteUserInteractor", () => {
       callback(transactionalEntityManager),
     );
     usersRepository.softDelete.mockImplementation(UsersRepository.prototype.softDelete);
+    mentorshipsRepository.hasActiveMentorship.mockResolvedValue(false);
 
-    interactor = new DeleteUserInteractor(usersRepository, caslCacheService);
+    interactor = new DeleteUserInteractor(usersRepository, mentorshipsRepository, caslCacheService);
   });
 
   afterEach(() => {
@@ -73,7 +77,7 @@ describe("DeleteUserInteractor", () => {
   });
 
   it("throws when the target user does not exist", async () => {
-    usersRepository.findById.mockResolvedValue(null);
+    usersRepository.findByIdForUpdate.mockResolvedValue(null);
 
     await expect(interactor.execute({ userId: TARGET_USER_ID, actorId: ACTOR_ID })).rejects.toThrow(
       new NotFoundException(USER_ERROR_MESSAGES.USER_NOT_FOUND),
@@ -84,7 +88,7 @@ describe("DeleteUserInteractor", () => {
 
   it("stamps deletedAt rather than removing the row", async () => {
     const user = makeUser();
-    usersRepository.findById.mockResolvedValue(user);
+    usersRepository.findByIdForUpdate.mockResolvedValue(user);
 
     await interactor.execute({ userId: TARGET_USER_ID, actorId: ACTOR_ID });
 
@@ -93,7 +97,7 @@ describe("DeleteUserInteractor", () => {
   });
 
   it("invalidates the ability cache for the deleted user", async () => {
-    usersRepository.findById.mockResolvedValue(makeUser());
+    usersRepository.findByIdForUpdate.mockResolvedValue(makeUser());
 
     await interactor.execute({ userId: TARGET_USER_ID, actorId: ACTOR_ID });
 
@@ -111,12 +115,25 @@ describe("DeleteUserInteractor", () => {
         name: "Superadmin",
       }),
     });
-    usersRepository.findById.mockResolvedValue(superadmin);
+    usersRepository.findByIdForUpdate.mockResolvedValue(superadmin);
 
     await expect(interactor.execute({ userId: TARGET_USER_ID, actorId: ACTOR_ID })).rejects.toThrow(
       new ForbiddenException(USER_ERROR_MESSAGES.SUPERADMIN_NOT_MODIFIABLE),
     );
 
     expect(usersRepository.softDelete).not.toHaveBeenCalled();
+  });
+
+  it("refuses to delete a user with an active mentorship", async () => {
+    const user = makeUser();
+    usersRepository.findByIdForUpdate.mockResolvedValue(user);
+    mentorshipsRepository.hasActiveMentorship.mockResolvedValue(true);
+
+    await expect(interactor.execute({ userId: TARGET_USER_ID, actorId: ACTOR_ID })).rejects.toThrow(
+      new ConflictException(USER_ERROR_MESSAGES.USER_HAS_ACTIVE_MENTORSHIPS),
+    );
+
+    expect(user.deletedAt).toBeUndefined();
+    expect(caslCacheService.invalidateUser).not.toHaveBeenCalled();
   });
 });

@@ -32,6 +32,12 @@ export function assertNotSuperadmin(currentRole: EUserRole): void {
   }
 }
 
+export function assertNoActiveMentorships(hasActiveMentorship: boolean): void {
+  if (hasActiveMentorship) {
+    throw new ConflictException(USER_ERROR_MESSAGES.USER_HAS_ACTIVE_MENTORSHIPS);
+  }
+}
+
 export function assertSuperadminNotDemoted(currentRole: EUserRole, targetRole: EUserRole): void {
   if (currentRole === EUserRole.SUPERADMIN && targetRole !== EUserRole.SUPERADMIN) {
     throw new ForbiddenException(USER_ERROR_MESSAGES.CANNOT_DEMOTE_SUPERADMIN);

@@ -1,3 +1,8 @@
+import { EMentorshipRelationshipType } from "@/common/enums/mentorships.enums";
+import { EUserRole } from "@/common/enums/roles.enums";
+
+import { ILegalRolePair } from "./mentorships.interfaces";
+
 export const MENTORSHIP_SUBTREE_MAX_DEPTH = 10;
 
 export const MENTORSHIP_DESCENDANTS_SQL = `
@@ -37,3 +42,16 @@ export const MENTORSHIP_ANCESTORS_SQL = `
   )
   select distinct user_id from chain;
 `;
+
+export const LEGAL_ROLE_PAIRS: readonly ILegalRolePair[] = [
+  {
+    supervisorRole: EUserRole.SENSEI,
+    subordinateRole: EUserRole.MENTOR,
+    relationshipType: EMentorshipRelationshipType.SENSEI_MENTOR,
+  },
+  {
+    supervisorRole: EUserRole.MENTOR,
+    subordinateRole: EUserRole.MENTEE,
+    relationshipType: EMentorshipRelationshipType.MENTOR_MENTEE,
+  },
+];

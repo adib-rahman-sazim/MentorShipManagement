@@ -7,6 +7,7 @@ import { EUserRole } from "@/common/enums/roles.enums";
 import { USER_ERROR_MESSAGES } from "../users.constants";
 import {
   assertActorCanAssignRole,
+  assertNoActiveMentorships,
   assertNoExistingSuperadmin,
   assertSuperadminNotDemoted,
 } from "../users-role-assignment.helpers";
@@ -84,5 +85,17 @@ describe("assertSuperadminNotDemoted", () => {
 
   it("allows changing the role of a non-superadmin", () => {
     expect(() => assertSuperadminNotDemoted(EUserRole.MENTEE, EUserRole.MENTOR)).not.toThrow();
+  });
+});
+
+describe("assertNoActiveMentorships", () => {
+  it("refuses the change while the user has an active mentorship", () => {
+    expect(() => assertNoActiveMentorships(true)).toThrow(
+      new ConflictException(USER_ERROR_MESSAGES.USER_HAS_ACTIVE_MENTORSHIPS),
+    );
+  });
+
+  it("allows the change when the user has no active mentorship", () => {
+    expect(() => assertNoActiveMentorships(false)).not.toThrow();
   });
 });

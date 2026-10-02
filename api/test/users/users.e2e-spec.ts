@@ -10,6 +10,7 @@ import type { User } from "@/common/entities/users.entity";
 import { EMentorshipRelationshipType, EMentorshipStatus } from "@/common/enums/mentorships.enums";
 import { EUserRole } from "@/common/enums/roles.enums";
 import { EUserState } from "@/common/enums/users.enums";
+import { USER_ERROR_MESSAGES } from "@/modules/users/users.constants";
 
 import { bootstrapTestServer } from "../utils/bootstrap";
 import { truncateTables } from "../utils/db";
@@ -300,6 +301,57 @@ describe("Users (E2E)", () => {
         .set("Authorization", `Bearer ${token}`)
         .send({ role: EUserRole.MENTOR })
         .expect(HttpStatus.FORBIDDEN);
+    });
+  });
+
+  describe("active mentorship guard", () => {
+    const arrangeMentorWithMentee = async (): Promise<{
+      token: string;
+      mentor: User;
+      mentee: User;
+    }> => {
+      const token = await arrangeSuperadmin();
+      const { user: mentor } = await arrangeMentorWithUser();
+      const mentee = await arrangeMentee();
+      await arrangeMentorship(mentor, mentee, EMentorshipRelationshipType.MENTOR_MENTEE);
+
+      return { token, mentor, mentee };
+    };
+
+    it("fails with CONFLICT(409) changing the role of a mentor who has active mentees", async () => {
+      const { token, mentor } = await arrangeMentorWithMentee();
+      await ensureRoleInDb(dbService, EUserRole.SENSEI);
+
+      const response = await request(httpServer)
+        .patch(userRoute(mentor.id))
+        .set("Authorization", `Bearer ${token}`)
+        .send({ role: EUserRole.SENSEI })
+        .expect(HttpStatus.CONFLICT);
+
+      expect(response.body.message).toBe(USER_ERROR_MESSAGES.USER_HAS_ACTIVE_MENTORSHIPS);
+    });
+
+    it("fails with CONFLICT(409) deactivating a mentee who has an active mentor", async () => {
+      const { token, mentee } = await arrangeMentorWithMentee();
+
+      const response = await request(httpServer)
+        .patch(userRoute(mentee.id))
+        .set("Authorization", `Bearer ${token}`)
+        .send({ state: EUserState.INACTIVE })
+        .expect(HttpStatus.CONFLICT);
+
+      expect(response.body.message).toBe(USER_ERROR_MESSAGES.USER_HAS_ACTIVE_MENTORSHIPS);
+    });
+
+    it("fails with CONFLICT(409) deleting a user with an active mentorship", async () => {
+      const { token, mentor } = await arrangeMentorWithMentee();
+
+      const response = await request(httpServer)
+        .delete(userRoute(mentor.id))
+        .set("Authorization", `Bearer ${token}`)
+        .expect(HttpStatus.CONFLICT);
+
+      expect(response.body.message).toBe(USER_ERROR_MESSAGES.USER_HAS_ACTIVE_MENTORSHIPS);
     });
   });
 

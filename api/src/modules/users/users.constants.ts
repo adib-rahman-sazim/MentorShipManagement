@@ -12,6 +12,8 @@ export const USER_ERROR_MESSAGES = {
   SUPERADMIN_ALREADY_EXISTS: "A superadmin already exists; only one is permitted",
   CANNOT_DEMOTE_SUPERADMIN: "The superadmin role cannot be removed from the only superadmin",
   SUPERADMIN_NOT_MODIFIABLE: "The superadmin's account cannot be changed or deleted",
+  USER_HAS_ACTIVE_MENTORSHIPS:
+    "This user still has active mentorships. End or reassign them through a draft before changing their role, deactivating or deleting them.",
 } as const;
 
 export const ROLE_FIELD = "role";

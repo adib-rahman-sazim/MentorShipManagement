@@ -16,3 +16,10 @@ export enum EMentorshipStatus {
   ACTIVE = "ACTIVE",
   ENDED = "ENDED",
 }
+
+export enum EMentorshipViolation {
+  SELF_MENTORSHIP = "SELF_MENTORSHIP",
+  ILLEGAL_ROLE_PAIR = "ILLEGAL_ROLE_PAIR",
+  CYCLE = "CYCLE",
+  INACTIVE_USER = "INACTIVE_USER",
+}

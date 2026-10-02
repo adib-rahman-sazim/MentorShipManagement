@@ -2,16 +2,18 @@ import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/commo
 
 import type { IBaseInteractor } from "@/common/interfaces/base-interactor.interfaces";
 import { CaslCacheService } from "@/modules/casl/casl-cache.service";
+import { MentorshipsRepository } from "@/modules/mentorships/mentorships.repository";
 
 import { USER_ERROR_MESSAGES } from "../users.constants";
 import type { IDeleteUserContext } from "../users.interfaces";
 import { UsersRepository } from "../users.repository";
-import { assertNotSuperadmin } from "../users-role-assignment.helpers";
+import { assertNoActiveMentorships, assertNotSuperadmin } from "../users-role-assignment.helpers";
 
 @Injectable()
 export class DeleteUserInteractor implements IBaseInteractor<IDeleteUserContext, void> {
   constructor(
     private readonly usersRepository: UsersRepository,
+    private readonly mentorshipsRepository: MentorshipsRepository,
     private readonly caslCacheService: CaslCacheService,
   ) {}
 
@@ -21,13 +23,17 @@ export class DeleteUserInteractor implements IBaseInteractor<IDeleteUserContext,
     }
 
     await this.usersRepository.transactional(async (em) => {
-      const user = await this.usersRepository.findById(userId, em);
+      const user = await this.usersRepository.findByIdForUpdate(userId, em);
 
       if (!user) {
         throw new NotFoundException(USER_ERROR_MESSAGES.USER_NOT_FOUND);
       }
 
       assertNotSuperadmin(user.role.code);
+
+      const hasActiveMentorship = await this.mentorshipsRepository.hasActiveMentorship(userId, em);
+
+      assertNoActiveMentorships(hasActiveMentorship);
 
       this.usersRepository.softDelete(user);
       await this.usersRepository.deleteSessionsForUser(userId, em);

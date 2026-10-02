@@ -1,4 +1,4 @@
-import { ForbiddenException } from "@nestjs/common";
+import { ConflictException, ForbiddenException } from "@nestjs/common";
 
 import type { EntityManager, MikroORM } from "@mikro-orm/postgresql";
 
@@ -10,6 +10,7 @@ import type { User } from "@/common/entities/users.entity";
 import { EUserRole } from "@/common/enums/roles.enums";
 import { EUserState } from "@/common/enums/users.enums";
 import { CaslCacheService } from "@/modules/casl/casl-cache.service";
+import { MentorshipsRepository } from "@/modules/mentorships/mentorships.repository";
 import { RolesRepository } from "@/modules/permissions/roles.repository";
 import { UpdateUserInteractor } from "@/modules/users/interactors/update-user.interactor";
 import { USER_ERROR_MESSAGES } from "@/modules/users/users.constants";
@@ -31,6 +32,7 @@ describe("UpdateUserInteractor", () => {
 
   let usersRepository: DeepMockProxy<UsersRepository>;
   let rolesRepository: DeepMockProxy<RolesRepository>;
+  let mentorshipsRepository: DeepMockProxy<MentorshipsRepository>;
   let usersSerializer: DeepMockProxy<UsersSerializer>;
   let caslCacheService: DeepMockProxy<CaslCacheService>;
   let transactionalEntityManager: DeepMockProxy<EntityManager>;
@@ -70,6 +72,7 @@ describe("UpdateUserInteractor", () => {
   beforeEach(() => {
     usersRepository = mockDeep<UsersRepository>();
     rolesRepository = mockDeep<RolesRepository>();
+    mentorshipsRepository = mockDeep<MentorshipsRepository>();
     usersSerializer = mockDeep<UsersSerializer>();
     caslCacheService = mockDeep<CaslCacheService>();
     transactionalEntityManager = mockDeep<EntityManager>();
@@ -77,10 +80,12 @@ describe("UpdateUserInteractor", () => {
     usersRepository.transactional.mockImplementation((callback) =>
       callback(transactionalEntityManager),
     );
+    mentorshipsRepository.hasActiveMentorship.mockResolvedValue(false);
 
     interactor = new UpdateUserInteractor(
       usersRepository,
       rolesRepository,
+      mentorshipsRepository,
       new UsersRoleAssignmentService(usersRepository, rolesRepository),
       usersSerializer,
       caslCacheService,
@@ -94,7 +99,7 @@ describe("UpdateUserInteractor", () => {
 
   it("invalidates the ability cache when the role actually changes", async () => {
     const user = makeUser();
-    usersRepository.findById.mockResolvedValue(user);
+    usersRepository.findByIdForUpdate.mockResolvedValue(user);
     rolesRepository.findByCode.mockResolvedValue(
       orm.em.merge(Role, { id: MENTOR_ROLE_ID, code: EUserRole.MENTOR, name: "Mentor" }),
     );
@@ -112,7 +117,7 @@ describe("UpdateUserInteractor", () => {
 
   it("does not invalidate the ability cache when only the name changes", async () => {
     const user = makeUser();
-    usersRepository.findById.mockResolvedValue(user);
+    usersRepository.findByIdForUpdate.mockResolvedValue(user);
 
     await interactor.execute({
       userId: TARGET_USER_ID,
@@ -127,7 +132,7 @@ describe("UpdateUserInteractor", () => {
 
   it("rejects a non-superadmin promoting a user to superadmin", async () => {
     const user = makeUser();
-    usersRepository.findById.mockResolvedValue(user);
+    usersRepository.findByIdForUpdate.mockResolvedValue(user);
 
     await expect(
       interactor.execute({
@@ -144,7 +149,7 @@ describe("UpdateUserInteractor", () => {
 
   it("rejects anyone changing the superadmin's account", async () => {
     const superadmin = makeSuperadmin();
-    usersRepository.findById.mockResolvedValue(superadmin);
+    usersRepository.findByIdForUpdate.mockResolvedValue(superadmin);
 
     await expect(
       interactor.execute({
@@ -161,7 +166,7 @@ describe("UpdateUserInteractor", () => {
 
   it("rejects the superadmin changing their own account through this route", async () => {
     const superadmin = makeSuperadmin();
-    usersRepository.findById.mockResolvedValue(superadmin);
+    usersRepository.findByIdForUpdate.mockResolvedValue(superadmin);
 
     await expect(
       interactor.execute({
@@ -173,5 +178,57 @@ describe("UpdateUserInteractor", () => {
     ).rejects.toThrow(new ForbiddenException(USER_ERROR_MESSAGES.SUPERADMIN_NOT_MODIFIABLE));
 
     expect(superadmin.name).toBe("Mock Superadmin");
+  });
+
+  describe("active mentorship guard", () => {
+    it("refuses a role change while the user has an active mentorship", async () => {
+      const user = makeUser();
+      usersRepository.findByIdForUpdate.mockResolvedValue(user);
+      mentorshipsRepository.hasActiveMentorship.mockResolvedValue(true);
+
+      await expect(
+        interactor.execute({
+          userId: TARGET_USER_ID,
+          dto: { role: EUserRole.MENTOR },
+          actorRole: EUserRole.SENSEI,
+          actorId: ACTOR_ID,
+        }),
+      ).rejects.toThrow(new ConflictException(USER_ERROR_MESSAGES.USER_HAS_ACTIVE_MENTORSHIPS));
+
+      expect(user.role.code).toBe(EUserRole.MENTEE);
+      expect(caslCacheService.invalidateUser).not.toHaveBeenCalled();
+    });
+
+    it("refuses deactivation while the user has an active mentorship", async () => {
+      const user = makeUser();
+      usersRepository.findByIdForUpdate.mockResolvedValue(user);
+      mentorshipsRepository.hasActiveMentorship.mockResolvedValue(true);
+
+      await expect(
+        interactor.execute({
+          userId: TARGET_USER_ID,
+          dto: { state: EUserState.INACTIVE },
+          actorRole: EUserRole.SENSEI,
+          actorId: ACTOR_ID,
+        }),
+      ).rejects.toThrow(new ConflictException(USER_ERROR_MESSAGES.USER_HAS_ACTIVE_MENTORSHIPS));
+
+      expect(user.state).toBe(EUserState.ACTIVE);
+      expect(usersRepository.deleteSessionsForUser).not.toHaveBeenCalled();
+    });
+
+    it("does not check mentorships when only the name changes", async () => {
+      usersRepository.findByIdForUpdate.mockResolvedValue(makeUser());
+      mentorshipsRepository.hasActiveMentorship.mockResolvedValue(true);
+
+      await interactor.execute({
+        userId: TARGET_USER_ID,
+        dto: { name: "Renamed" },
+        actorRole: EUserRole.SENSEI,
+        actorId: ACTOR_ID,
+      });
+
+      expect(mentorshipsRepository.hasActiveMentorship).not.toHaveBeenCalled();
+    });
   });
 });

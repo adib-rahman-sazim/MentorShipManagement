@@ -1,4 +1,5 @@
 import {
+  Check,
   Entity,
   EntityRepositoryType,
   Enum,
@@ -19,6 +20,10 @@ import { MentorshipDraft } from "./mentorship-drafts.entity";
 import { User } from "./users.entity";
 
 @Entity({ tableName: "mentorships", repository: () => MentorshipsRepository })
+@Check({
+  name: "mentorships_supervisor_not_subordinate_check",
+  expression: '"supervisor_id" <> "subordinate_id"',
+})
 @Index({
   name: "mentorships_active_subordinate_unique",
   expression:

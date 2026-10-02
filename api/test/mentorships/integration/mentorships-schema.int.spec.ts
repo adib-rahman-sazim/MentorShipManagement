@@ -132,6 +132,18 @@ describe("Mentorship schema (Integration)", () => {
     });
   });
 
+  describe("self-mentorship", () => {
+    it("rejects a row where the supervisor is also the subordinate", async () => {
+      dbService.persist(buildMentorship({ supervisor: subordinate }));
+
+      await expect(dbService.flush()).rejects.toThrow(
+        /mentorships_supervisor_not_subordinate_check/,
+      );
+
+      dbService.clear();
+    });
+  });
+
   describe("card scope", () => {
     it("does not create mentorship_draft_items — that belongs to MMS-37", async () => {
       const rows: Array<{ table_name: string }> = await dbService
