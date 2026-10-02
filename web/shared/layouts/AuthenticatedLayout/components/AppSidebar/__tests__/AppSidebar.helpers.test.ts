@@ -13,6 +13,7 @@ import { canPerform } from "@/shared/providers/AbilityProvider/AbilityProvider.h
 import { INormalizedCaslRuleResponse } from "@/shared/typedefs";
 
 const HOME = "Home";
+const MENTORSHIP_GRAPH = "Mentorship graph";
 const USERS = "Users";
 const SETTINGS = "Settings";
 
@@ -26,7 +27,7 @@ function visibleTitlesFor(rules: INormalizedCaslRuleResponse[]): string[] {
 
 describe("getVisibleSidebarMenuItems", () => {
   it("shows every page to the superadmin", () => {
-    expect(visibleTitlesFor(SUPERADMIN_RULES)).toEqual([HOME, USERS, SETTINGS]);
+    expect(visibleTitlesFor(SUPERADMIN_RULES)).toEqual([HOME, MENTORSHIP_GRAPH, USERS, SETTINGS]);
   });
 
   it.each([
@@ -34,11 +35,16 @@ describe("getVisibleSidebarMenuItems", () => {
     ["mentor", MENTOR_RULES],
     ["mentee", MENTEE_RULES],
   ])("hides the users page from a %s by default", (_role, rules) => {
-    expect(visibleTitlesFor(rules)).toEqual([HOME, SETTINGS]);
+    expect(visibleTitlesFor(rules)).toEqual([HOME, MENTORSHIP_GRAPH, SETTINGS]);
   });
 
   it("shows the users page once it is granted to a person", () => {
-    expect(visibleTitlesFor(SENSEI_WITH_USER_ADMIN_GRANTS_RULES)).toEqual([HOME, USERS, SETTINGS]);
+    expect(visibleTitlesFor(SENSEI_WITH_USER_ADMIN_GRANTS_RULES)).toEqual([
+      HOME,
+      MENTORSHIP_GRAPH,
+      USERS,
+      SETTINGS,
+    ]);
   });
 
   it("shows nothing when the rules are empty", () => {

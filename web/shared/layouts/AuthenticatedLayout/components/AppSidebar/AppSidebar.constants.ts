@@ -1,6 +1,11 @@
-import { Home, Settings, Users } from "lucide-react";
+import { Home, Network, Settings, Users } from "lucide-react";
 
-import { DASHBOARD_ROUTE, SETTINGS_ROUTE, USERS_ROUTE } from "@/shared/constants/routes.constants";
+import {
+  DASHBOARD_ROUTE,
+  MENTORSHIP_GRAPH_ROUTE,
+  SETTINGS_ROUTE,
+  USERS_ROUTE,
+} from "@/shared/constants/routes.constants";
 import { EResource } from "@/shared/typedefs";
 
 import { TSidebarMenuItem } from "./AppSidebar.types";
@@ -11,6 +16,12 @@ export const SIDEBAR_MENU_ITEMS: TSidebarMenuItem[] = [
     url: DASHBOARD_ROUTE,
     icon: Home,
     resource: EResource.DASHBOARD,
+  },
+  {
+    title: "Mentorship graph",
+    url: MENTORSHIP_GRAPH_ROUTE,
+    icon: Network,
+    resource: EResource.MENTORSHIP_GRAPH,
   },
   {
     title: "Users",

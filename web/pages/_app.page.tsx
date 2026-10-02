@@ -1,3 +1,4 @@
+import "@xyflow/react/dist/style.css";
 import "@/styles/globals.css";
 
 import { appWithTranslation } from "next-i18next";
