@@ -1,8 +1,19 @@
-import { Entity, Enum, Index, ManyToOne, PrimaryKey, Property, type Rel } from "@mikro-orm/core";
+import {
+  Collection,
+  Entity,
+  Enum,
+  Index,
+  ManyToOne,
+  OneToMany,
+  PrimaryKey,
+  Property,
+  type Rel,
+} from "@mikro-orm/core";
 
 import { EMentorshipDraftStatus } from "@/common/enums/mentorships.enums";
 
 import { CustomBaseEntity } from "./custom-base.entity";
+import { MentorshipDraftItem } from "./mentorship-draft-items.entity";
 import { User } from "./users.entity";
 
 @Entity({ tableName: "mentorship_drafts" })
@@ -36,4 +47,10 @@ export class MentorshipDraft extends CustomBaseEntity {
   @Property({ type: "datetime", nullable: true })
   @Index({ name: "mentorship_drafts_deleted_at_index" })
   deletedAt?: Date | null;
+
+  @OneToMany(
+    () => MentorshipDraftItem,
+    (item) => item.draft,
+  )
+  items = new Collection<MentorshipDraftItem>(this);
 }

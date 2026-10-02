@@ -23,3 +23,9 @@ export enum EMentorshipViolation {
   CYCLE = "CYCLE",
   INACTIVE_USER = "INACTIVE_USER",
 }
+
+export enum EMentorshipDraftOperation {
+  ASSIGN = "ASSIGN",
+  REASSIGN = "REASSIGN",
+  UNASSIGN = "UNASSIGN",
+}
