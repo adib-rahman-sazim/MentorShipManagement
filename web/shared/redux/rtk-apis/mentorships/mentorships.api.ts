@@ -1,5 +1,5 @@
 import projectApi from "@/shared/redux/rtk-apis/api.config";
-import { IMyMentorshipResponse, TApiResponse } from "@/shared/typedefs";
+import { IMentorshipGraphResponse, IMyMentorshipResponse, TApiResponse } from "@/shared/typedefs";
 
 const mentorshipsApi = projectApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -8,8 +8,14 @@ const mentorshipsApi = projectApi.injectEndpoints({
       transformResponse: (response: TApiResponse<IMyMentorshipResponse>) => response.data,
       providesTags: ["MyMentorship"],
     }),
+
+    getMentorshipGraph: builder.query<IMentorshipGraphResponse, void>({
+      query: () => "mentorships/graph",
+      transformResponse: (response: TApiResponse<IMentorshipGraphResponse>) => response.data,
+      providesTags: ["MentorshipGraph"],
+    }),
   }),
   overrideExisting: false,
 });
 
-export const { useGetMyMentorshipQuery } = mentorshipsApi;
+export const { useGetMyMentorshipQuery, useGetMentorshipGraphQuery } = mentorshipsApi;

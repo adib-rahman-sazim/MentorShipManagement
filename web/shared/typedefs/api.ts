@@ -155,6 +155,39 @@ export interface IMentorshipChainLinkResponse {
   supervisor: IMentorshipPersonResponse;
 }
 
+export interface IMentorshipGraphApiResponse {
+  data: IMentorshipGraphResponse;
+  message: string;
+  statusCode: number;
+}
+
+export interface IMentorshipGraphEdgeResponse {
+  /** @format uuid */
+  id: string;
+  relationshipType: EMentorshipRelationshipType;
+  /** @format date-time */
+  startedAt: string;
+  /** @format uuid */
+  subordinateId: string;
+  /** @format uuid */
+  supervisorId: string;
+}
+
+export interface IMentorshipGraphNodeResponse {
+  /** @format email */
+  email: string;
+  /** @format uuid */
+  id: string;
+  name: string;
+  role: EUserRole;
+  state: EUserState;
+}
+
+export interface IMentorshipGraphResponse {
+  edges: IMentorshipGraphEdgeResponse[];
+  nodes: IMentorshipGraphNodeResponse[];
+}
+
 export interface IMentorshipPersonResponse {
   /** @format uuid */
   id: string;
