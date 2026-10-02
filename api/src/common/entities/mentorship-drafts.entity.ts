@@ -41,8 +41,23 @@ export class MentorshipDraft extends CustomBaseEntity {
   @ManyToOne(() => User, { nullable: true })
   publishedBy?: Rel<User> | null;
 
+  @ManyToOne(() => User, { nullable: true })
+  cancelledBy?: Rel<User> | null;
+
   @Property({ type: "text", nullable: true })
   decisionComment?: string | null;
+
+  @Property({ type: "datetime", nullable: true })
+  submittedAt?: Date | null;
+
+  @Property({ type: "datetime", nullable: true })
+  decidedAt?: Date | null;
+
+  @Property({ type: "datetime", nullable: true })
+  publishedAt?: Date | null;
+
+  @Property({ type: "datetime", nullable: true })
+  cancelledAt?: Date | null;
 
   @Property({ type: "datetime", nullable: true })
   @Index({ name: "mentorship_drafts_deleted_at_index" })
