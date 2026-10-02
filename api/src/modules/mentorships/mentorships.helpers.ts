@@ -10,6 +10,8 @@ import type {
   IMentorshipAssignmentInput,
   IMentorshipEdge,
   IMentorshipParticipant,
+  IMentorshipTeamMember,
+  IMentorshipTeamTreeNode,
 } from "./mentorships.interfaces";
 
 export function isSelfMentorship(supervisorId: string, subordinateId: string): boolean {
@@ -87,4 +89,48 @@ export function buildSupervisorBySubordinate(
   edges: readonly IMentorshipEdge[],
 ): Map<string, string> {
   return new Map(edges.map((edge) => [edge.subordinateId, edge.supervisorId]));
+}
+
+export function buildTeamTree<T extends IMentorshipTeamMember>(
+  rootUserId: string,
+  mentorships: readonly T[],
+): IMentorshipTeamTreeNode<T>[] {
+  const mentorshipsBySupervisor = new Map<string, T[]>();
+
+  for (const mentorship of mentorships) {
+    const directReports = mentorshipsBySupervisor.get(mentorship.supervisor.id) ?? [];
+    directReports.push(mentorship);
+    mentorshipsBySupervisor.set(mentorship.supervisor.id, directReports);
+  }
+
+  return buildTeamBranch(rootUserId, mentorshipsBySupervisor, new Set([rootUserId]));
+}
+
+function buildTeamBranch<T extends IMentorshipTeamMember>(
+  supervisorId: string,
+  mentorshipsBySupervisor: ReadonlyMap<string, T[]>,
+  visitedUserIds: Set<string>,
+): IMentorshipTeamTreeNode<T>[] {
+  const directReports = (mentorshipsBySupervisor.get(supervisorId) ?? [])
+    .filter((mentorship) => !visitedUserIds.has(mentorship.subordinate.id))
+    .sort(compareBySubordinateName);
+
+  for (const mentorship of directReports) {
+    visitedUserIds.add(mentorship.subordinate.id);
+  }
+
+  return directReports.map((mentorship) => ({
+    mentorship,
+    team: buildTeamBranch(mentorship.subordinate.id, mentorshipsBySupervisor, visitedUserIds),
+  }));
+}
+
+function compareBySubordinateName(
+  left: IMentorshipTeamMember,
+  right: IMentorshipTeamMember,
+): number {
+  return (
+    left.subordinate.name.localeCompare(right.subordinate.name) ||
+    left.subordinate.id.localeCompare(right.subordinate.id)
+  );
 }

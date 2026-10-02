@@ -1,4 +1,7 @@
-import { EMentorshipRelationshipType } from "@/common/enums/mentorships.enums";
+import { FilterQuery } from "@mikro-orm/postgresql";
+
+import { Mentorship } from "@/common/entities/mentorships.entity";
+import { EMentorshipRelationshipType, EMentorshipStatus } from "@/common/enums/mentorships.enums";
 import { EUserRole } from "@/common/enums/roles.enums";
 
 import { ILegalRolePair } from "./mentorships.interfaces";
@@ -42,6 +45,11 @@ export const MENTORSHIP_ANCESTORS_SQL = `
   )
   select distinct user_id from chain;
 `;
+
+export const ACTIVE_MENTORSHIP = {
+  status: EMentorshipStatus.ACTIVE,
+  deletedAt: null,
+} satisfies FilterQuery<Mentorship>;
 
 export const LEGAL_ROLE_PAIRS: readonly ILegalRolePair[] = [
   {
