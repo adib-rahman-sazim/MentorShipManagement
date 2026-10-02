@@ -63,6 +63,7 @@ describe("GetUserPermissionOverridesInteractor", () => {
 
     effectivePermissionsService.resolveCodesForUser.mockResolvedValue({
       allPermissions: [],
+      roleCodes: [],
       effectiveCodes: [],
       grantedCodes: [],
       revokedCodes: [],

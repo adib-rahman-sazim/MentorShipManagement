@@ -207,6 +207,7 @@ export interface IUserPermissionEntryResponse {
   description?: string;
   effective: boolean;
   resource: EResource;
+  roleDefault: boolean;
   source: EPermissionSource;
 }
 
@@ -222,6 +223,7 @@ export interface IUserPermissionOverridesApiResponse {
 }
 
 export interface IUserPermissionOverridesResponse {
+  editable: boolean;
   permissions: IUserPermissionEntryResponse[];
   role: EUserRole;
   /** @format uuid */
