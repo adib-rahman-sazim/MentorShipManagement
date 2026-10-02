@@ -1,6 +1,7 @@
 import {
   Check,
   Entity,
+  EntityRepositoryType,
   Enum,
   Index,
   ManyToOne,
@@ -10,13 +11,17 @@ import {
 } from "@mikro-orm/core";
 
 import { EMentorshipDraftOperation } from "@/common/enums/mentorships.enums";
+import { MentorshipDraftItemsRepository } from "@/modules/mentorship-drafts/mentorship-draft-items.repository";
 
 import { CustomBaseEntity } from "./custom-base.entity";
 import { MentorshipDraft } from "./mentorship-drafts.entity";
 import { Mentorship } from "./mentorships.entity";
 import { User } from "./users.entity";
 
-@Entity({ tableName: "mentorship_draft_items" })
+@Entity({
+  tableName: "mentorship_draft_items",
+  repository: () => MentorshipDraftItemsRepository,
+})
 @Unique({
   name: "mentorship_draft_items_draft_id_subordinate_id_unique",
   properties: ["draft", "subordinate"],
@@ -28,6 +33,8 @@ import { User } from "./users.entity";
     `("operation" <> 'UNASSIGN' and "proposed_supervisor_id" is not null)`,
 })
 export class MentorshipDraftItem extends CustomBaseEntity {
+  [EntityRepositoryType]?: MentorshipDraftItemsRepository;
+
   @PrimaryKey({ type: "uuid", defaultRaw: "gen_random_uuid()" })
   id!: string;
 

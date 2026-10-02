@@ -29,6 +29,7 @@ export enum EPermissionConditionType {
   SUBTREE = "subtree",
   HIERARCHY = "hierarchy",
   NOT_AUTHOR = "not_author",
+  MENTOR_MENTEE = "mentor_mentee",
 }
 
 export enum EPermissionCode {

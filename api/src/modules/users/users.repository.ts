@@ -20,6 +20,13 @@ export class UsersRepository extends CustomSQLBaseRepository<User> {
     );
   }
 
+  findByIds(ids: string[], em?: EntityManager): Promise<User[]> {
+    return this.getScopedRepository(em).find(
+      { id: { $in: ids }, ...NOT_SOFT_DELETED },
+      { populate: ["role"] },
+    );
+  }
+
   findByEmail(email: string, em?: EntityManager): Promise<User | null> {
     return this.getScopedRepository(em).findOne({ email, ...NOT_SOFT_DELETED });
   }

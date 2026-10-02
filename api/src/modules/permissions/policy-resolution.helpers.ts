@@ -34,13 +34,7 @@ export function isPolicySatisfied(
   scope: IPolicyScope,
   subjectId: string,
 ): boolean {
-  const policy = findContextualPolicy(conditionType);
-
-  if (!policy) {
-    return false;
-  }
-
-  return policy.isSatisfiedBy(scope, subjectId);
+  return findContextualPolicy(conditionType)?.isSatisfiedBy?.(scope, subjectId) ?? false;
 }
 
 export function assertContextualPoliciesComplete(): void {

@@ -8,5 +8,5 @@ export interface IPolicyScope {
 
 export interface IContextualPolicy {
   toConditions: (scope: IPolicyScope) => TPolicyConditions;
-  isSatisfiedBy: (scope: IPolicyScope, subjectId: string) => boolean;
+  isSatisfiedBy?: (scope: IPolicyScope, subjectId: string) => boolean;
 }

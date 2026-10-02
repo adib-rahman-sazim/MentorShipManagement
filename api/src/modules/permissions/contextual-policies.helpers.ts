@@ -1,3 +1,5 @@
+import { EMentorshipRelationshipType } from "@/common/enums/mentorships.enums";
+
 import type { IPolicyScope } from "./contextual-policies.interfaces";
 import type { TPolicyConditions } from "./contextual-policies.types";
 
@@ -45,4 +47,8 @@ export function notAuthorConditions({ actorId }: IPolicyScope): TPolicyCondition
 
 export function isNotAuthorSubject({ actorId }: IPolicyScope, authorId: string): boolean {
   return authorId !== actorId;
+}
+
+export function mentorMenteeConditions(): TPolicyConditions {
+  return { relationshipType: EMentorshipRelationshipType.MENTOR_MENTEE };
 }

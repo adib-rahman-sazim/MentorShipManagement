@@ -16,6 +16,7 @@ import { AuthModule } from "./modules/auth/auth.module";
 import { CaslModule } from "./modules/casl/casl.module";
 import { FeatureFlagsModule } from "./modules/feature-flags/feature-flags.module";
 import { HealthModule } from "./modules/health/health.module";
+import { MentorshipDraftsModule } from "./modules/mentorship-drafts/mentorship-drafts.module";
 import { MentorshipsModule } from "./modules/mentorships/mentorships.module";
 import { PermissionsModule } from "./modules/permissions/permissions.module";
 import { RedisModule } from "./modules/redis/redis.module";
@@ -44,6 +45,7 @@ import { WebsocketExampleModule } from "./modules/websocket-example/websocket-ex
     RolesModule,
     PermissionsModule,
     MentorshipsModule,
+    MentorshipDraftsModule,
     FeatureFlagsModule,
     WebsocketExampleModule,
     HealthModule,
