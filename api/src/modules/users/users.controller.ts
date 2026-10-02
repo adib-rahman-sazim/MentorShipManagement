@@ -91,6 +91,7 @@ export class UsersController {
   @Permissions([EPermissionCode.CAN_UPDATE_USER])
   @ApiOperation({ summary: "Update another user." })
   @ApiOkResponse({ type: UserApiResponse })
+  @ApiConflictResponse({ description: "A superadmin already exists." })
   async updateUser(
     @Req() req: Request,
     @Param("id", ParseUUIDPipe) userId: string,

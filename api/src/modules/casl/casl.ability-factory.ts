@@ -2,13 +2,9 @@ import { Injectable } from "@nestjs/common";
 
 import { AbilityBuilder, createMongoAbility } from "@casl/ability";
 
-import { Permission } from "@/common/entities/permissions.entity";
-import type { EUserRole } from "@/common/enums/roles.enums";
+import type { Permission } from "@/common/entities/permissions.entity";
 import type { IAbilityContext } from "@/modules/casl/casl.interfaces";
-import {
-  DEFAULT_ROLE_PERMISSION_CODES,
-  PERMISSION_DEFINITIONS_BY_CODE,
-} from "@/modules/permissions/permissions.catalog.constants";
+import { EffectivePermissionsService } from "@/modules/permissions/effective-permissions.service";
 import { EResource } from "@/modules/permissions/permissions.enums";
 
 import type { TAppAbility, TAppRawRule } from "./casl.types";
@@ -16,7 +12,10 @@ import { CaslCacheService } from "./casl-cache.service";
 
 @Injectable()
 export class CaslAbilityFactory {
-  constructor(private readonly caslCacheService: CaslCacheService) {}
+  constructor(
+    private readonly caslCacheService: CaslCacheService,
+    private readonly effectivePermissionsService: EffectivePermissionsService,
+  ) {}
 
   async createForUser(context: IAbilityContext): Promise<TAppAbility> {
     const cacheKey = this.caslCacheService.buildUserCacheKey(context.userId);
@@ -25,7 +24,7 @@ export class CaslAbilityFactory {
       return this.buildAbilityFromRules(cachedRules);
     }
 
-    const permissions = this.resolvePermissionsFromCatalog(context.role);
+    const permissions = await this.effectivePermissionsService.resolveForUser(context);
     const resolvedRules = this.toResolvedRules(permissions);
     await this.caslCacheService.setRules(cacheKey, resolvedRules);
 
@@ -64,23 +63,5 @@ export class CaslAbilityFactory {
     }
 
     return [...deduplicated.values()];
-  }
-
-  private resolvePermissionsFromCatalog(role: EUserRole): Permission[] {
-    const permittedCodes = new Set(DEFAULT_ROLE_PERMISSION_CODES[role] ?? []);
-
-    return [...permittedCodes]
-      .map((code) => PERMISSION_DEFINITIONS_BY_CODE.get(code))
-      .filter((definition): definition is NonNullable<typeof definition> => !!definition)
-      .map(
-        (definition) =>
-          ({
-            code: definition.code,
-            resource: definition.resource,
-            action: definition.action,
-            conditionType: definition.conditionType,
-            denied: definition.denied,
-          }) as Permission,
-      );
   }
 }

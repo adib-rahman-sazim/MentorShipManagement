@@ -15,6 +15,7 @@ import { UpdateUserInteractor } from "@/modules/users/interactors/update-user.in
 import { USER_ERROR_MESSAGES } from "@/modules/users/users.constants";
 import { UsersRepository } from "@/modules/users/users.repository";
 import { UsersSerializer } from "@/modules/users/users.serializer";
+import { UsersRoleAssignmentService } from "@/modules/users/users-role-assignment.service";
 import { UserFactory } from "@/test/utils/factories/users.factory";
 import { createOfflineOrm } from "@/test/utils/helpers/offline-orm.helpers";
 
@@ -66,6 +67,7 @@ describe("UpdateUserInteractor", () => {
     interactor = new UpdateUserInteractor(
       usersRepository,
       rolesRepository,
+      new UsersRoleAssignmentService(usersRepository, rolesRepository),
       usersSerializer,
       caslCacheService,
     );

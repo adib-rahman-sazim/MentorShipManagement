@@ -11,6 +11,7 @@ import { EUserState } from "@/common/enums/users.enums";
 import { bootstrapTestServer } from "../utils/bootstrap";
 import { truncateTables } from "../utils/db";
 import { createUserInDb } from "../utils/helpers/create-user-in-db.helpers";
+import { seedPermissionCatalogInDb } from "../utils/helpers/permissions.helpers";
 import { ensureRoleInDb } from "../utils/helpers/roles.helpers";
 import type { THttpServer } from "../utils/http-server.types";
 import {
@@ -57,6 +58,7 @@ describe("Users (E2E)", () => {
   beforeEach(async () => {
     await truncateTables(dbService);
     dbService.clear();
+    await seedPermissionCatalogInDb(dbService);
   });
 
   const signIn = async (email: string, password = E2E_PASSWORD): Promise<string> => {
@@ -68,15 +70,17 @@ describe("Users (E2E)", () => {
     return response.body.token;
   };
 
-  const arrangeSuperadmin = async (): Promise<string> => {
-    await createUserInDb(dbService, {
+  const arrangeSuperadminWithUser = async (): Promise<{ token: string; user: User }> => {
+    const user = await createUserInDb(dbService, {
       email: SUPERADMIN_EMAIL,
       password: E2E_PASSWORD,
       role: EUserRole.SUPERADMIN,
     });
 
-    return signIn(SUPERADMIN_EMAIL);
+    return { token: await signIn(SUPERADMIN_EMAIL), user };
   };
+
+  const arrangeSuperadmin = async (): Promise<string> => (await arrangeSuperadminWithUser()).token;
 
   const arrangeMentee = async (email = MENTEE_EMAIL): Promise<User> =>
     createUserInDb(dbService, {
@@ -239,6 +243,40 @@ describe("Users (E2E)", () => {
         .expect(HttpStatus.OK);
 
       expect(meResponse.body.data.role).toBe(EUserRole.MENTOR);
+    });
+  });
+
+  describe("single superadmin", () => {
+    it("fails with CONFLICT(409) when provisioning a second superadmin", async () => {
+      const token = await arrangeSuperadmin();
+
+      await request(httpServer)
+        .post(USERS_ROUTE)
+        .set("Authorization", `Bearer ${token}`)
+        .send(provisionPayload({ role: EUserRole.SUPERADMIN }))
+        .expect(HttpStatus.CONFLICT);
+    });
+
+    it("fails with CONFLICT(409) when promoting another user to superadmin", async () => {
+      const token = await arrangeSuperadmin();
+      const mentee = await arrangeMentee();
+
+      await request(httpServer)
+        .patch(userRoute(mentee.id))
+        .set("Authorization", `Bearer ${token}`)
+        .send({ role: EUserRole.SUPERADMIN })
+        .expect(HttpStatus.CONFLICT);
+    });
+
+    it("fails with FORBIDDEN(403) when demoting the only superadmin", async () => {
+      const { token, user } = await arrangeSuperadminWithUser();
+      await ensureRoleInDb(dbService, EUserRole.MENTOR);
+
+      await request(httpServer)
+        .patch(userRoute(user.id))
+        .set("Authorization", `Bearer ${token}`)
+        .send({ role: EUserRole.MENTOR })
+        .expect(HttpStatus.FORBIDDEN);
     });
   });
 

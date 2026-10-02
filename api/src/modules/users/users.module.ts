@@ -16,12 +16,14 @@ import { UpdateUserInteractor } from "./interactors/update-user.interactor";
 import { UsersController } from "./users.controller";
 import { UsersSerializer } from "./users.serializer";
 import { UsersService } from "./users.service";
+import { UsersRoleAssignmentService } from "./users-role-assignment.service";
 
 @Module({
   imports: [MikroOrmModule.forFeature([User, Account, Role]), AuthModule],
   controllers: [UsersController],
   providers: [
     UsersService,
+    UsersRoleAssignmentService,
     GetUserInteractor,
     UpdateProfileInteractor,
     ListUsersInteractor,

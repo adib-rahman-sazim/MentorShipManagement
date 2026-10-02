@@ -19,6 +19,7 @@ import { USER_ERROR_MESSAGES } from "@/modules/users/users.constants";
 import type { CreateUserDto } from "@/modules/users/users.dtos";
 import { UsersRepository } from "@/modules/users/users.repository";
 import { UsersSerializer } from "@/modules/users/users.serializer";
+import { UsersRoleAssignmentService } from "@/modules/users/users-role-assignment.service";
 import { UserFactory } from "@/test/utils/factories/users.factory";
 import { createOfflineOrm } from "@/test/utils/helpers/offline-orm.helpers";
 
@@ -87,6 +88,7 @@ describe("CreateUserInteractor", () => {
       usersRepository,
       accountsRepository,
       rolesRepository,
+      new UsersRoleAssignmentService(usersRepository, rolesRepository),
       usersSerializer,
       caslCacheService,
     );
