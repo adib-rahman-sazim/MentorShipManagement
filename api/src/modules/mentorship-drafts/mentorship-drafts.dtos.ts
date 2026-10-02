@@ -1,24 +1,31 @@
 import { ApiProperty, PartialType } from "@nestjs/swagger";
 
-import { Type } from "class-transformer";
+import { Transform, Type } from "class-transformer";
 import {
   ArrayMaxSize,
   ArrayUnique,
   IsArray,
+  IsBoolean,
   IsEnum,
   IsNotEmpty,
+  IsOptional,
   IsString,
   IsUUID,
   MaxLength,
   ValidateNested,
 } from "class-validator";
 
-import { EMentorshipDraftOperation } from "@/common/enums/mentorships.enums";
+import { PaginationArgsDto } from "@/common/dtos/pagination.dtos";
+import {
+  EMentorshipDraftOperation,
+  EMentorshipDraftStatus,
+} from "@/common/enums/mentorships.enums";
 
 import {
   MENTORSHIP_DRAFT_ERROR_MESSAGES,
   MENTORSHIP_DRAFT_MAX_ITEMS,
   MENTORSHIP_DRAFT_TITLE_MAX_LENGTH,
+  QUERY_PARAM_TRUE,
 } from "./mentorship-drafts.constants";
 import { MatchesDraftOperation } from "./mentorship-drafts.validators";
 
@@ -55,3 +62,20 @@ export class CreateMentorshipDraftDto {
 }
 
 export class UpdateMentorshipDraftDto extends PartialType(CreateMentorshipDraftDto) {}
+
+export class ListMentorshipDraftsQueryDto extends PaginationArgsDto {
+  @ApiProperty({
+    enum: EMentorshipDraftStatus,
+    enumName: "EMentorshipDraftStatus",
+    required: false,
+  })
+  @IsOptional()
+  @IsEnum(EMentorshipDraftStatus)
+  status?: EMentorshipDraftStatus;
+
+  @ApiProperty({ required: false, default: false })
+  @IsOptional()
+  @Transform(({ obj, key }) => obj[key] === QUERY_PARAM_TRUE || obj[key] === true)
+  @IsBoolean()
+  mine?: boolean;
+}
