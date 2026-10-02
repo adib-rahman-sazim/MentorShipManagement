@@ -34,6 +34,8 @@ import { createUserInDb } from "../utils/helpers/create-user-in-db.helpers";
 import { seedPermissionCatalogInDb } from "../utils/helpers/permissions.helpers";
 import type { THttpServer } from "../utils/http-server.types";
 import {
+  APPROVE_PATH,
+  DECISION_COMMENT,
   DRAFT_TITLE,
   E2E_PASSWORD,
   FREE_MENTEE_EMAIL,
@@ -46,7 +48,9 @@ import {
   OTHER_DRAFT_TITLE,
   OTHER_MENTOR_EMAIL,
   OTHER_SENSEI_EMAIL,
+  REJECT_PATH,
   SENSEI_EMAIL,
+  STALE_ITEMS_ERROR_CODE,
   SUBMIT_PATH,
   SUBMITTED_DRAFT_TITLE,
   SUPERADMIN_EMAIL,
@@ -58,6 +62,7 @@ describe("Mentorship drafts (E2E)", () => {
   let httpServer: THttpServer;
   let orm: MikroORM<IDatabaseDriver<Connection>>;
 
+  let superadmin: User;
   let sensei: User;
   let otherSensei: User;
   let mentor: User;
@@ -154,6 +159,60 @@ describe("Mentorship drafts (E2E)", () => {
       .expect(expectedStatus);
   };
 
+  const postDecision = (token: string, draftId: string, path: string, body: object) =>
+    request(httpServer)
+      .post(`${MENTORSHIP_DRAFTS_ROUTE}/${draftId}/${path}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send(body);
+
+  const decideDraftAs = async (
+    email: string,
+    draftId: string,
+    path: string,
+    body: object,
+    expectedStatus: HttpStatus,
+  ) => {
+    const token = await getBearerToken(httpServer, email, E2E_PASSWORD);
+
+    return postDecision(token, draftId, path, body).expect(expectedStatus);
+  };
+
+  const findDraftStatus = async (draftId: string): Promise<EMentorshipDraftStatus> =>
+    (await dbService.fork().findOneOrFail(MentorshipDraft, { id: draftId })).status;
+
+  const arrangeSubmittedDraft = async (email: string, items: object[]): Promise<string> => {
+    const draftId = await arrangeDraft(email, DRAFT_TITLE, items);
+    await submitDraftAs(email, draftId, HttpStatus.OK);
+
+    return draftId;
+  };
+
+  const arrangeMenteeMovedByAnotherDraft = async (): Promise<string> => {
+    const movingDraftId = await arrangeDraft(OTHER_SENSEI_EMAIL, OTHER_DRAFT_TITLE, []);
+    const em = dbService.fork();
+
+    await em.nativeUpdate(
+      Mentorship,
+      { id: mentorToMentee.id },
+      {
+        status: EMentorshipStatus.ENDED,
+        endedAt: dayjs().toDate(),
+        endedByDraft: movingDraftId,
+      },
+    );
+    em.create(Mentorship, {
+      supervisor: otherMentor,
+      subordinate: mentee,
+      relationshipType: EMentorshipRelationshipType.MENTOR_MENTEE,
+      status: EMentorshipStatus.ACTIVE,
+      startedAt: dayjs().toDate(),
+      startedByDraft: movingDraftId,
+    });
+    await em.flush();
+
+    return movingDraftId;
+  };
+
   const getDraftAs = async (email: string, draftId: string, expectedStatus: HttpStatus) => {
     const token = await getBearerToken(httpServer, email, E2E_PASSWORD);
 
@@ -199,7 +258,7 @@ describe("Mentorship drafts (E2E)", () => {
     dbService.clear();
     await seedPermissionCatalogInDb(dbService);
 
-    await arrangeUser(SUPERADMIN_EMAIL, EUserRole.SUPERADMIN);
+    superadmin = await arrangeUser(SUPERADMIN_EMAIL, EUserRole.SUPERADMIN);
     sensei = await arrangeUser(SENSEI_EMAIL, EUserRole.SENSEI);
     otherSensei = await arrangeUser(OTHER_SENSEI_EMAIL, EUserRole.SENSEI);
     mentor = await arrangeUser(MENTOR_EMAIL, EUserRole.MENTOR);
@@ -612,6 +671,203 @@ describe("Mentorship drafts (E2E)", () => {
       MENTEE_EMAIL,
     ])("fails with FORBIDDEN(403) for %s, who cannot read drafts", async (email) => {
       await listDraftsAs(email, {}, HttpStatus.FORBIDDEN);
+    });
+  });
+
+  describe("POST /mentorship-drafts/:id/approve", () => {
+    let draftId: string;
+
+    beforeEach(async () => {
+      draftId = await arrangeSubmittedDraft(SENSEI_EMAIL, [
+        assign(freeMentee, mentor),
+        reassign(mentee, otherMentor),
+      ]);
+    });
+
+    it("returns OK(200) for another Sensei, recording who approved, when and the note", async () => {
+      const response = await decideDraftAs(
+        OTHER_SENSEI_EMAIL,
+        draftId,
+        APPROVE_PATH,
+        { decisionComment: DECISION_COMMENT },
+        HttpStatus.OK,
+      );
+
+      expect(response.body.data).toEqual(
+        expect.objectContaining({
+          id: draftId,
+          status: EMentorshipDraftStatus.APPROVED,
+          approvedBy: person(otherSensei, EUserRole.SENSEI),
+          reviewedBy: null,
+          decidedAt: expect.any(String),
+          decisionComment: DECISION_COMMENT,
+          allowedActions: [],
+        }),
+      );
+    });
+
+    it("returns OK(200) for the superadmin, storing no note when none is sent", async () => {
+      const response = await decideDraftAs(
+        SUPERADMIN_EMAIL,
+        draftId,
+        APPROVE_PATH,
+        {},
+        HttpStatus.OK,
+      );
+
+      expect(response.body.data).toEqual(
+        expect.objectContaining({
+          status: EMentorshipDraftStatus.APPROVED,
+          approvedBy: person(superadmin, EUserRole.SUPERADMIN),
+          decisionComment: null,
+        }),
+      );
+    });
+
+    it("fails with FORBIDDEN(403) when a Sensei approves a draft they created", async () => {
+      await decideDraftAs(SENSEI_EMAIL, draftId, APPROVE_PATH, {}, HttpStatus.FORBIDDEN);
+
+      expect(await findDraftStatus(draftId)).toBe(EMentorshipDraftStatus.IN_REVIEW);
+    });
+
+    it("fails with FORBIDDEN(403) when the superadmin approves a draft they created", async () => {
+      const ownDraftId = await arrangeSubmittedDraft(SUPERADMIN_EMAIL, [
+        assign(freeMentee, otherMentor),
+      ]);
+
+      await decideDraftAs(SUPERADMIN_EMAIL, ownDraftId, APPROVE_PATH, {}, HttpStatus.FORBIDDEN);
+    });
+
+    it.each([
+      MENTOR_EMAIL,
+      MENTEE_EMAIL,
+    ])("fails with FORBIDDEN(403) for %s, who cannot approve drafts", async (email) => {
+      await decideDraftAs(email, draftId, APPROVE_PATH, {}, HttpStatus.FORBIDDEN);
+    });
+
+    it("fails with NOT_FOUND(404) for someone else's draft that has not been submitted", async () => {
+      const unsubmittedDraftId = await arrangeDraft(SENSEI_EMAIL, OTHER_DRAFT_TITLE, [
+        assign(freeMentee, otherMentor),
+      ]);
+
+      await decideDraftAs(
+        OTHER_SENSEI_EMAIL,
+        unsubmittedDraftId,
+        APPROVE_PATH,
+        {},
+        HttpStatus.NOT_FOUND,
+      );
+    });
+
+    it("fails with CONFLICT(409) once the draft has been decided", async () => {
+      await decideDraftAs(OTHER_SENSEI_EMAIL, draftId, APPROVE_PATH, {}, HttpStatus.OK);
+
+      await decideDraftAs(SUPERADMIN_EMAIL, draftId, APPROVE_PATH, {}, HttpStatus.CONFLICT);
+    });
+
+    it("lets exactly one of two simultaneous approvals through", async () => {
+      const tokens = await Promise.all(
+        [OTHER_SENSEI_EMAIL, SUPERADMIN_EMAIL].map((email) =>
+          getBearerToken(httpServer, email, E2E_PASSWORD),
+        ),
+      );
+
+      const responses = await Promise.all(
+        tokens.map((token) => postDecision(token, draftId, APPROVE_PATH, {})),
+      );
+
+      expect(responses.map((response) => response.status).sort()).toEqual([
+        HttpStatus.OK,
+        HttpStatus.CONFLICT,
+      ]);
+    });
+
+    it("fails with CONFLICT(409) naming the stale change when the draft is out of date", async () => {
+      const movingDraftId = await arrangeMenteeMovedByAnotherDraft();
+
+      const response = await decideDraftAs(
+        OTHER_SENSEI_EMAIL,
+        draftId,
+        APPROVE_PATH,
+        {},
+        HttpStatus.CONFLICT,
+      );
+
+      expect(response.body.errorCode).toBe(STALE_ITEMS_ERROR_CODE);
+      expect(response.body.errors).toEqual([
+        {
+          subordinateId: mentee.id,
+          expectedSupervisorId: mentor.id,
+          currentSupervisorId: otherMentor.id,
+          changedByDraftId: movingDraftId,
+        },
+      ]);
+      expect(await findDraftStatus(draftId)).toBe(EMentorshipDraftStatus.IN_REVIEW);
+    });
+  });
+
+  describe("POST /mentorship-drafts/:id/reject", () => {
+    let draftId: string;
+
+    beforeEach(async () => {
+      draftId = await arrangeSubmittedDraft(SENSEI_EMAIL, [reassign(mentee, otherMentor)]);
+    });
+
+    it("returns OK(200) for another Sensei, recording who rejected, when and the note", async () => {
+      const response = await decideDraftAs(
+        OTHER_SENSEI_EMAIL,
+        draftId,
+        REJECT_PATH,
+        { decisionComment: DECISION_COMMENT },
+        HttpStatus.OK,
+      );
+
+      expect(response.body.data).toEqual(
+        expect.objectContaining({
+          status: EMentorshipDraftStatus.REJECTED,
+          reviewedBy: person(otherSensei, EUserRole.SENSEI),
+          approvedBy: null,
+          decidedAt: expect.any(String),
+          decisionComment: DECISION_COMMENT,
+          allowedActions: [],
+        }),
+      );
+    });
+
+    it("returns OK(200) for the superadmin", async () => {
+      const response = await decideDraftAs(
+        SUPERADMIN_EMAIL,
+        draftId,
+        REJECT_PATH,
+        {},
+        HttpStatus.OK,
+      );
+
+      expect(response.body.data).toEqual(
+        expect.objectContaining({
+          status: EMentorshipDraftStatus.REJECTED,
+          reviewedBy: person(superadmin, EUserRole.SUPERADMIN),
+        }),
+      );
+    });
+
+    it("returns OK(200) for a draft that is out of date", async () => {
+      await arrangeMenteeMovedByAnotherDraft();
+
+      await decideDraftAs(OTHER_SENSEI_EMAIL, draftId, REJECT_PATH, {}, HttpStatus.OK);
+    });
+
+    it("fails with FORBIDDEN(403) when a Sensei rejects a draft they created", async () => {
+      await decideDraftAs(SENSEI_EMAIL, draftId, REJECT_PATH, {}, HttpStatus.FORBIDDEN);
+
+      expect(await findDraftStatus(draftId)).toBe(EMentorshipDraftStatus.IN_REVIEW);
+    });
+
+    it("fails with CONFLICT(409) for a rejected draft, which stays rejected", async () => {
+      await decideDraftAs(OTHER_SENSEI_EMAIL, draftId, REJECT_PATH, {}, HttpStatus.OK);
+
+      await decideDraftAs(SUPERADMIN_EMAIL, draftId, APPROVE_PATH, {}, HttpStatus.CONFLICT);
+      expect(await findDraftStatus(draftId)).toBe(EMentorshipDraftStatus.REJECTED);
     });
   });
 });
