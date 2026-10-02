@@ -5,7 +5,7 @@ import {
   DEFAULT_PERMISSION_DEFINITIONS,
   DEFAULT_ROLE_PERMISSION_CODES,
 } from "@/modules/permissions/permissions.catalog.constants";
-import { EPermissionCode } from "@/modules/permissions/permissions.enums";
+import { EPermissionCode, EPermissionConditionType } from "@/modules/permissions/permissions.enums";
 
 const SUPERADMIN_CODES = ["can_manage_all"];
 
@@ -21,7 +21,12 @@ const SENSEI_CODES = [
   "can_read_user",
 ];
 
-const MENTOR_CODES = ["can_view_dashboard", "can_view_settings", "can_view_mentorship_graph"];
+const MENTOR_CODES = [
+  "can_view_dashboard",
+  "can_view_settings",
+  "can_view_mentorship_graph",
+  "can_read_user",
+];
 
 const MENTEE_CODES = [
   "can_view_dashboard",
@@ -29,6 +34,10 @@ const MENTEE_CODES = [
   "can_view_mentorship_graph",
   "can_read_user",
 ];
+
+const SUBTREE_SCOPED_CODES = ["can_update_user", "can_delete_user"];
+
+const HIERARCHY_SCOPED_CODES = ["can_read_user"];
 
 const USER_MANAGEMENT_CODES = [
   "can_create_user",
@@ -57,7 +66,7 @@ describe("permissions catalog", () => {
     expect(sorted(DEFAULT_ROLE_PERMISSION_CODES[EUserRole.SENSEI])).toEqual(sorted(SENSEI_CODES));
   });
 
-  it("grants mentor the graph page only", () => {
+  it("lets a mentor read their own people", () => {
     expect(sorted(DEFAULT_ROLE_PERMISSION_CODES[EUserRole.MENTOR])).toEqual(sorted(MENTOR_CODES));
   });
 
@@ -99,6 +108,22 @@ describe("permissions catalog", () => {
     const definedCodes = DEFAULT_PERMISSION_DEFINITIONS.map(({ code }) => code);
 
     expect(sorted(definedCodes)).toEqual(sorted(Object.values(EPermissionCode)));
+  });
+
+  it("scopes user writes to the actor's subtree", () => {
+    const scoped = DEFAULT_PERMISSION_DEFINITIONS.filter(
+      ({ conditionType }) => conditionType === EPermissionConditionType.SUBTREE,
+    ).map(({ code }) => code);
+
+    expect(sorted(scoped)).toEqual(sorted(SUBTREE_SCOPED_CODES));
+  });
+
+  it("scopes reads to the actor's part of the hierarchy, both directions", () => {
+    const scoped = DEFAULT_PERMISSION_DEFINITIONS.filter(
+      ({ conditionType }) => conditionType === EPermissionConditionType.HIERARCHY,
+    ).map(({ code }) => code);
+
+    expect(sorted(scoped)).toEqual(sorted(HIERARCHY_SCOPED_CODES));
   });
 
   it("pairs each code with a distinct resource and action", () => {

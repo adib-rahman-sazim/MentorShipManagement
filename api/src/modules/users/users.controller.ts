@@ -88,7 +88,7 @@ export class UsersController {
 
   @Patch(":id")
   @UseGuards(CaslPermissionsGuard)
-  @Permissions([EPermissionCode.CAN_UPDATE_USER])
+  @Permissions([EPermissionCode.CAN_UPDATE_USER], { subjectIdParam: "id" })
   @ApiOperation({ summary: "Update another user." })
   @ApiOkResponse({ type: UserApiResponse })
   @ApiConflictResponse({ description: "A superadmin already exists." })
@@ -102,7 +102,7 @@ export class UsersController {
 
   @Get(":id")
   @UseGuards(CaslPermissionsGuard)
-  @Permissions([EPermissionCode.CAN_READ_USER])
+  @Permissions([EPermissionCode.CAN_READ_USER], { subjectIdParam: "id" })
   @ApiOperation({ summary: "Return a single user by id, including their role." })
   @ApiOkResponse({ type: UserApiResponse })
   @ApiNotFoundResponse({ description: "User not found." })
@@ -113,7 +113,7 @@ export class UsersController {
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(CaslPermissionsGuard)
-  @Permissions([EPermissionCode.CAN_DELETE_USER])
+  @Permissions([EPermissionCode.CAN_DELETE_USER], { subjectIdParam: "id" })
   @ApiOperation({ summary: "Soft-delete a user and revoke their sessions." })
   @ApiNoContentResponse({ description: "The user was soft-deleted." })
   @ApiNotFoundResponse({ description: "User not found." })

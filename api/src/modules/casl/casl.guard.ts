@@ -8,8 +8,10 @@ import { PERMISSIONS_KEY } from "@/common/decorators/auth/permissions.decorator.
 import type { IPermissionsOptions } from "@/common/decorators/auth/permissions.decorator.interfaces";
 import { EUserRole } from "@/common/enums/roles.enums";
 import { CaslAbilityFactory } from "@/modules/casl/casl.ability-factory";
+import type { TSubjects } from "@/modules/casl/casl.types";
 import { PERMISSION_DEFINITIONS_BY_CODE } from "@/modules/permissions/permissions.catalog.constants";
 import type { EPermissionCode } from "@/modules/permissions/permissions.enums";
+import type { IPermissionDefinition } from "@/modules/permissions/permissions.interfaces";
 
 @Injectable()
 export class CaslPermissionsGuard implements CanActivate {
@@ -25,11 +27,13 @@ export class CaslPermissionsGuard implements CanActivate {
     );
 
     let permissions: EPermissionCode[];
+    let subjectIdParam: string | undefined;
 
     if (Array.isArray(metadata)) {
       permissions = metadata;
     } else if (metadata && typeof metadata === "object") {
       permissions = metadata.permissions;
+      subjectIdParam = metadata.subjectIdParam;
     } else {
       return true;
     }
@@ -58,11 +62,31 @@ export class CaslPermissionsGuard implements CanActivate {
         throw new ForbiddenException(`Unknown required permission: ${requiredCode}`);
       }
 
-      if (!ability.can(definition.action, definition.resource)) {
+      const subject = this.resolveSubject(definition, request, subjectIdParam);
+
+      if (!ability.can(definition.action, subject)) {
         throw new ForbiddenException(`Missing required permission: ${requiredCode}`);
       }
     }
 
     return true;
+  }
+
+  private resolveSubject(
+    definition: IPermissionDefinition,
+    request: Request,
+    subjectIdParam?: string,
+  ): TSubjects {
+    if (!subjectIdParam) {
+      return definition.resource;
+    }
+
+    const subjectId = request.params?.[subjectIdParam];
+
+    if (typeof subjectId !== "string" || !subjectId) {
+      throw new ForbiddenException(`Missing subject identifier: ${subjectIdParam}`);
+    }
+
+    return { __caslSubjectType__: definition.resource, id: subjectId };
   }
 }

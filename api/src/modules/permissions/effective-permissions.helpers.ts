@@ -2,7 +2,10 @@ import type { UserPermissionOverride } from "@/common/entities/user-permission-o
 
 import { ALL_MANAGE_PERMISSION_CODE } from "./permissions.catalog.constants";
 import type { EPermissionOverrideEffect } from "./permissions.enums";
-import type { IEffectivePermissionCodesInput } from "./permissions.interfaces";
+import type {
+  IEffectivePermissionCodesInput,
+  IExpandedAllManageInput,
+} from "./permissions.interfaces";
 
 export function permissionCodesByEffect(
   overrides: UserPermissionOverride[],
@@ -30,4 +33,11 @@ export function resolveEffectivePermissionCodes({
   }
 
   return [...effectiveCodeSet].sort();
+}
+
+export function holdsExpandedAllManage({
+  roleCodes,
+  grantedCodes,
+}: IExpandedAllManageInput): boolean {
+  return [...roleCodes, ...grantedCodes].includes(ALL_MANAGE_PERMISSION_CODE);
 }

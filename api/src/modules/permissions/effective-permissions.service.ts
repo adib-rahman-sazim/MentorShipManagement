@@ -3,12 +3,14 @@ import { Injectable } from "@nestjs/common";
 import type { Permission } from "@/common/entities/permissions.entity";
 
 import {
+  holdsExpandedAllManage,
   permissionCodesByEffect,
   resolveEffectivePermissionCodes,
 } from "./effective-permissions.helpers";
 import { EPermissionOverrideEffect } from "./permissions.enums";
 import type {
   IEffectivePermissionsContext,
+  IEffectivePermissionsResult,
   IResolvedPermissionCodes,
 } from "./permissions.interfaces";
 import { PermissionsRepository } from "./permissions.repository";
@@ -32,28 +34,40 @@ export class EffectivePermissionsService {
       this.permissionsRepository.findAllPermissions(),
     ]);
 
+    const roleCodes = rolePermissions.map((permission) => permission.code);
     const grantedCodes = permissionCodesByEffect(overrides, EPermissionOverrideEffect.ALLOW);
     const revokedCodes = permissionCodesByEffect(overrides, EPermissionOverrideEffect.REVOKE);
 
     const effectiveCodes = resolveEffectivePermissionCodes({
-      roleCodes: rolePermissions.map((permission) => permission.code),
+      roleCodes,
       grantedCodes,
       revokedCodes,
       allCodes: allPermissions.map((permission) => permission.code),
     });
 
-    return { allPermissions, effectiveCodes, grantedCodes, revokedCodes };
+    return {
+      allPermissions,
+      effectiveCodes,
+      grantedCodes,
+      revokedCodes,
+      holdsAllManage: holdsExpandedAllManage({ roleCodes, grantedCodes }),
+    };
   }
 
-  async resolveForUser(context: IEffectivePermissionsContext): Promise<Permission[]> {
-    const { allPermissions, effectiveCodes } = await this.resolveCodesForUser(context);
+  async resolveForUser(
+    context: IEffectivePermissionsContext,
+  ): Promise<IEffectivePermissionsResult> {
+    const { allPermissions, effectiveCodes, holdsAllManage } =
+      await this.resolveCodesForUser(context);
 
     const permissionsByCode = new Map(
       allPermissions.map((permission) => [permission.code, permission]),
     );
 
-    return effectiveCodes
+    const permissions = effectiveCodes
       .map((code) => permissionsByCode.get(code))
       .filter((permission): permission is Permission => !!permission);
+
+    return { permissions, holdsAllManage };
   }
 }
