@@ -6,6 +6,7 @@ import { CaslCacheService } from "@/modules/casl/casl-cache.service";
 import { USER_ERROR_MESSAGES } from "../users.constants";
 import type { IDeleteUserContext } from "../users.interfaces";
 import { UsersRepository } from "../users.repository";
+import { assertNotSuperadmin } from "../users-role-assignment.helpers";
 
 @Injectable()
 export class DeleteUserInteractor implements IBaseInteractor<IDeleteUserContext, void> {
@@ -25,6 +26,8 @@ export class DeleteUserInteractor implements IBaseInteractor<IDeleteUserContext,
       if (!user) {
         throw new NotFoundException(USER_ERROR_MESSAGES.USER_NOT_FOUND);
       }
+
+      assertNotSuperadmin(user.role.code);
 
       this.usersRepository.softDelete(user);
       await this.usersRepository.deleteSessionsForUser(userId, em);

@@ -18,6 +18,7 @@ import { createOfflineOrm } from "@/test/utils/helpers/offline-orm.helpers";
 const TARGET_USER_ID = "33333333-3333-4333-8333-333333333333";
 const ACTOR_ID = "44444444-4444-4444-8444-444444444444";
 const MENTEE_ROLE_ID = "55555555-5555-4555-8555-555555555555";
+const SUPERADMIN_ROLE_ID = "66666666-6666-4666-8666-666666666666";
 
 describe("DeleteUserInteractor", () => {
   let orm: MikroORM;
@@ -97,5 +98,25 @@ describe("DeleteUserInteractor", () => {
     await interactor.execute({ userId: TARGET_USER_ID, actorId: ACTOR_ID });
 
     expect(caslCacheService.invalidateUser).toHaveBeenCalledWith(TARGET_USER_ID);
+  });
+
+  it("refuses to delete the superadmin", async () => {
+    const superadmin = userFactory.makeEntity({
+      id: TARGET_USER_ID,
+      email: "superadmin@sazim.io",
+      name: "Mock Superadmin",
+      role: orm.em.merge(Role, {
+        id: SUPERADMIN_ROLE_ID,
+        code: EUserRole.SUPERADMIN,
+        name: "Superadmin",
+      }),
+    });
+    usersRepository.findById.mockResolvedValue(superadmin);
+
+    await expect(interactor.execute({ userId: TARGET_USER_ID, actorId: ACTOR_ID })).rejects.toThrow(
+      new ForbiddenException(USER_ERROR_MESSAGES.SUPERADMIN_NOT_MODIFIABLE),
+    );
+
+    expect(usersRepository.softDelete).not.toHaveBeenCalled();
   });
 });

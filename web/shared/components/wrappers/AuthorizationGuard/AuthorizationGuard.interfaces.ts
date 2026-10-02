@@ -1,12 +1,16 @@
 import { ReactNode } from "react";
 
-import { EPermission, EResource } from "@/shared/typedefs";
+import type {
+  TAppResource,
+  TSubjectConditions,
+} from "@/shared/providers/AbilityProvider/AbilityProvider.types";
+import { EPermission } from "@/shared/typedefs";
 
 export interface IAuthorizationGuardBaseProps {
   children: ReactNode;
   action: EPermission;
-  subject: EResource | "all";
-  conditions?: Record<string, unknown>;
+  subject: TAppResource;
+  conditions?: TSubjectConditions;
   loadingFallback?: ReactNode;
 }
 
@@ -18,4 +22,10 @@ export interface IAuthorizationGuardWithFallbackComponent extends IAuthorization
 export interface IAuthorizationGuardWithFallbackRoute extends IAuthorizationGuardBaseProps {
   fallbackRoute: string;
   unauthorizedFallback?: never;
+}
+
+export interface IUseAuthorizationGuardParams {
+  action: EPermission;
+  subject: TAppResource;
+  conditions?: TSubjectConditions;
 }

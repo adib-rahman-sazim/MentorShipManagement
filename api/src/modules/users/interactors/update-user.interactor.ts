@@ -12,6 +12,7 @@ import type { UserResponse } from "../users.responses";
 import { UsersSerializer } from "../users.serializer";
 import {
   assertActorCanAssignRole,
+  assertNotSuperadmin,
   assertSuperadminNotDemoted,
 } from "../users-role-assignment.helpers";
 import { UsersRoleAssignmentService } from "../users-role-assignment.service";
@@ -40,6 +41,8 @@ export class UpdateUserInteractor implements IBaseInteractor<IUpdateUserContext,
       if (!user) {
         throw new NotFoundException(USER_ERROR_MESSAGES.USER_NOT_FOUND);
       }
+
+      assertNotSuperadmin(user.role.code);
 
       if (dto.name !== undefined) {
         user.name = dto.name;

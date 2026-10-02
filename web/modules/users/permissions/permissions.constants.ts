@@ -54,7 +54,7 @@ export const PERMISSION_DETAILS: Record<EPermissionCode, IPermissionDetails> = {
   },
   [EPermissionCode.CAN_UPDATE_USER]: {
     label: "Edit people",
-    description: "Change a person's details. Limited to people below them in the hierarchy.",
+    description: "Change anyone's details, except the Superadmin's.",
   },
   [EPermissionCode.CAN_DELETE_USER]: {
     label: "Delete people",

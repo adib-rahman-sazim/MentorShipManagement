@@ -11,7 +11,6 @@ import CreateUserDialog from "@/modules/users/components/CreateUserDialog";
 import ToggleUserStateDialog from "@/modules/users/components/ToggleUserStateDialog";
 import UsersTable from "@/modules/users/components/UsersTable";
 import { USER_ROLE_LABELS, USER_STATE_LABELS } from "@/modules/users/users.constants";
-import { isAssignableUserRole } from "@/modules/users/users.helpers";
 import { DataTableShell } from "@/shared/components/DataTableShell";
 import { Button } from "@/shared/components/shadui/button";
 import {
@@ -30,15 +29,20 @@ import {
 } from "@/shared/components/shadui/select";
 import TableCheckBox from "@/shared/components/Table/TableCheckbox";
 import { USER_PERMISSIONS_ROUTE } from "@/shared/constants/routes.constants";
-import { useCan } from "@/shared/providers/AbilityProvider/AbilityProvider.hooks";
+import { useAbilityContext, useCan } from "@/shared/providers/AbilityProvider";
+import { useAuth } from "@/shared/providers/AuthProvider";
 import { useGetUsersQuery } from "@/shared/redux/rtk-apis/users/users.api";
 import { EPermission, EResource, EUserState, IUserResponse } from "@/shared/typedefs";
 
 import { USERS_PAGE_SIZE_OPTIONS } from "./UsersContainer.constants";
+import { canUpdateUserRow } from "./UsersContainer.helpers";
 
 const UsersContainer = () => {
   const router = useRouter();
+  const { user: currentUser } = useAuth();
+  const { ability } = useAbilityContext();
   const { isAllowed: canViewPermissions } = useCan(EPermission.READ, EResource.PERMISSIONS);
+  const { isAllowed: canCreateUsers } = useCan(EPermission.CREATE, EResource.USER);
   const [{ page, limit, userState }, setQueryStates] = useQueryStates({
     page: parseAsInteger.withDefault(1),
     limit: parseAsInteger.withDefault(10),
@@ -122,9 +126,9 @@ const UsersContainer = () => {
       id: "actions",
       header: "Actions",
       cell: ({ row }) => {
-        const isAssignable = isAssignableUserRole(row.original.role);
+        const canUpdateUser = canUpdateUserRow(ability, row.original.id, currentUser?.id);
 
-        return canViewPermissions || isAssignable ? (
+        return canViewPermissions || canUpdateUser ? (
           <DropdownMenu>
             <DropdownMenuTrigger>
               <Button variant="ghost" className="h-8 w-8 p-0">
@@ -137,8 +141,8 @@ const UsersContainer = () => {
                   Permissions
                 </DropdownMenuItem>
               ) : null}
-              {canViewPermissions && isAssignable ? <DropdownMenuSeparator /> : null}
-              {isAssignable ? (
+              {canViewPermissions && canUpdateUser ? <DropdownMenuSeparator /> : null}
+              {canUpdateUser ? (
                 <>
                   <DropdownMenuItem onClick={() => handleChangeRoleClick(row.original)}>
                     Change Role
@@ -210,7 +214,9 @@ const UsersContainer = () => {
 
       <div className="mb-4 flex flex-row items-center justify-between">
         <h3 className="text text-primary text-4xl font-bold">Users</h3>
-        <Button onClick={() => setIsCreateUserDialogOpen(true)}>Create User</Button>
+        {canCreateUsers ? (
+          <Button onClick={() => setIsCreateUserDialogOpen(true)}>Create User</Button>
+        ) : null}
       </div>
 
       <DataTableShell

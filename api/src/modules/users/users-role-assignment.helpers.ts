@@ -26,6 +26,12 @@ export function assertNoExistingSuperadmin(
   throw new ConflictException(USER_ERROR_MESSAGES.SUPERADMIN_ALREADY_EXISTS);
 }
 
+export function assertNotSuperadmin(currentRole: EUserRole): void {
+  if (currentRole === EUserRole.SUPERADMIN) {
+    throw new ForbiddenException(USER_ERROR_MESSAGES.SUPERADMIN_NOT_MODIFIABLE);
+  }
+}
+
 export function assertSuperadminNotDemoted(currentRole: EUserRole, targetRole: EUserRole): void {
   if (currentRole === EUserRole.SUPERADMIN && targetRole !== EUserRole.SUPERADMIN) {
     throw new ForbiddenException(USER_ERROR_MESSAGES.CANNOT_DEMOTE_SUPERADMIN);
