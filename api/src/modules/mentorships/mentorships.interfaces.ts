@@ -1,4 +1,5 @@
 import { Mentorship } from "@/common/entities/mentorships.entity";
+import type { User } from "@/common/entities/users.entity";
 import type { EMentorshipRelationshipType } from "@/common/enums/mentorships.enums";
 import type { EUserRole } from "@/common/enums/roles.enums";
 import type { EUserState } from "@/common/enums/users.enums";
@@ -45,4 +46,9 @@ export interface IMentorshipTeamTreeNode<T extends IMentorshipTeamMember> {
 export interface IMyMentorshipView {
   chain: IMentorshipChainLink[];
   team: IMentorshipTeamTreeNode<Mentorship>[];
+}
+
+export interface IMentorshipGraphView {
+  users: User[];
+  mentorships: Mentorship[];
 }

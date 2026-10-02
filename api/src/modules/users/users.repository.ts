@@ -43,6 +43,17 @@ export class UsersRepository extends CustomSQLBaseRepository<User> {
     });
   }
 
+  findMentorshipGraphMembers(userIdsOnActiveEdges: string[], em?: EntityManager): Promise<User[]> {
+    return this.getScopedRepository(em).find(
+      {
+        ...NOT_SOFT_DELETED,
+        role: { code: { $ne: EUserRole.SUPERADMIN } },
+        $or: [{ state: EUserState.ACTIVE }, { id: { $in: userIdsOnActiveEdges } }],
+      },
+      { populate: ["role"], orderBy: { name: "ASC" } },
+    );
+  }
+
   async findAllPaginated(
     options: IFindUsersOptions,
     em?: EntityManager,

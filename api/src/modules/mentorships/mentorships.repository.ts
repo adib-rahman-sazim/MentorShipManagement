@@ -90,6 +90,10 @@ export class MentorshipsRepository extends CustomSQLBaseRepository<Mentorship> {
     return team;
   }
 
+  findActiveEdges(em?: EntityManager): Promise<Mentorship[]> {
+    return this.getScopedRepository(em).find(ACTIVE_MENTORSHIP, { orderBy: { startedAt: "ASC" } });
+  }
+
   async hasActiveMentorship(userId: string, em?: EntityManager): Promise<boolean> {
     const activeCount = await this.getScopedRepository(em).count({
       $or: [{ supervisor: userId }, { subordinate: userId }],
