@@ -4,6 +4,7 @@ import { Seeder } from "@mikro-orm/seeder";
 import { Seed20260723000001_Roles } from "./core-seeders/Seed20260723000001_roles/Seed20260723000001_roles";
 import { Seed20260723000002_Permissions } from "./core-seeders/Seed20260723000002_permissions/Seed20260723000002_permissions";
 import { Seed20260723000005_MockUsers } from "./core-seeders/Seed20260723000005_mock_users/Seed20260723000005_mock_users";
+import { Seed20260723000006_Mentorships } from "./core-seeders/Seed20260723000006_mentorships/Seed20260723000006_mentorships";
 
 export class DevSeeder extends Seeder {
   async run(em: EntityManager): Promise<void> {
@@ -11,6 +12,7 @@ export class DevSeeder extends Seeder {
       Seed20260723000001_Roles,
       Seed20260723000002_Permissions,
       Seed20260723000005_MockUsers,
+      Seed20260723000006_Mentorships,
     ]);
   }
 }

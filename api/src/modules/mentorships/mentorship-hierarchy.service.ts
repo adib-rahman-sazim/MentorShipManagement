@@ -1,0 +1,27 @@
+import { Injectable } from "@nestjs/common";
+
+import { CaslCacheService } from "@/modules/casl/casl-cache.service";
+
+import { MENTORSHIP_SUBTREE_MAX_DEPTH } from "./mentorships.constants";
+import { MentorshipsRepository } from "./mentorships.repository";
+
+@Injectable()
+export class MentorshipHierarchyService {
+  constructor(
+    private readonly mentorshipsRepository: MentorshipsRepository,
+    private readonly caslCacheService: CaslCacheService,
+  ) {}
+
+  findSubtreeUserIds(userId: string): Promise<string[]> {
+    return this.mentorshipsRepository.findDescendantUserIds(userId, MENTORSHIP_SUBTREE_MAX_DEPTH);
+  }
+
+  async invalidateForMentorshipChange(userId: string): Promise<void> {
+    const ancestorUserIds = await this.mentorshipsRepository.findAncestorUserIds(
+      userId,
+      MENTORSHIP_SUBTREE_MAX_DEPTH,
+    );
+
+    await this.caslCacheService.invalidateUsers([userId, ...ancestorUserIds]);
+  }
+}

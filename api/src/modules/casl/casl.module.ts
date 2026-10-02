@@ -1,5 +1,6 @@
 import { Global, Module } from "@nestjs/common";
 
+import { MentorshipsModule } from "@/modules/mentorships/mentorships.module";
 import { EffectivePermissionsModule } from "@/modules/permissions/effective-permissions.module";
 import { RedisModule } from "@/modules/redis/redis.module";
 
@@ -8,7 +9,7 @@ import { CaslCacheService } from "./casl-cache.service";
 
 @Global()
 @Module({
-  imports: [EffectivePermissionsModule, RedisModule],
+  imports: [EffectivePermissionsModule, MentorshipsModule, RedisModule],
   providers: [CaslAbilityFactory, CaslCacheService],
   exports: [CaslAbilityFactory, CaslCacheService],
 })

@@ -4,6 +4,7 @@ import { Seeder } from "@mikro-orm/seeder";
 import { Seed20260723000001_Roles } from "@/db/seeders/core-seeders/Seed20260723000001_roles/Seed20260723000001_roles";
 import { Seed20260723000002_Permissions } from "@/db/seeders/core-seeders/Seed20260723000002_permissions/Seed20260723000002_permissions";
 import { Seed20260723000005_MockUsers } from "@/db/seeders/core-seeders/Seed20260723000005_mock_users/Seed20260723000005_mock_users";
+import { Seed20260723000006_Mentorships } from "@/db/seeders/core-seeders/Seed20260723000006_mentorships/Seed20260723000006_mentorships";
 import { DevSeeder } from "@/db/seeders/dev-seeder";
 
 import type { TSeederPrototypeWithCall } from "./seeder-call.spec.types";
@@ -24,7 +25,7 @@ describe("DevSeeder", () => {
     vi.restoreAllMocks();
   });
 
-  it("calls core seeders then mock users in order", async () => {
+  it("calls core seeders, then mock users, then the mentorship hierarchy in order", async () => {
     const seeder = new DevSeeder();
     await seeder.run({} as EntityManager);
 
@@ -32,6 +33,7 @@ describe("DevSeeder", () => {
       Seed20260723000001_Roles,
       Seed20260723000002_Permissions,
       Seed20260723000005_MockUsers,
+      Seed20260723000006_Mentorships,
     ]);
   });
 });
