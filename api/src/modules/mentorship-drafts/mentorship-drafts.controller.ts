@@ -30,6 +30,7 @@ import { CaslPermissionsGuard } from "@/modules/casl/casl.guard";
 import { EPermissionCode } from "@/modules/permissions/permissions.enums";
 
 import { ApproveMentorshipDraftInteractor } from "./interactors/approve-mentorship-draft.interactor";
+import { CancelMentorshipDraftInteractor } from "./interactors/cancel-mentorship-draft.interactor";
 import { CreateMentorshipDraftInteractor } from "./interactors/create-mentorship-draft.interactor";
 import { GetMentorshipDraftInteractor } from "./interactors/get-mentorship-draft.interactor";
 import { GetMentorshipDraftChangeSummaryInteractor } from "./interactors/get-mentorship-draft-change-summary.interactor";
@@ -72,6 +73,7 @@ export class MentorshipDraftsController {
     private readonly approveMentorshipDraftInteractor: ApproveMentorshipDraftInteractor,
     private readonly rejectMentorshipDraftInteractor: RejectMentorshipDraftInteractor,
     private readonly publishMentorshipDraftInteractor: PublishMentorshipDraftInteractor,
+    private readonly cancelMentorshipDraftInteractor: CancelMentorshipDraftInteractor,
   ) {}
 
   @Get()
@@ -219,6 +221,22 @@ export class MentorshipDraftsController {
     @Param("id", ParseUUIDPipe) draftId: string,
   ): Promise<MentorshipDraftDetailResponse> {
     return this.publishMentorshipDraftInteractor.execute({
+      draftId,
+      actorId: req.user!.id,
+      ability: req.ability!,
+    });
+  }
+
+  @Post(":id/cancel")
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(CaslPermissionsGuard)
+  @Permissions([EPermissionCode.CAN_READ_DRAFT])
+  @ApiOkResponse({ type: MentorshipDraftDetailApiResponse })
+  async cancelDraft(
+    @Req() req: Request,
+    @Param("id", ParseUUIDPipe) draftId: string,
+  ): Promise<MentorshipDraftDetailResponse> {
+    return this.cancelMentorshipDraftInteractor.execute({
       draftId,
       actorId: req.user!.id,
       ability: req.ability!,

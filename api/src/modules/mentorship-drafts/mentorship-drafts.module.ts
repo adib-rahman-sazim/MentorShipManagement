@@ -9,6 +9,7 @@ import { User } from "@/common/entities/users.entity";
 import { MentorshipsModule } from "@/modules/mentorships/mentorships.module";
 
 import { ApproveMentorshipDraftInteractor } from "./interactors/approve-mentorship-draft.interactor";
+import { CancelMentorshipDraftInteractor } from "./interactors/cancel-mentorship-draft.interactor";
 import { CreateMentorshipDraftInteractor } from "./interactors/create-mentorship-draft.interactor";
 import { GetMentorshipDraftInteractor } from "./interactors/get-mentorship-draft.interactor";
 import { GetMentorshipDraftChangeSummaryInteractor } from "./interactors/get-mentorship-draft-change-summary.interactor";
@@ -40,6 +41,7 @@ import { MentorshipDraftsService } from "./mentorship-drafts.service";
     ApproveMentorshipDraftInteractor,
     RejectMentorshipDraftInteractor,
     PublishMentorshipDraftInteractor,
+    CancelMentorshipDraftInteractor,
     MentorshipDraftsSerializer,
   ],
 })
