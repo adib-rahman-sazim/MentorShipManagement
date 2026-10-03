@@ -4,11 +4,15 @@ import type { MentorshipDraftItem } from "@/common/entities/mentorship-draft-ite
 import type { User } from "@/common/entities/users.entity";
 
 import type {
+  IDraftChangeSummaryItem,
+  IMentorshipDraftChangeSummaryView,
   IMentorshipDraftDetailView,
   IMentorshipDraftSummaryView,
   IMentorshipDraftView,
 } from "./mentorship-drafts.interfaces";
 import type {
+  MentorshipDraftChangeSummaryItemResponse,
+  MentorshipDraftChangeSummaryResponse,
   MentorshipDraftDetailItemResponse,
   MentorshipDraftDetailResponse,
   MentorshipDraftItemResponse,
@@ -65,6 +69,42 @@ export class MentorshipDraftsSerializer {
       cancelledBy: this.serializeOptionalPerson(draft.cancelledBy),
       decisionComment: draft.decisionComment ?? null,
       items: items.map((item) => this.serializeDetailItem(item)),
+    };
+  }
+
+  serializeChangeSummary({
+    draft,
+    items,
+  }: IMentorshipDraftChangeSummaryView): MentorshipDraftChangeSummaryResponse {
+    return {
+      draftId: draft.id,
+      items: items.map((summaryItem) => this.serializeChangeSummaryItem(summaryItem)),
+    };
+  }
+
+  private serializeChangeSummaryItem({
+    item,
+    currentSupervisor,
+    relationshipType,
+    violations,
+    stale,
+    overlappingDrafts,
+  }: IDraftChangeSummaryItem): MentorshipDraftChangeSummaryItemResponse {
+    return {
+      id: item.id,
+      operation: item.operation,
+      subordinate: this.serializePerson(item.subordinate),
+      expectedSupervisor: this.serializeOptionalPerson(item.expectedCurrentMentorship?.supervisor),
+      currentSupervisor: this.serializeOptionalPerson(currentSupervisor),
+      proposedSupervisor: this.serializeOptionalPerson(item.proposedSupervisor),
+      relationshipType,
+      violations,
+      stale: stale ? { changedByDraftId: stale.changedByDraftId } : null,
+      overlaps: overlappingDrafts.map((overlap) => ({
+        id: overlap.id,
+        title: overlap.title,
+        status: overlap.status,
+      })),
     };
   }
 

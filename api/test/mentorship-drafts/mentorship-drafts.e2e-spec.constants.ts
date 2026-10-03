@@ -24,3 +24,6 @@ export const APPROVE_PATH = "approve";
 export const REJECT_PATH = "reject";
 export const STALE_ITEMS_ERROR_CODE = "MENTORSHIP_DRAFT_STALE_ITEMS";
 export const DECISION_COMMENT = "Balances the Mentors' load";
+
+export const CHANGE_SUMMARY_PATH = "change-summary";
+export const LEAVING_MENTEE_EMAIL = "leaving-mentee@drafts.e2e.test";

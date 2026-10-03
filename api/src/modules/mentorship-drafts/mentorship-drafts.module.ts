@@ -10,6 +10,7 @@ import { User } from "@/common/entities/users.entity";
 import { ApproveMentorshipDraftInteractor } from "./interactors/approve-mentorship-draft.interactor";
 import { CreateMentorshipDraftInteractor } from "./interactors/create-mentorship-draft.interactor";
 import { GetMentorshipDraftInteractor } from "./interactors/get-mentorship-draft.interactor";
+import { GetMentorshipDraftChangeSummaryInteractor } from "./interactors/get-mentorship-draft-change-summary.interactor";
 import { ListMentorshipDraftsInteractor } from "./interactors/list-mentorship-drafts.interactor";
 import { RejectMentorshipDraftInteractor } from "./interactors/reject-mentorship-draft.interactor";
 import { SubmitMentorshipDraftInteractor } from "./interactors/submit-mentorship-draft.interactor";
@@ -30,6 +31,7 @@ import { MentorshipDraftsService } from "./mentorship-drafts.service";
     SubmitMentorshipDraftInteractor,
     ListMentorshipDraftsInteractor,
     GetMentorshipDraftInteractor,
+    GetMentorshipDraftChangeSummaryInteractor,
     ApproveMentorshipDraftInteractor,
     RejectMentorshipDraftInteractor,
     MentorshipDraftsSerializer,

@@ -3,6 +3,7 @@ import { ApiProperty } from "@nestjs/swagger";
 import {
   EMentorshipDraftOperation,
   EMentorshipDraftStatus,
+  EMentorshipRelationshipType,
   EMentorshipViolation,
 } from "@/common/enums/mentorships.enums";
 import { EUserRole } from "@/common/enums/roles.enums";
@@ -196,4 +197,69 @@ export class PaginatedMentorshipDraftsResponse {
 export class PaginatedMentorshipDraftsApiResponse extends AbstractApiResponse {
   @ApiProperty({ type: PaginatedMentorshipDraftsResponse })
   data!: PaginatedMentorshipDraftsResponse;
+}
+
+export class MentorshipDraftStaleChangeResponse {
+  @ApiProperty({ format: "uuid", type: String, nullable: true })
+  changedByDraftId!: string | null;
+}
+
+export class MentorshipDraftOverlapResponse {
+  @ApiProperty({ format: "uuid" })
+  id!: string;
+
+  @ApiProperty()
+  title!: string;
+
+  @ApiProperty({ enum: EMentorshipDraftStatus, enumName: "EMentorshipDraftStatus" })
+  status!: EMentorshipDraftStatus;
+}
+
+export class MentorshipDraftChangeSummaryItemResponse {
+  @ApiProperty({ format: "uuid" })
+  id!: string;
+
+  @ApiProperty({ enum: EMentorshipDraftOperation, enumName: "EMentorshipDraftOperation" })
+  operation!: EMentorshipDraftOperation;
+
+  @ApiProperty({ type: MentorshipDraftPersonResponse })
+  subordinate!: MentorshipDraftPersonResponse;
+
+  @ApiProperty({ type: MentorshipDraftPersonResponse, nullable: true })
+  expectedSupervisor!: MentorshipDraftPersonResponse | null;
+
+  @ApiProperty({ type: MentorshipDraftPersonResponse, nullable: true })
+  currentSupervisor!: MentorshipDraftPersonResponse | null;
+
+  @ApiProperty({ type: MentorshipDraftPersonResponse, nullable: true })
+  proposedSupervisor!: MentorshipDraftPersonResponse | null;
+
+  @ApiProperty({
+    enum: EMentorshipRelationshipType,
+    enumName: "EMentorshipRelationshipType",
+    nullable: true,
+  })
+  relationshipType!: EMentorshipRelationshipType | null;
+
+  @ApiProperty({ enum: EMentorshipViolation, enumName: "EMentorshipViolation", isArray: true })
+  violations!: EMentorshipViolation[];
+
+  @ApiProperty({ type: MentorshipDraftStaleChangeResponse, nullable: true })
+  stale!: MentorshipDraftStaleChangeResponse | null;
+
+  @ApiProperty({ type: [MentorshipDraftOverlapResponse] })
+  overlaps!: MentorshipDraftOverlapResponse[];
+}
+
+export class MentorshipDraftChangeSummaryResponse {
+  @ApiProperty({ format: "uuid" })
+  draftId!: string;
+
+  @ApiProperty({ type: [MentorshipDraftChangeSummaryItemResponse] })
+  items!: MentorshipDraftChangeSummaryItemResponse[];
+}
+
+export class MentorshipDraftChangeSummaryApiResponse extends AbstractApiResponse {
+  @ApiProperty({ type: MentorshipDraftChangeSummaryResponse })
+  data!: MentorshipDraftChangeSummaryResponse;
 }

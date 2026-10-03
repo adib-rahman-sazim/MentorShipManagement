@@ -37,10 +37,10 @@ export class MentorshipDraftsService {
     return draft;
   }
 
-  async findVisibleDetail(
-    { draftId, actorId, ability }: IMentorshipDraftByIdContext,
+  async findVisible(
+    { draftId, actorId }: IMentorshipDraftByIdContext,
     em?: EntityManager,
-  ): Promise<IMentorshipDraftDetailView> {
+  ): Promise<MentorshipDraft> {
     const draft = await this.mentorshipDraftsRepository.findVisibleById(
       draftId,
       buildVisibleDraftsFilter(actorId),
@@ -51,6 +51,15 @@ export class MentorshipDraftsService {
       throw new NotFoundException(MENTORSHIP_DRAFT_ERROR_MESSAGES.DRAFT_NOT_FOUND);
     }
 
+    return draft;
+  }
+
+  async findVisibleDetail(
+    context: IMentorshipDraftByIdContext,
+    em?: EntityManager,
+  ): Promise<IMentorshipDraftDetailView> {
+    const { actorId, ability } = context;
+    const draft = await this.findVisible(context, em);
     const items = await this.mentorshipDraftItemsRepository.findByDraftIdWithPeople(draft.id, em);
 
     return {
