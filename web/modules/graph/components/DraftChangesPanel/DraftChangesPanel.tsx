@@ -23,6 +23,7 @@ const DraftChangesPanel = ({
   changes,
   onSelectPerson,
   onRemoveChange,
+  cancelSlot,
 }: IDraftChangesPanelProps) => {
   const { title, isEditable, isDirty, isSaving, isSubmitting } = draft;
   const hasTitle = title.trim().length > 0;
@@ -86,6 +87,7 @@ const DraftChangesPanel = ({
               {SAVE_DRAFT_LABEL}
             </Button>
           </div>
+          {cancelSlot}
         </div>
       ) : (
         <p className="text-xs text-muted-foreground">{READ_ONLY_TEXT}</p>

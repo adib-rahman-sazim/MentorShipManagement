@@ -1,5 +1,7 @@
 import { ReactNode, useMemo } from "react";
 
+import CancelDraftDialog from "@/modules/graph/components/CancelDraftDialog";
+import DecisionPanel from "@/modules/graph/components/DecisionPanel";
 import DraftChangeNotice from "@/modules/graph/components/DraftChangeNotice";
 import DraftChangesPanel from "@/modules/graph/components/DraftChangesPanel";
 import DraftReadOnlyHint from "@/modules/graph/components/DraftReadOnlyHint";
@@ -19,6 +21,7 @@ import {
 } from "@/modules/graph/draft.helpers";
 import { withReviewMarks, withStaleEdges } from "@/modules/graph/review.helpers";
 import { useAppAbility } from "@/shared/providers/AbilityProvider/AbilityProvider.hooks";
+import { EMentorshipDraftAction } from "@/shared/typedefs";
 
 import { NO_DRAFT_ITEMS, NO_STALE_IDS } from "./MentorshipGraphWorkspace.constants";
 import {
@@ -33,6 +36,7 @@ const MentorshipGraphWorkspace = ({
   layout,
   draft,
   review,
+  decisions,
 }: IMentorshipGraphWorkspaceProps) => {
   const isCompact = useIsCompactGraph();
   const ability = useAppAbility();
@@ -103,14 +107,38 @@ const MentorshipGraphWorkspace = ({
   let selectionExtra: ReactNode = null;
 
   if (review) {
-    idleContent = <DraftReviewPanel review={review} onSelectPerson={focusPerson} />;
+    idleContent = (
+      <DraftReviewPanel
+        review={review}
+        onSelectPerson={focusPerson}
+        decisionSlot={
+          <DecisionPanel
+            review={review}
+            decisions={decisions}
+            canStartNewDraft={draft.canCreateDraft}
+            onStartNewDraft={draft.startNewDraft}
+            onSelectPerson={focusPerson}
+          />
+        }
+      />
+    );
   } else if (isActive) {
+    const canCancel = draft.detail?.allowedActions.includes(EMentorshipDraftAction.CANCEL);
+
     idleContent = (
       <DraftChangesPanel
         draft={draft}
         changes={changes}
         onSelectPerson={focusPerson}
         onRemoveChange={handleRemoveChange}
+        cancelSlot={
+          canCancel ? (
+            <CancelDraftDialog
+              isBusy={decisions.isBusy || draft.isSaving || draft.isSubmitting}
+              onConfirm={decisions.cancel}
+            />
+          ) : null
+        }
       />
     );
   }

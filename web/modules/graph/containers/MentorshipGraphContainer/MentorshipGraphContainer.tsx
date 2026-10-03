@@ -12,6 +12,7 @@ import { countDraftOperations } from "@/modules/graph/draft.helpers";
 import { getDraftByline } from "@/modules/graph/review.helpers";
 
 import {
+  useDraftDecisions,
   useDraftReview,
   useGraphDraft,
   useMentorshipGraph,
@@ -21,6 +22,7 @@ const MentorshipGraphContainer = () => {
   const { graph, layout, isLoading, errorMessage, refetch } = useMentorshipGraph();
   const draft = useGraphDraft();
   const review = useDraftReview(draft);
+  const decisions = useDraftDecisions(draft.detail);
   const counts = useMemo(() => countDraftOperations(draft.items), [draft.items]);
 
   let content: ReactNode;
@@ -42,7 +44,13 @@ const MentorshipGraphContainer = () => {
   } else {
     content = (
       <ReactFlowProvider>
-        <MentorshipGraphWorkspace graph={graph} layout={layout} draft={draft} review={review} />
+        <MentorshipGraphWorkspace
+          graph={graph}
+          layout={layout}
+          draft={draft}
+          review={review}
+          decisions={decisions}
+        />
       </ReactFlowProvider>
     );
   }

@@ -1,3 +1,4 @@
+import type { IDraftDecisions } from "@/modules/graph/decision.interfaces";
 import type { IGraphDraft } from "@/modules/graph/draft.interfaces";
 import type { TDraftContext, TDraftItem } from "@/modules/graph/draft.types";
 import type { TGraphLayout } from "@/modules/graph/graph.types";
@@ -9,6 +10,7 @@ export interface IMentorshipGraphWorkspaceProps {
   layout: TGraphLayout;
   draft: IGraphDraft;
   review: TDraftReview | null;
+  decisions: IDraftDecisions;
 }
 
 export interface IDraftCanvasHandlersParams {
