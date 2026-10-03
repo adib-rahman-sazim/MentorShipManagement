@@ -9,12 +9,18 @@ import MentorshipGraphSkeleton from "@/modules/graph/components/MentorshipGraphS
 import MentorshipGraphToolbar from "@/modules/graph/components/MentorshipGraphToolbar";
 import MentorshipGraphWorkspace from "@/modules/graph/components/MentorshipGraphWorkspace";
 import { countDraftOperations } from "@/modules/graph/draft.helpers";
+import { getDraftByline } from "@/modules/graph/review.helpers";
 
-import { useGraphDraft, useMentorshipGraph } from "./MentorshipGraphContainer.hooks";
+import {
+  useDraftReview,
+  useGraphDraft,
+  useMentorshipGraph,
+} from "./MentorshipGraphContainer.hooks";
 
 const MentorshipGraphContainer = () => {
   const { graph, layout, isLoading, errorMessage, refetch } = useMentorshipGraph();
   const draft = useGraphDraft();
+  const review = useDraftReview(draft);
   const counts = useMemo(() => countDraftOperations(draft.items), [draft.items]);
 
   let content: ReactNode;
@@ -36,7 +42,7 @@ const MentorshipGraphContainer = () => {
   } else {
     content = (
       <ReactFlowProvider>
-        <MentorshipGraphWorkspace graph={graph} layout={layout} draft={draft} />
+        <MentorshipGraphWorkspace graph={graph} layout={layout} draft={draft} review={review} />
       </ReactFlowProvider>
     );
   }
@@ -47,6 +53,8 @@ const MentorshipGraphContainer = () => {
         <DraftBar
           title={draft.title}
           status={draft.status}
+          byline={review ? getDraftByline(review.detail) : null}
+          isEditable={draft.isEditable}
           counts={counts}
           changeCount={draft.items.length}
           onOpenChanges={draft.openChangesSheet}
@@ -55,7 +63,9 @@ const MentorshipGraphContainer = () => {
       ) : (
         <MentorshipGraphToolbar
           canCreateDraft={draft.canCreateDraft}
+          canReadDrafts={draft.canReadDrafts}
           onNewDraft={draft.startNewDraft}
+          onOpenDraft={draft.openDraft}
         />
       )}
       {content}

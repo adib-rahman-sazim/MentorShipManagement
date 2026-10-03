@@ -7,7 +7,7 @@ import type {
   ReactFlowProps,
 } from "@xyflow/react";
 
-import { EMentorshipDraftStatus } from "@/shared/typedefs";
+import { EMentorshipDraftStatus, IMentorshipDraftDetailResponse } from "@/shared/typedefs";
 
 import type { TDraftContext, TDraftEdge, TDraftItem, TDraftViolations } from "./draft.types";
 import type { TGraphNode } from "./graph.types";
@@ -15,8 +15,10 @@ import type { TGraphNode } from "./graph.types";
 export interface IGraphDraft {
   isActive: boolean;
   canCreateDraft: boolean;
+  canReadDrafts: boolean;
   isEditable: boolean;
   status: EMentorshipDraftStatus;
+  detail: IMentorshipDraftDetailResponse | null;
   title: string;
   items: TDraftItem[];
   violations: TDraftViolations;
@@ -27,6 +29,7 @@ export interface IGraphDraft {
   setTitle: (title: string) => void;
   changeItems: (items: TDraftItem[]) => void;
   startNewDraft: () => void;
+  openDraft: (draftId: string) => void;
   exitDraft: () => void;
   save: () => Promise<void>;
   submit: () => Promise<void>;

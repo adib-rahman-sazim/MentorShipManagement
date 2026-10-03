@@ -1,12 +1,14 @@
 import type { IGraphDraft } from "@/modules/graph/draft.interfaces";
 import type { TDraftContext, TDraftItem } from "@/modules/graph/draft.types";
 import type { TGraphLayout } from "@/modules/graph/graph.types";
+import type { TDraftReview } from "@/modules/graph/review.types";
 import { IMentorshipGraphResponse } from "@/shared/typedefs";
 
 export interface IMentorshipGraphWorkspaceProps {
   graph: IMentorshipGraphResponse;
   layout: TGraphLayout;
   draft: IGraphDraft;
+  review: TDraftReview | null;
 }
 
 export interface IDraftCanvasHandlersParams {
