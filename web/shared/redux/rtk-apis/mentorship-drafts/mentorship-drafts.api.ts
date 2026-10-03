@@ -12,7 +12,7 @@ import {
   TPaginatedResponse,
 } from "@/shared/typedefs";
 
-import { TUpdateMentorshipDraftArgs } from "./mentorship-drafts.types";
+import { TDecideMentorshipDraftArgs, TUpdateMentorshipDraftArgs } from "./mentorship-drafts.types";
 
 const mentorshipDraftsApi = projectApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -61,6 +61,54 @@ const mentorshipDraftsApi = projectApi.injectEndpoints({
         { type: "MentorshipDrafts", id: "LIST" },
       ],
     }),
+
+    approveMentorshipDraft: builder.mutation<
+      IMentorshipDraftDetailResponse,
+      TDecideMentorshipDraftArgs
+    >({
+      query: ({ id, ...body }) => ({
+        url: `mentorship-drafts/${id}/approve`,
+        method: "POST",
+        body,
+      }),
+      transformResponse: (response: TApiResponse<IMentorshipDraftDetailResponse>) => response.data,
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: "MentorshipDraft", id },
+        { type: "MentorshipDrafts", id: "LIST" },
+      ],
+    }),
+
+    rejectMentorshipDraft: builder.mutation<
+      IMentorshipDraftDetailResponse,
+      TDecideMentorshipDraftArgs
+    >({
+      query: ({ id, ...body }) => ({ url: `mentorship-drafts/${id}/reject`, method: "POST", body }),
+      transformResponse: (response: TApiResponse<IMentorshipDraftDetailResponse>) => response.data,
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: "MentorshipDraft", id },
+        { type: "MentorshipDrafts", id: "LIST" },
+      ],
+    }),
+
+    publishMentorshipDraft: builder.mutation<IMentorshipDraftDetailResponse, string>({
+      query: (id) => ({ url: `mentorship-drafts/${id}/publish`, method: "POST" }),
+      transformResponse: (response: TApiResponse<IMentorshipDraftDetailResponse>) => response.data,
+      invalidatesTags: (_result, _error, id) => [
+        { type: "MentorshipDraft", id },
+        { type: "MentorshipDrafts", id: "LIST" },
+        "MentorshipGraph",
+        "MyMentorship",
+      ],
+    }),
+
+    cancelMentorshipDraft: builder.mutation<IMentorshipDraftDetailResponse, string>({
+      query: (id) => ({ url: `mentorship-drafts/${id}/cancel`, method: "POST" }),
+      transformResponse: (response: TApiResponse<IMentorshipDraftDetailResponse>) => response.data,
+      invalidatesTags: (_result, _error, id) => [
+        { type: "MentorshipDraft", id },
+        { type: "MentorshipDrafts", id: "LIST" },
+      ],
+    }),
   }),
   overrideExisting: false,
 });
@@ -72,4 +120,8 @@ export const {
   useCreateMentorshipDraftMutation,
   useUpdateMentorshipDraftMutation,
   useSubmitMentorshipDraftMutation,
+  useApproveMentorshipDraftMutation,
+  useRejectMentorshipDraftMutation,
+  usePublishMentorshipDraftMutation,
+  useCancelMentorshipDraftMutation,
 } = mentorshipDraftsApi;
