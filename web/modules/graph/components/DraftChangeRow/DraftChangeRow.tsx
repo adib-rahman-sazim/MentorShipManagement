@@ -1,6 +1,6 @@
 import { X } from "lucide-react";
 
-import { cn } from "@/lib/utils";
+import DraftOperationBadge from "@/modules/graph/components/DraftOperationBadge";
 import { DRAFT_OPERATION_DETAILS } from "@/modules/graph/draft.constants";
 import { Button } from "@/shared/components/shadui/button";
 
@@ -19,15 +19,7 @@ const DraftChangeRow = ({
 
   return (
     <div className="flex items-start gap-2 py-2">
-      <span
-        aria-hidden
-        className={cn(
-          "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border font-mono text-xs font-semibold",
-          details.badgeClassName,
-        )}
-      >
-        {details.glyph}
-      </span>
+      <DraftOperationBadge operation={change.operation} />
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <button
           type="button"

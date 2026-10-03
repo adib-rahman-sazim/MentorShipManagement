@@ -8,8 +8,8 @@ import { EGraphSelectionKind } from "@/modules/graph/graph.enums";
 import { Drawer, DrawerContent, DrawerTitle } from "@/shared/components/shadui/drawer";
 
 import { GRAPH_SIDE_PANEL_LABEL, PANEL_SLIDE_PROPERTY } from "./GraphSidePanel.constants";
-import { getLinkDetails, getPersonDetails } from "./GraphSidePanel.helpers";
-import { useDisplayedSelection } from "./GraphSidePanel.hooks";
+import { getLinkDetails, getPersonDetails, isInsideAlertDialog } from "./GraphSidePanel.helpers";
+import { useDisplayedSelection, useNonModalSheetBody } from "./GraphSidePanel.hooks";
 import { IGraphSidePanelProps } from "./GraphSidePanel.interfaces";
 
 const GraphSidePanel = ({
@@ -51,9 +51,17 @@ const GraphSidePanel = ({
   const isOpen = isSelectionOpen || isShowingIdle;
   const isSheetOpen = isCompact && (isSelectionOpen || (isShowingIdle && isIdleSheetOpen));
 
+  useNonModalSheetBody(isSheetOpen);
+
   const handleOpenChange = (open: boolean) => {
     if (!open) {
       onClear();
+    }
+  };
+
+  const handleEscapeKeyDown = (event: KeyboardEvent) => {
+    if (isInsideAlertDialog(event.target)) {
+      event.preventDefault();
     }
   };
 
@@ -83,7 +91,7 @@ const GraphSidePanel = ({
         </div>
       </aside>
       <Drawer open={isSheetOpen} onOpenChange={handleOpenChange} modal={false}>
-        <DrawerContent>
+        <DrawerContent onEscapeKeyDown={handleEscapeKeyDown}>
           <DrawerTitle className="sr-only">{GRAPH_SIDE_PANEL_LABEL}</DrawerTitle>
           <div className="relative overflow-y-auto">
             <GraphPanelCloseButton onClose={onClear} />
