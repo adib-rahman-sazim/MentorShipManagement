@@ -7,3 +7,4 @@ export const SUBORDINATE_NOUN: Partial<Record<EUserRole, string>> = {
 
 export const NO_MENTOR_LABEL = "no mentor";
 export const META_SEPARATOR = " · ";
+export const DRAFT_HANDLE_CLASS = "graph-handle";

@@ -6,11 +6,13 @@ import {
   IMentorshipGraphNodeResponse,
 } from "@/shared/typedefs";
 
+import type { TPersonDraftState } from "./draft.types";
 import { EGraphNodeType, EGraphSelectionKind } from "./graph.enums";
 
 export type TPersonNodeData = Pick<IMentorshipGraphNodeResponse, "name" | "role" | "state"> & {
   subordinateCount: number;
   hasSupervisor: boolean;
+  draft?: TPersonDraftState;
 };
 
 export type TPersonNode = Node<TPersonNodeData, EGraphNodeType.PERSON>;

@@ -1,17 +1,21 @@
-import { ReactNode } from "react";
+import { ReactNode, useMemo } from "react";
 
 import { ReactFlowProvider } from "@xyflow/react";
 
+import DraftBar from "@/modules/graph/components/DraftBar";
 import MentorshipGraphEmptyState from "@/modules/graph/components/MentorshipGraphEmptyState";
 import MentorshipGraphLoadError from "@/modules/graph/components/MentorshipGraphLoadError";
 import MentorshipGraphSkeleton from "@/modules/graph/components/MentorshipGraphSkeleton";
 import MentorshipGraphToolbar from "@/modules/graph/components/MentorshipGraphToolbar";
 import MentorshipGraphWorkspace from "@/modules/graph/components/MentorshipGraphWorkspace";
+import { countDraftOperations } from "@/modules/graph/draft.helpers";
 
-import { useMentorshipGraph } from "./MentorshipGraphContainer.hooks";
+import { useGraphDraft, useMentorshipGraph } from "./MentorshipGraphContainer.hooks";
 
 const MentorshipGraphContainer = () => {
   const { graph, layout, isLoading, errorMessage, refetch } = useMentorshipGraph();
+  const draft = useGraphDraft();
+  const counts = useMemo(() => countDraftOperations(draft.items), [draft.items]);
 
   let content: ReactNode;
 
@@ -32,14 +36,28 @@ const MentorshipGraphContainer = () => {
   } else {
     content = (
       <ReactFlowProvider>
-        <MentorshipGraphWorkspace graph={graph} layout={layout} />
+        <MentorshipGraphWorkspace graph={graph} layout={layout} draft={draft} />
       </ReactFlowProvider>
     );
   }
 
   return (
     <div className="flex h-full flex-col">
-      <MentorshipGraphToolbar />
+      {draft.isActive ? (
+        <DraftBar
+          title={draft.title}
+          status={draft.status}
+          counts={counts}
+          changeCount={draft.items.length}
+          onOpenChanges={draft.openChangesSheet}
+          onExit={draft.exitDraft}
+        />
+      ) : (
+        <MentorshipGraphToolbar
+          canCreateDraft={draft.canCreateDraft}
+          onNewDraft={draft.startNewDraft}
+        />
+      )}
       {content}
     </div>
   );
