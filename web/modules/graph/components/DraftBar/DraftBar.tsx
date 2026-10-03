@@ -1,7 +1,7 @@
+import StatusLozenge from "@/modules/graph/components/StatusLozenge";
 import {
   DRAFT_OPERATION_DETAILS,
   DRAFT_OPERATION_ORDER,
-  DRAFT_STATUS_LABELS,
   UNTITLED_DRAFT_LABEL,
 } from "@/modules/graph/draft.constants";
 import { Button } from "@/shared/components/shadui/button";
@@ -20,9 +20,7 @@ const DraftBar = ({
 }: IDraftBarProps) => (
   <header className="flex min-h-13 shrink-0 flex-wrap items-center gap-x-3 gap-y-1 border-b bg-background py-2 pr-5">
     <SidebarTrigger />
-    <span className="rounded-md border border-status-draft-line bg-status-draft-bg px-1.5 py-0.5 text-xs font-medium text-status-draft-fg">
-      {DRAFT_STATUS_LABELS[status]}
-    </span>
+    <StatusLozenge status={status} />
     <h1 className="min-w-0 truncate text-sm font-medium" title={title}>
       {title.trim() || UNTITLED_DRAFT_LABEL}
     </h1>
