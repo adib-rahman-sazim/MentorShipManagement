@@ -2,8 +2,12 @@ import { useEffect } from "react";
 
 import { Background, MiniMap, ReactFlow, useEdgesState, useNodesState } from "@xyflow/react";
 
+import DraftConnectionHint from "@/modules/graph/components/DraftConnectionHint";
 import GraphZoomControls from "@/modules/graph/components/GraphZoomControls";
-import { getSelectedId, markSelected } from "@/modules/graph/graph.helpers";
+import { DRAFT_DELETE_KEYS } from "@/modules/graph/draft.constants";
+import type { TDraftEdge } from "@/modules/graph/draft.types";
+import { getSelectedId, keepMeasured, markSelected } from "@/modules/graph/graph.helpers";
+import type { TGraphNode } from "@/modules/graph/graph.types";
 import { useIsMobile } from "@/shared/hooks/useIsMobile";
 
 import {
@@ -16,23 +20,29 @@ import {
 import { IMentorshipGraphCanvasProps } from "./MentorshipGraphCanvas.interfaces";
 
 const MentorshipGraphCanvas = ({
-  layout,
+  nodes: sourceNodes,
+  edges: sourceEdges,
   selectedPersonId,
   selectedLinkId,
   onSelectionChange,
+  draftEditing,
 }: IMentorshipGraphCanvasProps) => {
   const isMobile = useIsMobile();
-  const [nodes, setNodes, onNodesChange] = useNodesState(
-    markSelected(layout.nodes, selectedPersonId),
+  const isEditing = draftEditing !== null;
+  const [nodes, setNodes, onNodesChange] = useNodesState<TGraphNode>(
+    markSelected(sourceNodes, selectedPersonId),
   );
-  const [edges, setEdges, onEdgesChange] = useEdgesState(
-    markSelected(layout.edges, selectedLinkId),
+  const [edges, setEdges, onEdgesChange] = useEdgesState<TDraftEdge>(
+    markSelected(sourceEdges, selectedLinkId),
   );
 
   useEffect(() => {
-    setNodes((current) => markSelected(layout.nodes, getSelectedId(current)));
-    setEdges((current) => markSelected(layout.edges, getSelectedId(current)));
-  }, [layout, setNodes, setEdges]);
+    setNodes((current) => markSelected(keepMeasured(sourceNodes, current), getSelectedId(current)));
+  }, [sourceNodes, setNodes]);
+
+  useEffect(() => {
+    setEdges((current) => markSelected(sourceEdges, getSelectedId(current)));
+  }, [sourceEdges, setEdges]);
 
   useEffect(() => {
     setNodes((current) => markSelected(current, selectedPersonId));
@@ -51,9 +61,17 @@ const MentorshipGraphCanvas = ({
       onSelectionChange={onSelectionChange}
       nodeTypes={GRAPH_NODE_TYPES}
       nodesDraggable={false}
-      nodesConnectable={false}
-      edgesReconnectable={false}
-      deleteKeyCode={null}
+      nodesConnectable={isEditing}
+      edgesReconnectable={isEditing}
+      elevateEdgesOnSelect={isEditing}
+      deleteKeyCode={isEditing ? DRAFT_DELETE_KEYS : null}
+      isValidConnection={draftEditing?.isValidConnection}
+      onConnect={draftEditing?.onConnect}
+      onConnectEnd={draftEditing?.onConnectEnd}
+      onReconnectStart={draftEditing?.onReconnectStart}
+      onReconnect={draftEditing?.onReconnect}
+      onReconnectEnd={draftEditing?.onReconnectEnd}
+      onBeforeDelete={draftEditing?.onBeforeDelete}
       selectionKeyCode={null}
       multiSelectionKeyCode={null}
       elementsSelectable
@@ -66,6 +84,12 @@ const MentorshipGraphCanvas = ({
       <Background gap={GRAPH_BACKGROUND_GAP} />
       <GraphZoomControls />
       {isMobile ? null : <MiniMap pannable zoomable />}
+      {draftEditing ? (
+        <DraftConnectionHint
+          context={draftEditing.context}
+          movingSubordinateId={draftEditing.movingSubordinateId}
+        />
+      ) : null}
     </ReactFlow>
   );
 };

@@ -68,6 +68,10 @@ export const PERMISSION_DETAILS: Record<EPermissionCode, IPermissionDetails> = {
     label: "Draft mentorship changes",
     description: "Propose changes to the hierarchy for someone to review.",
   },
+  [EPermissionCode.CAN_READ_DRAFT]: {
+    label: "View drafts",
+    description: "See their own drafts and everyone's submitted drafts.",
+  },
   [EPermissionCode.CAN_REVIEW_DRAFT]: {
     label: "Review drafts",
     description: "Review proposed mentorship changes.",
@@ -75,6 +79,10 @@ export const PERMISSION_DETAILS: Record<EPermissionCode, IPermissionDetails> = {
   [EPermissionCode.CAN_APPROVE_DRAFT]: {
     label: "Approve drafts",
     description: "Approve proposed mentorship changes so they can be published.",
+  },
+  [EPermissionCode.CAN_PUBLISH_DRAFT]: {
+    label: "Publish drafts",
+    description: "Apply approved drafts to the live hierarchy. Only the Superadmin by default.",
   },
   [EPermissionCode.CAN_LIST_ROLES]: {
     label: "List roles",
@@ -149,8 +157,10 @@ export const PERMISSION_GROUPS: IPermissionGroupDefinition[] = [
     codes: [
       EPermissionCode.CAN_ASSIGN_MENTOR,
       EPermissionCode.CAN_CREATE_DRAFT,
+      EPermissionCode.CAN_READ_DRAFT,
       EPermissionCode.CAN_REVIEW_DRAFT,
       EPermissionCode.CAN_APPROVE_DRAFT,
+      EPermissionCode.CAN_PUBLISH_DRAFT,
     ],
   },
 ];

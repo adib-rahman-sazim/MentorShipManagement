@@ -19,6 +19,9 @@ const GraphSidePanel = ({
   onSelectPerson,
   onOpen,
   onClear,
+  idleContent,
+  selectionExtra,
+  isIdleSheetOpen,
 }: IGraphSidePanelProps) => {
   const displayed = useDisplayedSelection(selection);
   const personDetails =
@@ -26,15 +29,27 @@ const GraphSidePanel = ({
   const linkDetails =
     displayed?.kind === EGraphSelectionKind.LINK ? getLinkDetails(graph, displayed.id) : null;
 
-  let content: ReactNode = null;
+  let details: ReactNode = null;
 
   if (personDetails) {
-    content = <PersonDetails details={personDetails} onSelectPerson={onSelectPerson} />;
+    details = <PersonDetails details={personDetails} onSelectPerson={onSelectPerson} />;
   } else if (linkDetails) {
-    content = <LinkDetails details={linkDetails} onSelectPerson={onSelectPerson} />;
+    details = <LinkDetails details={linkDetails} onSelectPerson={onSelectPerson} />;
   }
 
-  const isOpen = selection !== null && content !== null;
+  const hasSelectionContent = details !== null || selectionExtra !== null;
+  const isSelectionOpen = selection !== null && hasSelectionContent;
+  const isShowingIdle = !isSelectionOpen && idleContent !== null;
+  const content = isShowingIdle ? (
+    idleContent
+  ) : (
+    <>
+      {details}
+      {selectionExtra}
+    </>
+  );
+  const isOpen = isSelectionOpen || isShowingIdle;
+  const isSheetOpen = isCompact && (isSelectionOpen || (isShowingIdle && isIdleSheetOpen));
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
@@ -63,11 +78,11 @@ const GraphSidePanel = ({
         )}
       >
         <div className="relative h-full w-80 overflow-y-auto">
-          <GraphPanelCloseButton onClose={onClear} />
+          {isShowingIdle ? null : <GraphPanelCloseButton onClose={onClear} />}
           {content}
         </div>
       </aside>
-      <Drawer open={isCompact && isOpen} onOpenChange={handleOpenChange} modal={false}>
+      <Drawer open={isSheetOpen} onOpenChange={handleOpenChange} modal={false}>
         <DrawerContent>
           <DrawerTitle className="sr-only">{GRAPH_SIDE_PANEL_LABEL}</DrawerTitle>
           <div className="relative overflow-y-auto">

@@ -455,3 +455,45 @@
 .react-flow__edge.selected .react-flow__edge-path {
   stroke-width: 2.5;
 }
+
+.react-flow__handle.graph-handle {
+  width: 0.75rem;
+  height: 0.75rem;
+  border: 0.125rem solid var(--background);
+  background: var(--foreground);
+}
+
+.react-flow__handle.graph-handle.connectingto {
+  background: var(--destructive);
+}
+
+.react-flow__handle.graph-handle.valid {
+  background: var(--op-assign);
+}
+
+.react-flow__edge.draft-edge-proposed .react-flow__edge-path {
+  stroke-dasharray: 6 4;
+  stroke-width: 2;
+}
+
+.react-flow__edge.draft-edge-replaced .react-flow__edge-path {
+  stroke-dasharray: 2 4;
+  opacity: 0.55;
+}
+
+.react-flow__edge.draft-edge-assign .react-flow__edge-path {
+  stroke: var(--op-assign);
+}
+
+.react-flow__edge.draft-edge-reassign .react-flow__edge-path {
+  stroke: var(--op-reassign);
+}
+
+.react-flow__edge.draft-edge-unassign .react-flow__edge-path {
+  stroke: var(--op-unassign);
+  opacity: 0.85;
+}
+
+.react-flow__edge.selected .react-flow__edgeupdater-source {
+  transform: translateY(-1rem);
+}

@@ -6,6 +6,8 @@ import { PureAbilityContext, useAbilityContext } from "./AbilityProvider";
 import { canPerform } from "./AbilityProvider.helpers";
 import type { TAppResource, TReachabilityRule, TSubjectConditions } from "./AbilityProvider.types";
 
+export const useAppAbility = () => useCaslAbility(PureAbilityContext);
+
 export const useCan = (
   action: EPermission,
   resource: TAppResource,

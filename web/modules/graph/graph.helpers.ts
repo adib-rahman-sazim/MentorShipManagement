@@ -19,6 +19,7 @@ import {
 import { EGraphNodeType, EGraphSelectionKind } from "./graph.enums";
 import {
   TGraphLayout,
+  TGraphNode,
   TGraphSelection,
   TPersonNode,
   TSelectableElement,
@@ -132,6 +133,19 @@ export function markSelected<TElement extends TSelectableElement>(
     const selected = element.id === selectedId;
 
     return (element.selected ?? false) === selected ? element : { ...element, selected };
+  });
+}
+
+export function keepMeasured(
+  nodes: TGraphNode[],
+  currentNodes: readonly TGraphNode[],
+): TGraphNode[] {
+  const measuredById = new Map(currentNodes.map(({ id, measured }) => [id, measured]));
+
+  return nodes.map((node) => {
+    const measured = measuredById.get(node.id);
+
+    return measured ? { ...node, measured } : node;
   });
 }
 

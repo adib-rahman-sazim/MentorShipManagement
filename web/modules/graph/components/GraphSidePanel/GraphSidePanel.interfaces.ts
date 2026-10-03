@@ -1,3 +1,5 @@
+import { ReactNode } from "react";
+
 import type { TGraphSelection } from "@/modules/graph/graph.types";
 import { IMentorshipGraphResponse } from "@/shared/typedefs";
 
@@ -8,4 +10,7 @@ export interface IGraphSidePanelProps {
   onSelectPerson: (personId: string) => void;
   onOpen: () => void;
   onClear: () => void;
+  idleContent: ReactNode;
+  selectionExtra: ReactNode;
+  isIdleSheetOpen: boolean;
 }

@@ -13,6 +13,8 @@ export const projectApi = createApi({
     "UserPermissions",
     "MyMentorship",
     "MentorshipGraph",
+    "MentorshipDraft",
+    "MentorshipDrafts",
   ],
   endpoints: () => ({}),
 });

@@ -1,8 +1,24 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { OnSelectionChangeParams, useReactFlow, useStoreApi } from "@xyflow/react";
+import {
+  Connection,
+  Edge,
+  FinalConnectionState,
+  OnSelectionChangeParams,
+  useReactFlow,
+  useStoreApi,
+} from "@xyflow/react";
 import { useQueryStates } from "nuqs";
+import { toast } from "sonner";
 
+import {
+  checkStagedConnection,
+  connectInDraft,
+  deleteInDraft,
+  reconnectInDraft,
+} from "@/modules/graph/draft.helpers";
+import type { IDraftCanvasHandlers } from "@/modules/graph/draft.interfaces";
+import type { TDraftConnection, TDraftEdge, TDraftUpdate } from "@/modules/graph/draft.types";
 import { GRAPH_SELECTION_PARSERS } from "@/modules/graph/graph.constants";
 import { getGraphSelection, getPersonCenter, isPersonInView } from "@/modules/graph/graph.helpers";
 
@@ -11,6 +27,8 @@ import {
   GRAPH_CENTER_DURATION_MS,
   GRAPH_COMPACT_MEDIA_QUERY,
 } from "./MentorshipGraphWorkspace.constants";
+import { getDroppedConnection } from "./MentorshipGraphWorkspace.helpers";
+import { IDraftCanvasHandlersParams } from "./MentorshipGraphWorkspace.interfaces";
 
 export const useGraphSelection = () => {
   const [{ person, link }, setSelection] = useQueryStates(GRAPH_SELECTION_PARSERS);
@@ -106,4 +124,84 @@ export const useIsCompactGraph = () => {
   }, []);
 
   return isCompact;
+};
+
+export const useDraftCanvasHandlers = ({
+  context,
+  isEditable,
+  onItemsChange,
+}: IDraftCanvasHandlersParams): IDraftCanvasHandlers | null => {
+  const [movingSubordinateId, setMovingSubordinateId] = useState<string | null>(null);
+
+  const applyUpdate = useCallback(
+    ({ items, reason }: TDraftUpdate) => {
+      if (reason) {
+        toast.error(reason);
+
+        return;
+      }
+
+      onItemsChange(items);
+    },
+    [onItemsChange],
+  );
+
+  const isValidConnection = useCallback(
+    (connection: Edge | Connection) =>
+      checkStagedConnection(connection, { ...context, movingSubordinateId }).ok,
+    [context, movingSubordinateId],
+  );
+
+  const onConnect = useCallback(
+    (connection: TDraftConnection) => applyUpdate(connectInDraft(context, connection)),
+    [context, applyUpdate],
+  );
+
+  const onConnectEnd = useCallback(
+    (_event: MouseEvent | TouchEvent, connectionState: FinalConnectionState) => {
+      const connection = getDroppedConnection(connectionState);
+      const reason = connection
+        ? checkStagedConnection(connection, { ...context, movingSubordinateId }).reason
+        : null;
+
+      if (reason) {
+        toast.error(reason);
+      }
+    },
+    [context, movingSubordinateId],
+  );
+
+  const onReconnect = useCallback(
+    (edge: TDraftEdge, connection: TDraftConnection) =>
+      applyUpdate(reconnectInDraft(context, edge, connection)),
+    [context, applyUpdate],
+  );
+
+  const onBeforeDelete = useCallback(
+    async ({ edges }: { edges: TDraftEdge[] }) => {
+      onItemsChange(
+        deleteInDraft(
+          context,
+          edges.filter(({ selected }) => selected),
+        ),
+      );
+
+      return false;
+    },
+    [context, onItemsChange],
+  );
+
+  return isEditable
+    ? {
+        context,
+        movingSubordinateId,
+        isValidConnection,
+        onConnect,
+        onConnectEnd,
+        onReconnectStart: (_event, edge) => setMovingSubordinateId(edge.target),
+        onReconnect,
+        onReconnectEnd: () => setMovingSubordinateId(null),
+        onBeforeDelete,
+      }
+    : null;
 };
