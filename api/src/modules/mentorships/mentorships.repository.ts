@@ -1,6 +1,9 @@
+import { LockMode } from "@mikro-orm/core";
 import type { EntityManager } from "@mikro-orm/postgresql";
 
-import type { Mentorship } from "@/common/entities/mentorships.entity";
+import dayjs from "dayjs";
+
+import { Mentorship } from "@/common/entities/mentorships.entity";
 import { EMentorshipStatus } from "@/common/enums/mentorships.enums";
 import { CustomSQLBaseRepository } from "@/common/repository/custom-sql-base.repository";
 
@@ -9,7 +12,7 @@ import {
   MENTORSHIP_ANCESTORS_SQL,
   MENTORSHIP_DESCENDANTS_SQL,
 } from "./mentorships.constants";
-import type { IMentorshipChainLink } from "./mentorships.interfaces";
+import type { IMentorshipChainLink, IMentorshipStart } from "./mentorships.interfaces";
 
 export class MentorshipsRepository extends CustomSQLBaseRepository<Mentorship> {
   async findDescendantUserIds(
@@ -99,6 +102,61 @@ export class MentorshipsRepository extends CustomSQLBaseRepository<Mentorship> {
       subordinate: { $in: subordinateIds },
       ...ACTIVE_MENTORSHIP,
     });
+  }
+
+  findActiveBySubordinateIdsForUpdate(
+    subordinateIds: string[],
+    em?: EntityManager,
+  ): Promise<Mentorship[]> {
+    return this.getScopedRepository(em).find(
+      { subordinate: { $in: subordinateIds }, ...ACTIVE_MENTORSHIP },
+      { orderBy: { id: "ASC" }, lockMode: LockMode.PESSIMISTIC_WRITE },
+    );
+  }
+
+  async endMentorships(
+    mentorshipIds: string[],
+    endedByDraftId: string,
+    em?: EntityManager,
+  ): Promise<void> {
+    if (mentorshipIds.length === 0) {
+      return;
+    }
+
+    const endedAt = dayjs().toDate();
+
+    await this.getScopedEntityManager(em).nativeUpdate(
+      Mentorship,
+      { id: { $in: mentorshipIds } },
+      {
+        status: EMentorshipStatus.ENDED,
+        endedAt,
+        endedByDraft: endedByDraftId,
+        updatedAt: endedAt,
+      },
+    );
+  }
+
+  startMentorships(
+    starts: readonly IMentorshipStart[],
+    startedByDraftId: string,
+    em?: EntityManager,
+  ): Mentorship[] {
+    const scopedEntityManager = this.getScopedEntityManager(em);
+    const startedAt = dayjs().toDate();
+    const mentorships = starts.map((start) =>
+      scopedEntityManager.create(Mentorship, {
+        supervisor: start.supervisorId,
+        subordinate: start.subordinateId,
+        relationshipType: start.relationshipType,
+        status: EMentorshipStatus.ACTIVE,
+        startedAt,
+        startedByDraft: startedByDraftId,
+      }),
+    );
+    scopedEntityManager.persist(mentorships);
+
+    return mentorships;
   }
 
   async hasActiveMentorship(userId: string, em?: EntityManager): Promise<boolean> {

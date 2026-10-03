@@ -9,15 +9,18 @@ import { MentorshipDraftItemsRepository } from "./mentorship-draft-items.reposit
 import {
   assertCanAssignDraftItems,
   assertNoDraftItemViolations,
+  assertNoPublishViolations,
+  assertNoStaleDraftItems,
+  buildDraftApplyPlan,
   collectDraftItemUserIds,
   findDraftItemViolations,
   findStaleDraftItems,
   groupDraftsBySubordinate,
   resolveItemRelationshipType,
   toDraftItemExpectation,
+  toLiveMentorshipBySubordinate,
   toLiveSupervisorBySubordinate,
   toMentorshipParticipant,
-  toMentorshipSnapshot,
   toStoredDraftItemInput,
 } from "./mentorship-drafts.helpers";
 import type {
@@ -81,13 +84,60 @@ export class MentorshipDraftItemsService {
 
     return findStaleDraftItems(
       items.map(toDraftItemExpectation),
-      new Map(
-        liveMentorships.map((mentorship) => [
-          mentorship.subordinate.id,
-          toMentorshipSnapshot(mentorship),
-        ]),
-      ),
+      toLiveMentorshipBySubordinate(liveMentorships),
     );
+  }
+
+  async publishItems(draftId: string, em: EntityManager): Promise<string[]> {
+    const inputs = (await this.mentorshipDraftItemsRepository.findByDraftId(draftId, em)).map(
+      toStoredDraftItemInput,
+    );
+    const subordinateIds = inputs.map((input) => input.subordinateId);
+
+    const users = await this.usersRepository.findByIdsForUpdate(
+      collectDraftItemUserIds(inputs),
+      em,
+    );
+    const liveMentorshipBySubordinate = toLiveMentorshipBySubordinate(
+      await this.mentorshipsRepository.findActiveBySubordinateIdsForUpdate(subordinateIds, em),
+    );
+    const items = await this.mentorshipDraftItemsRepository.findByDraftIdWithExpectedMentorship(
+      draftId,
+      em,
+    );
+
+    assertNoStaleDraftItems(
+      findStaleDraftItems(items.map(toDraftItemExpectation), liveMentorshipBySubordinate),
+    );
+
+    const participantsById = new Map(users.map((user) => [user.id, toMentorshipParticipant(user)]));
+    const supervisorBySubordinate = toLiveSupervisorBySubordinate(
+      await this.mentorshipsRepository.findActiveEdges(em),
+    );
+
+    assertNoPublishViolations(
+      findDraftItemViolations({ items: inputs, participantsById, supervisorBySubordinate }),
+    );
+
+    const { endedMentorships, startedMentorships } = buildDraftApplyPlan(
+      inputs,
+      liveMentorshipBySubordinate,
+      participantsById,
+    );
+
+    await this.mentorshipsRepository.endMentorships(
+      endedMentorships.map((mentorship) => mentorship.id),
+      draftId,
+      em,
+    );
+    this.mentorshipsRepository.startMentorships(startedMentorships, draftId, em);
+
+    return [
+      ...new Set([
+        ...subordinateIds,
+        ...endedMentorships.map((mentorship) => mentorship.supervisorId),
+      ]),
+    ];
   }
 
   async findChangeSummaryItems(

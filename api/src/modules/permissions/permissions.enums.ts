@@ -9,6 +9,7 @@ export enum EPermission {
   ASSIGN = "assign",
   REVIEW = "review",
   APPROVE = "approve",
+  PUBLISH = "publish",
 }
 
 export enum EResource {
@@ -54,6 +55,7 @@ export enum EPermissionCode {
   CAN_READ_DRAFT = "can_read_draft",
   CAN_REVIEW_DRAFT = "can_review_draft",
   CAN_APPROVE_DRAFT = "can_approve_draft",
+  CAN_PUBLISH_DRAFT = "can_publish_draft",
   CAN_VIEW_DASHBOARD = "can_view_dashboard",
   CAN_VIEW_SETTINGS = "can_view_settings",
   CAN_VIEW_USERS_PAGE = "can_view_users_page",

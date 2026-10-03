@@ -19,6 +19,7 @@ import {
   ApiConflictResponse,
   ApiCreatedResponse,
   ApiOkResponse,
+  refs,
 } from "@nestjs/swagger";
 
 import type { Request } from "express";
@@ -33,6 +34,7 @@ import { CreateMentorshipDraftInteractor } from "./interactors/create-mentorship
 import { GetMentorshipDraftInteractor } from "./interactors/get-mentorship-draft.interactor";
 import { GetMentorshipDraftChangeSummaryInteractor } from "./interactors/get-mentorship-draft-change-summary.interactor";
 import { ListMentorshipDraftsInteractor } from "./interactors/list-mentorship-drafts.interactor";
+import { PublishMentorshipDraftInteractor } from "./interactors/publish-mentorship-draft.interactor";
 import { RejectMentorshipDraftInteractor } from "./interactors/reject-mentorship-draft.interactor";
 import { SubmitMentorshipDraftInteractor } from "./interactors/submit-mentorship-draft.interactor";
 import { UpdateMentorshipDraftInteractor } from "./interactors/update-mentorship-draft.interactor";
@@ -69,6 +71,7 @@ export class MentorshipDraftsController {
     private readonly getMentorshipDraftChangeSummaryInteractor: GetMentorshipDraftChangeSummaryInteractor,
     private readonly approveMentorshipDraftInteractor: ApproveMentorshipDraftInteractor,
     private readonly rejectMentorshipDraftInteractor: RejectMentorshipDraftInteractor,
+    private readonly publishMentorshipDraftInteractor: PublishMentorshipDraftInteractor,
   ) {}
 
   @Get()
@@ -196,6 +199,27 @@ export class MentorshipDraftsController {
     return this.rejectMentorshipDraftInteractor.execute({
       draftId,
       dto,
+      actorId: req.user!.id,
+      ability: req.ability!,
+    });
+  }
+
+  @Post(":id/publish")
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(CaslPermissionsGuard)
+  @Permissions([EPermissionCode.CAN_PUBLISH_DRAFT])
+  @ApiOkResponse({ type: MentorshipDraftDetailApiResponse })
+  @ApiConflictResponse({
+    schema: {
+      oneOf: refs(MentorshipDraftStaleItemsResponse, MentorshipDraftInvalidItemsResponse),
+    },
+  })
+  async publishDraft(
+    @Req() req: Request,
+    @Param("id", ParseUUIDPipe) draftId: string,
+  ): Promise<MentorshipDraftDetailResponse> {
+    return this.publishMentorshipDraftInteractor.execute({
+      draftId,
       actorId: req.user!.id,
       ability: req.ability!,
     });

@@ -30,6 +30,7 @@ import type { MentorshipDraftItemDto } from "./mentorship-drafts.dtos";
 import { EMentorshipDraftAction, EMentorshipDraftErrorCode } from "./mentorship-drafts.enums";
 import type {
   IDraftActionContext,
+  IDraftApplyPlan,
   IDraftDecisionCheck,
   IDraftItemExpectation,
   IDraftItemInput,
@@ -264,6 +265,14 @@ export function toDraftItemExpectation(item: MentorshipDraftItem): IDraftItemExp
   };
 }
 
+export function toLiveMentorshipBySubordinate(
+  mentorships: readonly Mentorship[],
+): Map<string, IMentorshipSnapshot> {
+  return new Map(
+    mentorships.map((mentorship) => [mentorship.subordinate.id, toMentorshipSnapshot(mentorship)]),
+  );
+}
+
 export function toLiveSupervisorBySubordinate(
   mentorships: readonly Mentorship[],
 ): Map<string, string> {
@@ -324,6 +333,45 @@ export function assertNoStaleDraftItems(staleItems: IStaleDraftItem[]): void {
   }
 }
 
+export function assertNoPublishViolations(itemViolations: IDraftItemViolation[]): void {
+  if (itemViolations.length > 0) {
+    throw new ConflictException(
+      {
+        message: MENTORSHIP_DRAFT_ERROR_MESSAGES.NO_LONGER_VALID_ITEMS,
+        errorCode: EMentorshipDraftErrorCode.INVALID_ITEMS,
+      },
+      { cause: itemViolations },
+    );
+  }
+}
+
+export function buildDraftApplyPlan(
+  items: readonly IDraftItemInput[],
+  liveMentorshipBySubordinate: ReadonlyMap<string, IMentorshipSnapshot>,
+  participantsById: ReadonlyMap<string, IMentorshipParticipant>,
+): IDraftApplyPlan {
+  return {
+    endedMentorships: items.flatMap(
+      (item) => liveMentorshipBySubordinate.get(item.subordinateId) ?? [],
+    ),
+    startedMentorships: items.flatMap((item) => {
+      const relationshipType = resolveItemRelationshipType(item, participantsById);
+
+      if (item.proposedSupervisorId === null || relationshipType === null) {
+        return [];
+      }
+
+      return [
+        {
+          supervisorId: item.proposedSupervisorId,
+          subordinateId: item.subordinateId,
+          relationshipType,
+        },
+      ];
+    }),
+  };
+}
+
 export function buildVisibleDraftsFilter(actorId: string): ObjectQuery<MentorshipDraft> {
   return { $or: [{ createdBy: actorId }, SUBMITTED_DRAFT] };
 }
@@ -337,6 +385,7 @@ export function resolveAllowedDraftActions({
 }: IDraftActionContext): EMentorshipDraftAction[] {
   const isAuthor = authorId === actorId;
   const canWriteDrafts = ability.can(EPermission.CREATE, EResource.DRAFT);
+  const canPublishDrafts = ability.can(EPermission.PUBLISH, EResource.DRAFT);
 
   const actionChecks: [EMentorshipDraftAction, boolean][] = [
     [
@@ -359,6 +408,10 @@ export function resolveAllowedDraftActions({
       EMentorshipDraftAction.REJECT,
       canDecideDraft({ permission: EPermission.REVIEW, authorId, actorId, ability }) &&
         canTransitionDraft(status, EMentorshipDraftStatus.REJECTED),
+    ],
+    [
+      EMentorshipDraftAction.PUBLISH,
+      canPublishDrafts && canTransitionDraft(status, EMentorshipDraftStatus.PUBLISHED),
     ],
     [
       EMentorshipDraftAction.CANCEL,

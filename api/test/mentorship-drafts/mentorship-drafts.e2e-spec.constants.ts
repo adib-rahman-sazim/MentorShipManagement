@@ -27,3 +27,6 @@ export const DECISION_COMMENT = "Balances the Mentors' load";
 
 export const CHANGE_SUMMARY_PATH = "change-summary";
 export const LEAVING_MENTEE_EMAIL = "leaving-mentee@drafts.e2e.test";
+
+export const PUBLISH_PATH = "publish";
+export const USERS_ROUTE = "/api/v1/users";

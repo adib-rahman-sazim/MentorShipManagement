@@ -19,6 +19,7 @@ import { EMentorshipDraftAction } from "../mentorship-drafts.enums";
 import {
   assertCanAssignDraftItems,
   assertDraftTransition,
+  buildDraftApplyPlan,
   canDecideDraft,
   canTransitionDraft,
   findDraftItemViolations,
@@ -362,5 +363,55 @@ describe("findStaleDraftItems", () => {
         changedByDraftId: "draft-2",
       },
     ]);
+  });
+});
+
+describe("buildDraftApplyPlan", () => {
+  it("ends the live mentorship of everyone moved and starts each proposed one", () => {
+    const participantsById = new Map([
+      ...PARTICIPANTS_BY_ID,
+      ["free-mentee", participant("free-mentee", EUserRole.MENTEE)],
+      ["leaving-mentee", participant("leaving-mentee", EUserRole.MENTEE)],
+    ]);
+    const liveMentorshipBySubordinate = new Map([
+      ["mentee", snapshot("m1", "mentor")],
+      ["leaving-mentee", snapshot("m2", "other-mentor")],
+      ["mentor", snapshot("m3", "sensei")],
+    ]);
+    const items: IDraftItemInput[] = [
+      assign("free-mentee", "mentor"),
+      reassign("mentee", "other-mentor"),
+      {
+        operation: EMentorshipDraftOperation.UNASSIGN,
+        subordinateId: "leaving-mentee",
+        proposedSupervisorId: null,
+      },
+      reassign("mentor", "other-sensei"),
+    ];
+
+    expect(buildDraftApplyPlan(items, liveMentorshipBySubordinate, participantsById)).toEqual({
+      endedMentorships: [
+        snapshot("m1", "mentor"),
+        snapshot("m2", "other-mentor"),
+        snapshot("m3", "sensei"),
+      ],
+      startedMentorships: [
+        {
+          supervisorId: "mentor",
+          subordinateId: "free-mentee",
+          relationshipType: EMentorshipRelationshipType.MENTOR_MENTEE,
+        },
+        {
+          supervisorId: "other-mentor",
+          subordinateId: "mentee",
+          relationshipType: EMentorshipRelationshipType.MENTOR_MENTEE,
+        },
+        {
+          supervisorId: "other-sensei",
+          subordinateId: "mentor",
+          relationshipType: EMentorshipRelationshipType.SENSEI_MENTOR,
+        },
+      ],
+    });
   });
 });

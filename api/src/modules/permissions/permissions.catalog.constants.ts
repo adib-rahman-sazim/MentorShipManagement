@@ -81,6 +81,7 @@ export const DEFAULT_PERMISSION_DEFINITIONS: IPermissionDefinition[] = [
     EPermission.APPROVE,
     EPermissionConditionType.NOT_AUTHOR,
   ),
+  toPermissionDefinition(EPermissionCode.CAN_PUBLISH_DRAFT, EResource.DRAFT, EPermission.PUBLISH),
   toPermissionDefinition(
     EPermissionCode.CAN_VIEW_DASHBOARD,
     EResource.DASHBOARD,
