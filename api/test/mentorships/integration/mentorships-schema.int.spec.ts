@@ -143,16 +143,4 @@ describe("Mentorship schema (Integration)", () => {
       dbService.clear();
     });
   });
-
-  describe("card scope", () => {
-    it("does not create mentorship_draft_items — that belongs to MMS-37", async () => {
-      const rows: Array<{ table_name: string }> = await dbService
-        .getConnection()
-        .execute(
-          "select table_name from information_schema.tables where table_schema = 'public' and table_name like 'mentorship%' order by table_name;",
-        );
-
-      expect(rows.map((row) => row.table_name)).toEqual(["mentorship_drafts", "mentorships"]);
-    });
-  });
 });

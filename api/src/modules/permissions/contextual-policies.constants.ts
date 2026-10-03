@@ -5,6 +5,7 @@ import {
   isNotAuthorSubject,
   isSelfSubject,
   isSubtreeSubject,
+  mentorMenteeConditions,
   notAuthorConditions,
   selfConditions,
   subtreeConditions,
@@ -33,6 +34,9 @@ export const CONTEXTUAL_POLICIES: Record<EPermissionConditionType, IContextualPo
   [EPermissionConditionType.NOT_AUTHOR]: {
     toConditions: notAuthorConditions,
     isSatisfiedBy: isNotAuthorSubject,
+  },
+  [EPermissionConditionType.MENTOR_MENTEE]: {
+    toConditions: mentorMenteeConditions,
   },
 };
 

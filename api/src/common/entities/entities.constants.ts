@@ -1,5 +1,6 @@
 import { Account } from "./accounts.entity";
 import { CustomBaseEntity } from "./custom-base.entity";
+import { MentorshipDraftItem } from "./mentorship-draft-items.entity";
 import { MentorshipDraft } from "./mentorship-drafts.entity";
 import { Mentorship } from "./mentorships.entity";
 import { Permission } from "./permissions.entity";
@@ -15,6 +16,7 @@ export const ENTITIES = [
   Account,
   Mentorship,
   MentorshipDraft,
+  MentorshipDraftItem,
   Permission,
   Role,
   RolePermission,

@@ -66,10 +66,11 @@ export const DEFAULT_PERMISSION_DEFINITIONS: IPermissionDefinition[] = [
     EResource.PERMISSIONS,
     EPermission.DELETE,
   ),
-  toPermissionDefinition(
+  toScopedPermissionDefinition(
     EPermissionCode.CAN_ASSIGN_MENTOR,
     EResource.MENTORSHIP,
     EPermission.ASSIGN,
+    EPermissionConditionType.MENTOR_MENTEE,
   ),
   toPermissionDefinition(EPermissionCode.CAN_CREATE_DRAFT, EResource.DRAFT, EPermission.CREATE),
   toPermissionDefinition(EPermissionCode.CAN_REVIEW_DRAFT, EResource.DRAFT, EPermission.REVIEW),

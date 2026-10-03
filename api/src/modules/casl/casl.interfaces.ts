@@ -1,3 +1,4 @@
+import type { EMentorshipRelationshipType } from "@/common/enums/mentorships.enums";
 import type { EUserRole } from "@/common/enums/roles.enums";
 
 export interface IAbilityContext {
@@ -10,4 +11,5 @@ export interface ISubjectWithFields {
   id?: string;
   userId?: string;
   createdBy?: string;
+  relationshipType?: EMentorshipRelationshipType;
 }
