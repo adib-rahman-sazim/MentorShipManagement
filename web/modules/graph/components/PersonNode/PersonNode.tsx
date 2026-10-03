@@ -24,8 +24,7 @@ const PersonNode = ({ data, selected }: NodeProps<TPersonNode>) => {
       className={cn(
         "relative flex h-14 w-40 items-center gap-2 rounded-lg bg-card px-2.5 text-card-foreground shadow-xs ring-1 ring-foreground/10 transition-shadow hover:ring-foreground/30",
         {
-          "ring-2 ring-destructive hover:ring-destructive": data.draft?.hasViolation,
-          "ring-2 ring-focus hover:ring-focus": selected,
+          "ring-2 ring-destructive hover:ring-destructive": selected || data.draft?.hasViolation,
           "opacity-60": data.state === EUserState.INACTIVE,
         },
       )}
