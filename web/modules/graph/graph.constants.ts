@@ -1,3 +1,5 @@
+import { parseAsString } from "nuqs";
+
 import { EUserRole } from "@/shared/typedefs";
 
 export const PERSON_NODE_WIDTH = 160;
@@ -24,3 +26,18 @@ export const GRAPH_TIER_ROLES: readonly EUserRole[] = [
   EUserRole.MENTOR,
   EUserRole.MENTEE,
 ];
+
+export const SUPERVISOR_ROLE: Partial<Record<EUserRole, EUserRole>> = {
+  [EUserRole.MENTOR]: EUserRole.SENSEI,
+  [EUserRole.MENTEE]: EUserRole.MENTOR,
+};
+
+export const SUBORDINATE_ROLE: Partial<Record<EUserRole, EUserRole>> = {
+  [EUserRole.SENSEI]: EUserRole.MENTOR,
+  [EUserRole.MENTOR]: EUserRole.MENTEE,
+};
+
+export const GRAPH_SELECTION_PARSERS = {
+  person: parseAsString,
+  link: parseAsString,
+};

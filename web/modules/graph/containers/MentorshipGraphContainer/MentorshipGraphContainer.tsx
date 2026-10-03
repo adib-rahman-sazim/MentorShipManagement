@@ -2,11 +2,11 @@ import { ReactNode } from "react";
 
 import { ReactFlowProvider } from "@xyflow/react";
 
-import MentorshipGraphCanvas from "@/modules/graph/components/MentorshipGraphCanvas";
 import MentorshipGraphEmptyState from "@/modules/graph/components/MentorshipGraphEmptyState";
 import MentorshipGraphLoadError from "@/modules/graph/components/MentorshipGraphLoadError";
 import MentorshipGraphSkeleton from "@/modules/graph/components/MentorshipGraphSkeleton";
 import MentorshipGraphToolbar from "@/modules/graph/components/MentorshipGraphToolbar";
+import MentorshipGraphWorkspace from "@/modules/graph/components/MentorshipGraphWorkspace";
 
 import { useMentorshipGraph } from "./MentorshipGraphContainer.hooks";
 
@@ -31,11 +31,9 @@ const MentorshipGraphContainer = () => {
     );
   } else {
     content = (
-      <div className="min-h-96 flex-1">
-        <ReactFlowProvider>
-          <MentorshipGraphCanvas layout={layout} />
-        </ReactFlowProvider>
-      </div>
+      <ReactFlowProvider>
+        <MentorshipGraphWorkspace graph={graph} layout={layout} />
+      </ReactFlowProvider>
     );
   }
 
