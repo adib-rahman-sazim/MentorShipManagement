@@ -494,6 +494,18 @@
   opacity: 0.85;
 }
 
+.react-flow__edge.draft-edge-stale .react-flow__edge-text {
+  fill: var(--destructive);
+  font-size: 0.6875rem;
+  font-weight: 500;
+}
+
+.react-flow__edge.draft-edge-stale .react-flow__edge-textbg {
+  fill: var(--background);
+  stroke: var(--destructive);
+  stroke-opacity: 0.4;
+}
+
 .react-flow__edge.selected .react-flow__edgeupdater-source {
   transform: translateY(-1rem);
 }

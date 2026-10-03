@@ -1,10 +1,12 @@
 import { memo } from "react";
 
 import { Handle, NodeProps, Position } from "@xyflow/react";
+import { TriangleAlert } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { DRAFT_OPERATION_DETAILS } from "@/modules/graph/draft.constants";
 import type { TPersonNode } from "@/modules/graph/graph.types";
+import { STALE_CHANGE_LABEL } from "@/modules/graph/review.constants";
 import { EUserState } from "@/shared/typedefs";
 import { getInitials } from "@/shared/utils/string";
 
@@ -52,6 +54,14 @@ const PersonNode = ({ data, selected }: NodeProps<TPersonNode>) => {
           )}
         >
           {operationDetails.glyph}
+        </span>
+      ) : null}
+      {data.draft?.isStale ? (
+        <span
+          title={STALE_CHANGE_LABEL}
+          className="absolute -top-2 -left-2 flex size-5 items-center justify-center rounded-full border border-destructive/40 bg-background text-destructive"
+        >
+          <TriangleAlert aria-hidden className="size-3" />
         </span>
       ) : null}
       <Handle

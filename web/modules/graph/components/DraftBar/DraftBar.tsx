@@ -7,12 +7,19 @@ import {
 import { Button } from "@/shared/components/shadui/button";
 import { SidebarTrigger } from "@/shared/components/shadui/sidebar";
 
-import { CHANGES_BUTTON_LABEL, EXIT_DRAFT_LABEL, LIVE_UNCHANGED_TEXT } from "./DraftBar.constants";
+import {
+  BACK_TO_LIVE_LABEL,
+  CHANGES_BUTTON_LABEL,
+  EXIT_DRAFT_LABEL,
+  LIVE_UNCHANGED_TEXT,
+} from "./DraftBar.constants";
 import { IDraftBarProps } from "./DraftBar.interfaces";
 
 const DraftBar = ({
   title,
   status,
+  byline,
+  isEditable,
   counts,
   changeCount,
   onOpenChanges,
@@ -24,7 +31,7 @@ const DraftBar = ({
     <h1 className="min-w-0 truncate text-sm font-medium" title={title}>
       {title.trim() || UNTITLED_DRAFT_LABEL}
     </h1>
-    <p className="hidden text-xs text-muted-foreground lg:block">{LIVE_UNCHANGED_TEXT}</p>
+    <p className="hidden text-xs text-muted-foreground lg:block">{byline ?? LIVE_UNCHANGED_TEXT}</p>
     <div className="ml-auto flex items-center gap-3">
       <span className="flex gap-2 font-mono text-xs">
         {DRAFT_OPERATION_ORDER.map((operation) => (
@@ -38,7 +45,7 @@ const DraftBar = ({
         {CHANGES_BUTTON_LABEL} {changeCount}
       </Button>
       <Button variant="ghost" size="sm" onClick={onExit}>
-        {EXIT_DRAFT_LABEL}
+        {isEditable ? EXIT_DRAFT_LABEL : BACK_TO_LIVE_LABEL}
       </Button>
     </div>
   </header>

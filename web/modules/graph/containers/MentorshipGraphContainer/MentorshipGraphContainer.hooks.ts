@@ -15,9 +15,12 @@ import {
 import type { IGraphDraft } from "@/modules/graph/draft.interfaces";
 import type { TDraftItem, TDraftSnapshot, TDraftViolations } from "@/modules/graph/draft.types";
 import { layoutGraph } from "@/modules/graph/graph.helpers";
+import { getDraftReview } from "@/modules/graph/review.helpers";
+import type { TDraftReview } from "@/modules/graph/review.types";
 import { useCan } from "@/shared/providers/AbilityProvider/AbilityProvider.hooks";
 import {
   useCreateMentorshipDraftMutation,
+  useGetMentorshipDraftChangeSummaryQuery,
   useGetMentorshipDraftQuery,
   useSubmitMentorshipDraftMutation,
   useUpdateMentorshipDraftMutation,
@@ -50,6 +53,7 @@ export const useMentorshipGraph = () => {
 export const useGraphDraft = (): IGraphDraft => {
   const [draftId, setDraftId] = useQueryState(DRAFT_QUERY_KEY, DRAFT_QUERY_PARSER);
   const { isAllowed: canCreateDraft } = useCan(EPermission.CREATE, EResource.DRAFT);
+  const { isAllowed: canReadDrafts } = useCan(EPermission.READ, EResource.DRAFT);
   const isNew = draftId === NEW_DRAFT_ID;
   const savedId = draftId && !isNew ? draftId : null;
   const { currentData: draft, error: loadError } = useGetMentorshipDraftQuery(
@@ -160,8 +164,10 @@ export const useGraphDraft = (): IGraphDraft => {
   return {
     isActive: savedId !== null || (isNew && canCreateDraft),
     canCreateDraft,
+    canReadDrafts,
     isEditable,
     status: draft?.status ?? EMentorshipDraftStatus.DRAFT,
+    detail: savedId ? (draft ?? null) : null,
     title,
     items,
     violations,
@@ -175,6 +181,10 @@ export const useGraphDraft = (): IGraphDraft => {
       resetDraft();
       setDraftId(NEW_DRAFT_ID);
     },
+    openDraft: (id: string) => {
+      resetDraft();
+      setDraftId(id);
+    },
     exitDraft: () => {
       resetDraft();
       setDraftId(null);
@@ -184,4 +194,16 @@ export const useGraphDraft = (): IGraphDraft => {
     openChangesSheet: () => setIsChangesSheetOpen(true),
     closeChangesSheet: () => setIsChangesSheetOpen(false),
   };
+};
+
+export const useDraftReview = ({ detail, isEditable }: IGraphDraft): TDraftReview | null => {
+  const reviewId = detail && !isEditable ? detail.id : null;
+  const { currentData: summary } = useGetMentorshipDraftChangeSummaryQuery(reviewId ?? skipToken, {
+    refetchOnMountOrArgChange: true,
+  });
+
+  return useMemo(
+    () => (detail && reviewId ? getDraftReview(detail, summary) : null),
+    [detail, reviewId, summary],
+  );
 };

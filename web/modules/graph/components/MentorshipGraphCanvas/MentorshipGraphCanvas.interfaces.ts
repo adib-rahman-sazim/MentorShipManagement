@@ -1,3 +1,5 @@
+import { ReactNode } from "react";
+
 import type { OnSelectionChangeFunc } from "@xyflow/react";
 
 import type { IDraftCanvasHandlers } from "@/modules/graph/draft.interfaces";
@@ -11,4 +13,5 @@ export interface IMentorshipGraphCanvasProps {
   selectedLinkId: string | null;
   onSelectionChange: OnSelectionChangeFunc;
   draftEditing: IDraftCanvasHandlers | null;
+  children?: ReactNode;
 }

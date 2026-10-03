@@ -26,6 +26,7 @@ const MentorshipGraphCanvas = ({
   selectedLinkId,
   onSelectionChange,
   draftEditing,
+  children,
 }: IMentorshipGraphCanvasProps) => {
   const isMobile = useIsMobile();
   const isEditing = draftEditing !== null;
@@ -90,6 +91,7 @@ const MentorshipGraphCanvas = ({
           movingSubordinateId={draftEditing.movingSubordinateId}
         />
       ) : null}
+      {children}
     </ReactFlow>
   );
 };
