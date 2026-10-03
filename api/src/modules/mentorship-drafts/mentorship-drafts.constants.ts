@@ -7,6 +7,8 @@ export const MENTORSHIP_DRAFT_TITLE_MAX_LENGTH = 255;
 
 export const MENTORSHIP_DRAFT_MAX_ITEMS = 100;
 
+export const MENTORSHIP_DRAFT_DECISION_COMMENT_MAX_LENGTH = 2000;
+
 export const NOT_SOFT_DELETED_DRAFT = { deletedAt: null } satisfies FilterQuery<MentorshipDraft>;
 
 export const SUBMITTED_DRAFT = {
@@ -44,6 +46,8 @@ export const DRAFT_ACTOR_POPULATE = [
 
 export const DRAFT_ITEM_PEOPLE_POPULATE = ["subordinate.role", "proposedSupervisor.role"] as const;
 
+export const DRAFT_ITEM_EXPECTED_MENTORSHIP_POPULATE = ["expectedCurrentMentorship"] as const;
+
 export const QUERY_PARAM_TRUE = "true";
 
 export const MENTORSHIP_DRAFT_ERROR_MESSAGES = {
@@ -57,4 +61,6 @@ export const MENTORSHIP_DRAFT_ERROR_MESSAGES = {
   PROPOSED_SUPERVISOR_MISMATCH:
     "proposedSupervisorId must be a UUID for ASSIGN and REASSIGN, and empty for UNASSIGN",
   DUPLICATE_SUBORDINATE: "Each person can appear in at most one change per draft",
+  OWN_DRAFT_DECISION: "You can't approve or reject a draft you wrote",
+  STALE_ITEMS: "Some changes in this draft no longer match the live hierarchy",
 } as const;

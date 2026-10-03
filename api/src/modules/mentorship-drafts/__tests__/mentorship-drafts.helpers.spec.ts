@@ -19,12 +19,19 @@ import { EMentorshipDraftAction } from "../mentorship-drafts.enums";
 import {
   assertCanAssignDraftItems,
   assertDraftTransition,
+  canDecideDraft,
   canTransitionDraft,
   findDraftItemViolations,
   findOperationStateViolations,
+  findStaleDraftItems,
   resolveAllowedDraftActions,
+  toDecisionComment,
 } from "../mentorship-drafts.helpers";
-import type { IDraftItemInput } from "../mentorship-drafts.interfaces";
+import type {
+  IDraftItemExpectation,
+  IDraftItemInput,
+  IMentorshipSnapshot,
+} from "../mentorship-drafts.interfaces";
 
 const participant = (id: string, role: EUserRole): IMentorshipParticipant => ({
   id,
@@ -198,6 +205,12 @@ const WRITE_ONLY_DRAFT_ABILITY = buildAbility(({ can }) => {
   can(EPermission.READ, EResource.DRAFT);
 });
 
+const notAuthorDraftAbility = (actorId: string): TAppAbility =>
+  buildAbility(({ can }) => {
+    can(EPermission.REVIEW, EResource.DRAFT);
+    can(EPermission.APPROVE, EResource.DRAFT, { createdBy: { $ne: actorId } });
+  });
+
 describe("canTransitionDraft", () => {
   it.each(STATUS_PAIRS)("$from → $to is allowed: $isAllowed", ({ from, to, isAllowed }) => {
     expect(canTransitionDraft(from, to)).toBe(isAllowed);
@@ -259,5 +272,95 @@ describe("resolveAllowedDraftActions", () => {
     expect(
       resolveFor("other-sensei", WRITE_ONLY_DRAFT_ABILITY, EMentorshipDraftStatus.IN_REVIEW),
     ).toEqual([]);
+  });
+});
+
+describe("canDecideDraft", () => {
+  it("lets the not_author condition refuse approval on its own", () => {
+    expect(
+      canDecideDraft({
+        permission: EPermission.APPROVE,
+        authorId: "sensei",
+        actorId: "other-sensei",
+        ability: notAuthorDraftAbility("sensei"),
+      }),
+    ).toBe(false);
+  });
+});
+
+describe("toDecisionComment", () => {
+  it.each([
+    ["   ", null],
+    ["  Looks right  ", "Looks right"],
+  ])("turns %j into %j", (comment, expected) => {
+    expect(toDecisionComment(comment)).toBe(expected);
+  });
+});
+
+const snapshot = (
+  id: string,
+  supervisorId: string,
+  draftIds: Partial<Pick<IMentorshipSnapshot, "startedByDraftId" | "endedByDraftId">> = {},
+): IMentorshipSnapshot => ({
+  id,
+  supervisorId,
+  startedByDraftId: draftIds.startedByDraftId ?? null,
+  endedByDraftId: draftIds.endedByDraftId ?? null,
+});
+
+const expectation = (expectedMentorship: IMentorshipSnapshot | null): IDraftItemExpectation => ({
+  subordinateId: "mentee",
+  expectedMentorship,
+});
+
+const liveFor = (mentorship?: IMentorshipSnapshot): Map<string, IMentorshipSnapshot> =>
+  new Map(mentorship ? [["mentee", mentorship]] : []);
+
+describe("findStaleDraftItems", () => {
+  it.each([
+    ["the expected mentorship is still live", snapshot("m1", "mentor"), snapshot("m1", "mentor")],
+    ["an assign's subordinate is still unassigned", null, undefined],
+  ])("finds nothing when %s", (_, expected, live) => {
+    expect(findStaleDraftItems([expectation(expected)], liveFor(live))).toEqual([]);
+  });
+
+  it("names the supervisors and the draft that moved the subordinate", () => {
+    const expected = snapshot("m1", "mentor", { endedByDraftId: "draft-2" });
+    const live = snapshot("m2", "other-mentor", { startedByDraftId: "draft-2" });
+
+    expect(findStaleDraftItems([expectation(expected)], liveFor(live))).toEqual([
+      {
+        subordinateId: "mentee",
+        expectedSupervisorId: "mentor",
+        currentSupervisorId: "other-mentor",
+        changedByDraftId: "draft-2",
+      },
+    ]);
+  });
+
+  it("names the draft that ended the mentorship when nobody replaced it", () => {
+    const expected = snapshot("m1", "mentor", { endedByDraftId: "draft-2" });
+
+    expect(findStaleDraftItems([expectation(expected)], liveFor())).toEqual([
+      {
+        subordinateId: "mentee",
+        expectedSupervisorId: "mentor",
+        currentSupervisorId: null,
+        changedByDraftId: "draft-2",
+      },
+    ]);
+  });
+
+  it("flags an assign whose subordinate has been given a supervisor since", () => {
+    const live = snapshot("m2", "other-mentor", { startedByDraftId: "draft-2" });
+
+    expect(findStaleDraftItems([expectation(null)], liveFor(live))).toEqual([
+      {
+        subordinateId: "mentee",
+        expectedSupervisorId: null,
+        currentSupervisorId: "other-mentor",
+        changedByDraftId: "draft-2",
+      },
+    ]);
   });
 });

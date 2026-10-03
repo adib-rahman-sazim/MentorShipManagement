@@ -6,14 +6,19 @@ import { buildSupervisorBySubordinate } from "@/modules/mentorships/mentorships.
 import { MentorshipsRepository } from "@/modules/mentorships/mentorships.repository";
 import { UsersRepository } from "@/modules/users/users.repository";
 
+import { MentorshipDraftItemsRepository } from "./mentorship-draft-items.repository";
 import {
   assertCanAssignDraftItems,
   assertNoDraftItemViolations,
   collectDraftItemUserIds,
   findDraftItemViolations,
+  findStaleDraftItems,
+  toDraftItemExpectation,
   toMentorshipParticipant,
+  toMentorshipSnapshot,
 } from "./mentorship-drafts.helpers";
 import type {
+  IStaleDraftItem,
   IValidateDraftItemsContext,
   IValidatedDraftItem,
 } from "./mentorship-drafts.interfaces";
@@ -23,6 +28,7 @@ export class MentorshipDraftItemsService {
   constructor(
     private readonly usersRepository: UsersRepository,
     private readonly mentorshipsRepository: MentorshipsRepository,
+    private readonly mentorshipDraftItemsRepository: MentorshipDraftItemsRepository,
   ) {}
 
   async validateDraftItems(
@@ -57,5 +63,31 @@ export class MentorshipDraftItemsService {
       ...item,
       expectedCurrentMentorshipId: activeMentorshipIdBySubordinate.get(item.subordinateId) ?? null,
     }));
+  }
+
+  async findStaleItems(draftId: string, em?: EntityManager): Promise<IStaleDraftItem[]> {
+    const items = await this.mentorshipDraftItemsRepository.findByDraftIdWithExpectedMentorship(
+      draftId,
+      em,
+    );
+
+    if (items.length === 0) {
+      return [];
+    }
+
+    const liveMentorships = await this.mentorshipsRepository.findActiveBySubordinateIds(
+      items.map((item) => item.subordinate.id),
+      em,
+    );
+
+    return findStaleDraftItems(
+      items.map(toDraftItemExpectation),
+      new Map(
+        liveMentorships.map((mentorship) => [
+          mentorship.subordinate.id,
+          toMentorshipSnapshot(mentorship),
+        ]),
+      ),
+    );
   }
 }

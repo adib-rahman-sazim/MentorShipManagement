@@ -2,6 +2,8 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 
 import type { EntityManager } from "@mikro-orm/postgresql";
 
+import type { MentorshipDraft } from "@/common/entities/mentorship-drafts.entity";
+
 import { MentorshipDraftItemsRepository } from "./mentorship-draft-items.repository";
 import { MENTORSHIP_DRAFT_ERROR_MESSAGES } from "./mentorship-drafts.constants";
 import { buildVisibleDraftsFilter, resolveAllowedDraftActions } from "./mentorship-drafts.helpers";
@@ -17,6 +19,23 @@ export class MentorshipDraftsService {
     private readonly mentorshipDraftsRepository: MentorshipDraftsRepository,
     private readonly mentorshipDraftItemsRepository: MentorshipDraftItemsRepository,
   ) {}
+
+  async findVisibleForUpdate(
+    { draftId, actorId }: IMentorshipDraftByIdContext,
+    em: EntityManager,
+  ): Promise<MentorshipDraft> {
+    const draft = await this.mentorshipDraftsRepository.findVisibleByIdForUpdate(
+      draftId,
+      buildVisibleDraftsFilter(actorId),
+      em,
+    );
+
+    if (!draft) {
+      throw new NotFoundException(MENTORSHIP_DRAFT_ERROR_MESSAGES.DRAFT_NOT_FOUND);
+    }
+
+    return draft;
+  }
 
   async findVisibleDetail(
     { draftId, actorId, ability }: IMentorshipDraftByIdContext,

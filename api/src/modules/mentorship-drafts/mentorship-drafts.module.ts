@@ -7,9 +7,11 @@ import { MentorshipDraft } from "@/common/entities/mentorship-drafts.entity";
 import { Mentorship } from "@/common/entities/mentorships.entity";
 import { User } from "@/common/entities/users.entity";
 
+import { ApproveMentorshipDraftInteractor } from "./interactors/approve-mentorship-draft.interactor";
 import { CreateMentorshipDraftInteractor } from "./interactors/create-mentorship-draft.interactor";
 import { GetMentorshipDraftInteractor } from "./interactors/get-mentorship-draft.interactor";
 import { ListMentorshipDraftsInteractor } from "./interactors/list-mentorship-drafts.interactor";
+import { RejectMentorshipDraftInteractor } from "./interactors/reject-mentorship-draft.interactor";
 import { SubmitMentorshipDraftInteractor } from "./interactors/submit-mentorship-draft.interactor";
 import { UpdateMentorshipDraftInteractor } from "./interactors/update-mentorship-draft.interactor";
 import { MentorshipDraftItemsService } from "./mentorship-draft-items.service";
@@ -28,6 +30,8 @@ import { MentorshipDraftsService } from "./mentorship-drafts.service";
     SubmitMentorshipDraftInteractor,
     ListMentorshipDraftsInteractor,
     GetMentorshipDraftInteractor,
+    ApproveMentorshipDraftInteractor,
+    RejectMentorshipDraftInteractor,
     MentorshipDraftsSerializer,
   ],
 })

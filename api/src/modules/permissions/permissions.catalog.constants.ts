@@ -75,7 +75,12 @@ export const DEFAULT_PERMISSION_DEFINITIONS: IPermissionDefinition[] = [
   toPermissionDefinition(EPermissionCode.CAN_CREATE_DRAFT, EResource.DRAFT, EPermission.CREATE),
   toPermissionDefinition(EPermissionCode.CAN_READ_DRAFT, EResource.DRAFT, EPermission.READ),
   toPermissionDefinition(EPermissionCode.CAN_REVIEW_DRAFT, EResource.DRAFT, EPermission.REVIEW),
-  toPermissionDefinition(EPermissionCode.CAN_APPROVE_DRAFT, EResource.DRAFT, EPermission.APPROVE),
+  toScopedPermissionDefinition(
+    EPermissionCode.CAN_APPROVE_DRAFT,
+    EResource.DRAFT,
+    EPermission.APPROVE,
+    EPermissionConditionType.NOT_AUTHOR,
+  ),
   toPermissionDefinition(
     EPermissionCode.CAN_VIEW_DASHBOARD,
     EResource.DASHBOARD,

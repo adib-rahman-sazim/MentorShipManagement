@@ -9,9 +9,11 @@ import type {
 } from "@/common/enums/mentorships.enums";
 import type { TAppAbility } from "@/modules/casl/casl.types";
 import type { IMentorshipParticipant } from "@/modules/mentorships/mentorships.interfaces";
+import type { EPermission } from "@/modules/permissions/permissions.enums";
 
 import type {
   CreateMentorshipDraftDto,
+  DecideMentorshipDraftDto,
   ListMentorshipDraftsQueryDto,
   UpdateMentorshipDraftDto,
 } from "./mentorship-drafts.dtos";
@@ -71,6 +73,32 @@ export interface IDraftActionContext {
   ability: TAppAbility;
 }
 
+export interface IDraftDecisionCheck {
+  permission: EPermission;
+  authorId: string;
+  actorId: string;
+  ability: TAppAbility;
+}
+
+export interface IMentorshipSnapshot {
+  id: string;
+  supervisorId: string;
+  startedByDraftId: string | null;
+  endedByDraftId: string | null;
+}
+
+export interface IDraftItemExpectation {
+  subordinateId: string;
+  expectedMentorship: IMentorshipSnapshot | null;
+}
+
+export interface IStaleDraftItem {
+  subordinateId: string;
+  expectedSupervisorId: string | null;
+  currentSupervisorId: string | null;
+  changedByDraftId: string | null;
+}
+
 export interface IFindVisibleDraftsOptions {
   visibility: ObjectQuery<MentorshipDraft>;
   page: number;
@@ -96,6 +124,10 @@ export interface IMentorshipDraftByIdContext {
   draftId: string;
   actorId: string;
   ability: TAppAbility;
+}
+
+export interface IDecideMentorshipDraftContext extends IMentorshipDraftByIdContext {
+  dto: DecideMentorshipDraftDto;
 }
 
 export interface IListMentorshipDraftsContext {

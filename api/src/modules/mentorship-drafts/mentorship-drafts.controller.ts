@@ -16,6 +16,7 @@ import {
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
+  ApiConflictResponse,
   ApiCreatedResponse,
   ApiOkResponse,
 } from "@nestjs/swagger";
@@ -27,13 +28,16 @@ import { ResponseTransformInterceptor } from "@/common/interceptors/response-tra
 import { CaslPermissionsGuard } from "@/modules/casl/casl.guard";
 import { EPermissionCode } from "@/modules/permissions/permissions.enums";
 
+import { ApproveMentorshipDraftInteractor } from "./interactors/approve-mentorship-draft.interactor";
 import { CreateMentorshipDraftInteractor } from "./interactors/create-mentorship-draft.interactor";
 import { GetMentorshipDraftInteractor } from "./interactors/get-mentorship-draft.interactor";
 import { ListMentorshipDraftsInteractor } from "./interactors/list-mentorship-drafts.interactor";
+import { RejectMentorshipDraftInteractor } from "./interactors/reject-mentorship-draft.interactor";
 import { SubmitMentorshipDraftInteractor } from "./interactors/submit-mentorship-draft.interactor";
 import { UpdateMentorshipDraftInteractor } from "./interactors/update-mentorship-draft.interactor";
 import {
   CreateMentorshipDraftDto,
+  DecideMentorshipDraftDto,
   ListMentorshipDraftsQueryDto,
   UpdateMentorshipDraftDto,
 } from "./mentorship-drafts.dtos";
@@ -43,6 +47,7 @@ import {
   MentorshipDraftDetailResponse,
   MentorshipDraftInvalidItemsResponse,
   MentorshipDraftResponse,
+  MentorshipDraftStaleItemsResponse,
   PaginatedMentorshipDraftsApiResponse,
   PaginatedMentorshipDraftsResponse,
 } from "./mentorship-drafts.responses";
@@ -58,6 +63,8 @@ export class MentorshipDraftsController {
     private readonly submitMentorshipDraftInteractor: SubmitMentorshipDraftInteractor,
     private readonly listMentorshipDraftsInteractor: ListMentorshipDraftsInteractor,
     private readonly getMentorshipDraftInteractor: GetMentorshipDraftInteractor,
+    private readonly approveMentorshipDraftInteractor: ApproveMentorshipDraftInteractor,
+    private readonly rejectMentorshipDraftInteractor: RejectMentorshipDraftInteractor,
   ) {}
 
   @Get()
@@ -133,6 +140,43 @@ export class MentorshipDraftsController {
   ): Promise<MentorshipDraftDetailResponse> {
     return this.submitMentorshipDraftInteractor.execute({
       draftId,
+      actorId: req.user!.id,
+      ability: req.ability!,
+    });
+  }
+
+  @Post(":id/approve")
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(CaslPermissionsGuard)
+  @Permissions([EPermissionCode.CAN_APPROVE_DRAFT])
+  @ApiOkResponse({ type: MentorshipDraftDetailApiResponse })
+  @ApiConflictResponse({ type: MentorshipDraftStaleItemsResponse })
+  async approveDraft(
+    @Req() req: Request,
+    @Param("id", ParseUUIDPipe) draftId: string,
+    @Body() dto: DecideMentorshipDraftDto,
+  ): Promise<MentorshipDraftDetailResponse> {
+    return this.approveMentorshipDraftInteractor.execute({
+      draftId,
+      dto,
+      actorId: req.user!.id,
+      ability: req.ability!,
+    });
+  }
+
+  @Post(":id/reject")
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(CaslPermissionsGuard)
+  @Permissions([EPermissionCode.CAN_REVIEW_DRAFT])
+  @ApiOkResponse({ type: MentorshipDraftDetailApiResponse })
+  async rejectDraft(
+    @Req() req: Request,
+    @Param("id", ParseUUIDPipe) draftId: string,
+    @Body() dto: DecideMentorshipDraftDto,
+  ): Promise<MentorshipDraftDetailResponse> {
+    return this.rejectMentorshipDraftInteractor.execute({
+      draftId,
+      dto,
       actorId: req.user!.id,
       ability: req.ability!,
     });

@@ -1,4 +1,4 @@
-import { LockMode, type RequiredEntityData } from "@mikro-orm/core";
+import { type EntityData, LockMode, type RequiredEntityData } from "@mikro-orm/core";
 import type { EntityManager, ObjectQuery } from "@mikro-orm/postgresql";
 
 import { MentorshipDraft } from "@/common/entities/mentorship-drafts.entity";
@@ -21,6 +21,25 @@ export class MentorshipDraftsRepository extends CustomSQLBaseRepository<Mentorsh
       { id, ...NOT_SOFT_DELETED_DRAFT },
       { lockMode: LockMode.PESSIMISTIC_WRITE },
     );
+  }
+
+  findVisibleByIdForUpdate(
+    id: string,
+    visibility: ObjectQuery<MentorshipDraft>,
+    em?: EntityManager,
+  ): Promise<MentorshipDraft | null> {
+    return this.getScopedRepository(em).findOne(
+      { id, ...NOT_SOFT_DELETED_DRAFT, ...visibility },
+      { lockMode: LockMode.PESSIMISTIC_WRITE },
+    );
+  }
+
+  assignFields(
+    draft: MentorshipDraft,
+    data: EntityData<MentorshipDraft>,
+    em?: EntityManager,
+  ): MentorshipDraft {
+    return this.getScopedEntityManager(em).assign(draft, data);
   }
 
   findVisibleById(

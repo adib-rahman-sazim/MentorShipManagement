@@ -40,6 +40,8 @@ const SUBTREE_SCOPED_CODES = ["can_delete_user"];
 
 const HIERARCHY_SCOPED_CODES = ["can_read_user"];
 
+const NOT_AUTHOR_SCOPED_CODES = ["can_approve_draft"];
+
 const USER_MANAGEMENT_CODES = [
   "can_create_user",
   "can_update_user",
@@ -125,6 +127,14 @@ describe("permissions catalog", () => {
     ).map(({ code }) => code);
 
     expect(sorted(scoped)).toEqual(sorted(HIERARCHY_SCOPED_CODES));
+  });
+
+  it("keeps approving a draft away from its author", () => {
+    const scoped = DEFAULT_PERMISSION_DEFINITIONS.filter(
+      ({ conditionType }) => conditionType === EPermissionConditionType.NOT_AUTHOR,
+    ).map(({ code }) => code);
+
+    expect(sorted(scoped)).toEqual(sorted(NOT_AUTHOR_SCOPED_CODES));
   });
 
   it("pairs each code with a distinct resource and action", () => {
