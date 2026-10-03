@@ -1,10 +1,14 @@
 import {
   Body,
   Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
   Param,
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
   UseInterceptors,
@@ -24,12 +28,23 @@ import { CaslPermissionsGuard } from "@/modules/casl/casl.guard";
 import { EPermissionCode } from "@/modules/permissions/permissions.enums";
 
 import { CreateMentorshipDraftInteractor } from "./interactors/create-mentorship-draft.interactor";
+import { GetMentorshipDraftInteractor } from "./interactors/get-mentorship-draft.interactor";
+import { ListMentorshipDraftsInteractor } from "./interactors/list-mentorship-drafts.interactor";
+import { SubmitMentorshipDraftInteractor } from "./interactors/submit-mentorship-draft.interactor";
 import { UpdateMentorshipDraftInteractor } from "./interactors/update-mentorship-draft.interactor";
-import { CreateMentorshipDraftDto, UpdateMentorshipDraftDto } from "./mentorship-drafts.dtos";
+import {
+  CreateMentorshipDraftDto,
+  ListMentorshipDraftsQueryDto,
+  UpdateMentorshipDraftDto,
+} from "./mentorship-drafts.dtos";
 import {
   MentorshipDraftApiResponse,
+  MentorshipDraftDetailApiResponse,
+  MentorshipDraftDetailResponse,
   MentorshipDraftInvalidItemsResponse,
   MentorshipDraftResponse,
+  PaginatedMentorshipDraftsApiResponse,
+  PaginatedMentorshipDraftsResponse,
 } from "./mentorship-drafts.responses";
 
 @Controller("mentorship-drafts")
@@ -40,7 +55,40 @@ export class MentorshipDraftsController {
   constructor(
     private readonly createMentorshipDraftInteractor: CreateMentorshipDraftInteractor,
     private readonly updateMentorshipDraftInteractor: UpdateMentorshipDraftInteractor,
+    private readonly submitMentorshipDraftInteractor: SubmitMentorshipDraftInteractor,
+    private readonly listMentorshipDraftsInteractor: ListMentorshipDraftsInteractor,
+    private readonly getMentorshipDraftInteractor: GetMentorshipDraftInteractor,
   ) {}
+
+  @Get()
+  @UseGuards(CaslPermissionsGuard)
+  @Permissions([EPermissionCode.CAN_READ_DRAFT])
+  @ApiOkResponse({ type: PaginatedMentorshipDraftsApiResponse })
+  async listDrafts(
+    @Req() req: Request,
+    @Query() query: ListMentorshipDraftsQueryDto,
+  ): Promise<PaginatedMentorshipDraftsResponse> {
+    return this.listMentorshipDraftsInteractor.execute({
+      query,
+      actorId: req.user!.id,
+      ability: req.ability!,
+    });
+  }
+
+  @Get(":id")
+  @UseGuards(CaslPermissionsGuard)
+  @Permissions([EPermissionCode.CAN_READ_DRAFT])
+  @ApiOkResponse({ type: MentorshipDraftDetailApiResponse })
+  async getDraft(
+    @Req() req: Request,
+    @Param("id", ParseUUIDPipe) draftId: string,
+  ): Promise<MentorshipDraftDetailResponse> {
+    return this.getMentorshipDraftInteractor.execute({
+      draftId,
+      actorId: req.user!.id,
+      ability: req.ability!,
+    });
+  }
 
   @Post()
   @UseGuards(CaslPermissionsGuard)
@@ -69,6 +117,22 @@ export class MentorshipDraftsController {
     return this.updateMentorshipDraftInteractor.execute({
       draftId,
       dto,
+      actorId: req.user!.id,
+      ability: req.ability!,
+    });
+  }
+
+  @Post(":id/submit")
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(CaslPermissionsGuard)
+  @Permissions([EPermissionCode.CAN_CREATE_DRAFT])
+  @ApiOkResponse({ type: MentorshipDraftDetailApiResponse })
+  async submitDraft(
+    @Req() req: Request,
+    @Param("id", ParseUUIDPipe) draftId: string,
+  ): Promise<MentorshipDraftDetailResponse> {
+    return this.submitMentorshipDraftInteractor.execute({
+      draftId,
       actorId: req.user!.id,
       ability: req.ability!,
     });

@@ -1,13 +1,21 @@
+import type { ObjectQuery } from "@mikro-orm/core";
+
 import type { MentorshipDraftItem } from "@/common/entities/mentorship-draft-items.entity";
 import type { MentorshipDraft } from "@/common/entities/mentorship-drafts.entity";
 import type {
   EMentorshipDraftOperation,
+  EMentorshipDraftStatus,
   EMentorshipViolation,
 } from "@/common/enums/mentorships.enums";
 import type { TAppAbility } from "@/modules/casl/casl.types";
 import type { IMentorshipParticipant } from "@/modules/mentorships/mentorships.interfaces";
 
-import type { CreateMentorshipDraftDto, UpdateMentorshipDraftDto } from "./mentorship-drafts.dtos";
+import type {
+  CreateMentorshipDraftDto,
+  ListMentorshipDraftsQueryDto,
+  UpdateMentorshipDraftDto,
+} from "./mentorship-drafts.dtos";
+import type { EMentorshipDraftAction } from "./mentorship-drafts.enums";
 
 export interface IDraftItemInput {
   operation: EMentorshipDraftOperation;
@@ -40,6 +48,37 @@ export interface IMentorshipDraftView {
   items: MentorshipDraftItem[];
 }
 
+export interface IMentorshipDraftDetailView extends IMentorshipDraftView {
+  allowedActions: EMentorshipDraftAction[];
+}
+
+export interface IMentorshipDraftSummaryView {
+  draft: MentorshipDraft;
+  itemCount: number;
+  allowedActions: EMentorshipDraftAction[];
+}
+
+export interface IDraftItemCountRow {
+  draftId: string;
+  itemCount: number;
+}
+
+export interface IDraftActionContext {
+  status: EMentorshipDraftStatus;
+  authorId: string;
+  itemCount: number;
+  actorId: string;
+  ability: TAppAbility;
+}
+
+export interface IFindVisibleDraftsOptions {
+  visibility: ObjectQuery<MentorshipDraft>;
+  page: number;
+  limit: number;
+  status?: EMentorshipDraftStatus;
+  createdById?: string;
+}
+
 export interface ICreateMentorshipDraftContext {
   dto: CreateMentorshipDraftDto;
   actorId: string;
@@ -49,6 +88,18 @@ export interface ICreateMentorshipDraftContext {
 export interface IUpdateMentorshipDraftContext {
   draftId: string;
   dto: UpdateMentorshipDraftDto;
+  actorId: string;
+  ability: TAppAbility;
+}
+
+export interface IMentorshipDraftByIdContext {
+  draftId: string;
+  actorId: string;
+  ability: TAppAbility;
+}
+
+export interface IListMentorshipDraftsContext {
+  query: ListMentorshipDraftsQueryDto;
   actorId: string;
   ability: TAppAbility;
 }

@@ -19,6 +19,7 @@ import {
   EMentorshipViolation,
 } from "@/common/enums/mentorships.enums";
 import { EUserRole } from "@/common/enums/roles.enums";
+import { EMentorshipDraftAction } from "@/modules/mentorship-drafts/mentorship-drafts.enums";
 import {
   EPermission,
   EPermissionCode,
@@ -42,9 +43,12 @@ import {
   MENTORSHIP_DRAFTS_ROUTE,
   MY_PERMISSIONS_ROUTE,
   NEW_DRAFT_TITLE,
+  OTHER_DRAFT_TITLE,
   OTHER_MENTOR_EMAIL,
   OTHER_SENSEI_EMAIL,
   SENSEI_EMAIL,
+  SUBMIT_PATH,
+  SUBMITTED_DRAFT_TITLE,
   SUPERADMIN_EMAIL,
 } from "./mentorship-drafts.e2e-spec.constants";
 
@@ -140,6 +144,52 @@ describe("Mentorship drafts (E2E)", () => {
       .send(body)
       .expect(expectedStatus);
   };
+
+  const submitDraftAs = async (email: string, draftId: string, expectedStatus: HttpStatus) => {
+    const token = await getBearerToken(httpServer, email, E2E_PASSWORD);
+
+    return request(httpServer)
+      .post(`${MENTORSHIP_DRAFTS_ROUTE}/${draftId}/${SUBMIT_PATH}`)
+      .set("Authorization", `Bearer ${token}`)
+      .expect(expectedStatus);
+  };
+
+  const getDraftAs = async (email: string, draftId: string, expectedStatus: HttpStatus) => {
+    const token = await getBearerToken(httpServer, email, E2E_PASSWORD);
+
+    return request(httpServer)
+      .get(`${MENTORSHIP_DRAFTS_ROUTE}/${draftId}`)
+      .set("Authorization", `Bearer ${token}`)
+      .expect(expectedStatus);
+  };
+
+  const listDraftsAs = async (email: string, query: object, expectedStatus: HttpStatus) => {
+    const token = await getBearerToken(httpServer, email, E2E_PASSWORD);
+
+    return request(httpServer)
+      .get(MENTORSHIP_DRAFTS_ROUTE)
+      .query(query)
+      .set("Authorization", `Bearer ${token}`)
+      .expect(expectedStatus);
+  };
+
+  const arrangeDraft = async (email: string, title: string, items: object[]): Promise<string> => {
+    const response = await createDraftAs(email, { title, items }, HttpStatus.CREATED);
+
+    return response.body.data.id;
+  };
+
+  const revokePermission = async (user: User, code: EPermissionCode): Promise<void> => {
+    const permission = await dbService.findOneOrFail(Permission, { code });
+    dbService.create(UserPermissionOverride, {
+      user,
+      permission,
+      effect: EPermissionOverrideEffect.REVOKE,
+    });
+    await dbService.flush();
+  };
+
+  const person = (user: User, role: EUserRole) => ({ id: user.id, name: user.name, role });
 
   const countItems = (draftId: string): Promise<number> =>
     dbService.fork().count(MentorshipDraftItem, { draft: draftId });
@@ -351,6 +401,217 @@ describe("Mentorship drafts (E2E)", () => {
         );
 
       await updateDraftAs(SENSEI_EMAIL, draftId, { title: NEW_DRAFT_TITLE }, HttpStatus.CONFLICT);
+    });
+  });
+
+  describe("POST /mentorship-drafts/:id/submit", () => {
+    let draftId: string;
+
+    beforeEach(async () => {
+      draftId = await arrangeDraft(SENSEI_EMAIL, DRAFT_TITLE, [assign(freeMentee, mentor)]);
+    });
+
+    it("returns OK(200) with the draft IN_REVIEW, its submit time and the author's actions", async () => {
+      const response = await submitDraftAs(SENSEI_EMAIL, draftId, HttpStatus.OK);
+
+      expect(response.body.data).toEqual(
+        expect.objectContaining({
+          id: draftId,
+          status: EMentorshipDraftStatus.IN_REVIEW,
+          submittedAt: expect.any(String),
+          allowedActions: [EMentorshipDraftAction.CANCEL],
+        }),
+      );
+    });
+
+    it("fails with FORBIDDEN(403) for a Sensei who is not the author", async () => {
+      await submitDraftAs(OTHER_SENSEI_EMAIL, draftId, HttpStatus.FORBIDDEN);
+    });
+
+    it("fails with CONFLICT(409) when the draft is already submitted", async () => {
+      await submitDraftAs(SENSEI_EMAIL, draftId, HttpStatus.OK);
+
+      await submitDraftAs(SENSEI_EMAIL, draftId, HttpStatus.CONFLICT);
+    });
+
+    it("fails with BAD_REQUEST(400) for a draft with no changes", async () => {
+      const emptyDraftId = await arrangeDraft(SENSEI_EMAIL, OTHER_DRAFT_TITLE, []);
+
+      await submitDraftAs(SENSEI_EMAIL, emptyDraftId, HttpStatus.BAD_REQUEST);
+    });
+
+    it("fails with BAD_REQUEST(400) when a change is no longer valid, leaving the draft in DRAFT", async () => {
+      await arrangeMentorship(otherMentor, freeMentee, EMentorshipRelationshipType.MENTOR_MENTEE);
+
+      const response = await submitDraftAs(SENSEI_EMAIL, draftId, HttpStatus.BAD_REQUEST);
+
+      expect(response.body.errorCode).toBe(INVALID_ITEMS_ERROR_CODE);
+      expect(response.body.errors).toEqual([
+        { subordinateId: freeMentee.id, violations: [EMentorshipViolation.ALREADY_ASSIGNED] },
+      ]);
+      expect((await dbService.fork().findOneOrFail(MentorshipDraft, { id: draftId })).status).toBe(
+        EMentorshipDraftStatus.DRAFT,
+      );
+    });
+  });
+
+  describe("GET /mentorship-drafts/:id", () => {
+    let draftId: string;
+
+    beforeEach(async () => {
+      draftId = await arrangeDraft(SENSEI_EMAIL, DRAFT_TITLE, [
+        assign(freeMentee, mentor),
+        unassign(mentee),
+      ]);
+    });
+
+    it("returns OK(200) with people's names and roles, the actors, timestamps and actions", async () => {
+      const response = await getDraftAs(SENSEI_EMAIL, draftId, HttpStatus.OK);
+
+      expect(response.body.data).toEqual({
+        id: draftId,
+        title: DRAFT_TITLE,
+        status: EMentorshipDraftStatus.DRAFT,
+        createdBy: person(sensei, EUserRole.SENSEI),
+        itemCount: 2,
+        createdAt: expect.any(String),
+        updatedAt: expect.any(String),
+        submittedAt: null,
+        decidedAt: null,
+        publishedAt: null,
+        cancelledAt: null,
+        allowedActions: [
+          EMentorshipDraftAction.EDIT,
+          EMentorshipDraftAction.SUBMIT,
+          EMentorshipDraftAction.CANCEL,
+        ],
+        reviewedBy: null,
+        approvedBy: null,
+        publishedBy: null,
+        cancelledBy: null,
+        decisionComment: null,
+        items: [
+          {
+            id: expect.any(String),
+            operation: EMentorshipDraftOperation.ASSIGN,
+            subordinate: person(freeMentee, EUserRole.MENTEE),
+            proposedSupervisor: person(mentor, EUserRole.MENTOR),
+            expectedCurrentMentorshipId: null,
+          },
+          {
+            id: expect.any(String),
+            operation: EMentorshipDraftOperation.UNASSIGN,
+            subordinate: person(mentee, EUserRole.MENTEE),
+            proposedSupervisor: null,
+            expectedCurrentMentorshipId: mentorToMentee.id,
+          },
+        ],
+      });
+    });
+
+    it("fails with NOT_FOUND(404) for another Sensei until the draft is submitted", async () => {
+      await getDraftAs(OTHER_SENSEI_EMAIL, draftId, HttpStatus.NOT_FOUND);
+
+      await submitDraftAs(SENSEI_EMAIL, draftId, HttpStatus.OK);
+      const response = await getDraftAs(OTHER_SENSEI_EMAIL, draftId, HttpStatus.OK);
+
+      expect(response.body.data.allowedActions).toEqual([
+        EMentorshipDraftAction.APPROVE,
+        EMentorshipDraftAction.REJECT,
+      ]);
+    });
+
+    it("fails with NOT_FOUND(404) for the superadmin until the draft is submitted", async () => {
+      await getDraftAs(SUPERADMIN_EMAIL, draftId, HttpStatus.NOT_FOUND);
+
+      await submitDraftAs(SENSEI_EMAIL, draftId, HttpStatus.OK);
+      const response = await getDraftAs(SUPERADMIN_EMAIL, draftId, HttpStatus.OK);
+
+      expect(response.body.data.allowedActions).toEqual([
+        EMentorshipDraftAction.APPROVE,
+        EMentorshipDraftAction.REJECT,
+      ]);
+    });
+
+    it.each([
+      MENTOR_EMAIL,
+      MENTEE_EMAIL,
+    ])("fails with FORBIDDEN(403) for %s, who cannot read drafts", async (email) => {
+      await getDraftAs(email, draftId, HttpStatus.FORBIDDEN);
+    });
+
+    it("fails with FORBIDDEN(403) for a Sensei whose can_read_draft is revoked", async () => {
+      await submitDraftAs(SENSEI_EMAIL, draftId, HttpStatus.OK);
+      await revokePermission(otherSensei, EPermissionCode.CAN_READ_DRAFT);
+
+      await getDraftAs(OTHER_SENSEI_EMAIL, draftId, HttpStatus.FORBIDDEN);
+    });
+  });
+
+  describe("GET /mentorship-drafts", () => {
+    let ownDraftId: string;
+    let otherDraftId: string;
+    let submittedDraftId: string;
+
+    beforeEach(async () => {
+      ownDraftId = await arrangeDraft(SENSEI_EMAIL, DRAFT_TITLE, [assign(freeMentee, mentor)]);
+      otherDraftId = await arrangeDraft(OTHER_SENSEI_EMAIL, OTHER_DRAFT_TITLE, [
+        assign(freeMentee, otherMentor),
+      ]);
+      submittedDraftId = await arrangeDraft(OTHER_SENSEI_EMAIL, SUBMITTED_DRAFT_TITLE, [
+        assign(freeMentee, mentor),
+        unassign(mentee),
+      ]);
+      await submitDraftAs(OTHER_SENSEI_EMAIL, submittedDraftId, HttpStatus.OK);
+    });
+
+    const listedIds = (response: request.Response): string[] =>
+      response.body.data.data.map((draft: { id: string }) => draft.id);
+
+    it("returns OK(200) with a Sensei's own drafts and other people's submitted ones", async () => {
+      const response = await listDraftsAs(SENSEI_EMAIL, {}, HttpStatus.OK);
+
+      expect(listedIds(response).sort()).toEqual([ownDraftId, submittedDraftId].sort());
+      expect(response.body.data.data).toContainEqual(
+        expect.objectContaining({
+          id: submittedDraftId,
+          title: SUBMITTED_DRAFT_TITLE,
+          status: EMentorshipDraftStatus.IN_REVIEW,
+          createdBy: person(otherSensei, EUserRole.SENSEI),
+          itemCount: 2,
+          allowedActions: [EMentorshipDraftAction.APPROVE, EMentorshipDraftAction.REJECT],
+        }),
+      );
+    });
+
+    it("returns OK(200) with only the caller's drafts when mine=true", async () => {
+      const response = await listDraftsAs(OTHER_SENSEI_EMAIL, { mine: true }, HttpStatus.OK);
+
+      expect(listedIds(response).sort()).toEqual([otherDraftId, submittedDraftId].sort());
+    });
+
+    it("returns OK(200) filtered by status", async () => {
+      const response = await listDraftsAs(
+        SENSEI_EMAIL,
+        { status: EMentorshipDraftStatus.IN_REVIEW },
+        HttpStatus.OK,
+      );
+
+      expect(listedIds(response)).toEqual([submittedDraftId]);
+    });
+
+    it("returns OK(200) one page at a time with the total", async () => {
+      const response = await listDraftsAs(OTHER_SENSEI_EMAIL, { page: 2, limit: 1 }, HttpStatus.OK);
+
+      expect(listedIds(response)).toEqual([otherDraftId]);
+      expect(response.body.data.meta).toEqual({ total: 2, page: 2, limit: 1, totalPages: 2 });
+    });
+
+    it.each([
+      MENTOR_EMAIL,
+      MENTEE_EMAIL,
+    ])("fails with FORBIDDEN(403) for %s, who cannot read drafts", async (email) => {
+      await listDraftsAs(email, {}, HttpStatus.FORBIDDEN);
     });
   });
 });

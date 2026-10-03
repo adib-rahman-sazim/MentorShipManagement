@@ -5,9 +5,11 @@ import {
   EMentorshipDraftStatus,
   EMentorshipViolation,
 } from "@/common/enums/mentorships.enums";
+import { EUserRole } from "@/common/enums/roles.enums";
 import { AbstractApiResponse } from "@/common/interceptors/response-transform.interceptor.responses";
+import { PaginationMetaResponse } from "@/modules/users/users.responses";
 
-import { EMentorshipDraftErrorCode } from "./mentorship-drafts.enums";
+import { EMentorshipDraftAction, EMentorshipDraftErrorCode } from "./mentorship-drafts.enums";
 
 export class MentorshipDraftItemResponse {
   @ApiProperty({ format: "uuid" })
@@ -68,4 +70,108 @@ export class MentorshipDraftInvalidItemsResponse extends AbstractApiResponse {
 
   @ApiProperty({ type: [MentorshipDraftItemViolationResponse] })
   errors!: MentorshipDraftItemViolationResponse[];
+}
+
+export class MentorshipDraftPersonResponse {
+  @ApiProperty({ format: "uuid" })
+  id!: string;
+
+  @ApiProperty()
+  name!: string;
+
+  @ApiProperty({ enum: EUserRole, enumName: "EUserRole" })
+  role!: EUserRole;
+}
+
+export class MentorshipDraftDetailItemResponse {
+  @ApiProperty({ format: "uuid" })
+  id!: string;
+
+  @ApiProperty({ enum: EMentorshipDraftOperation, enumName: "EMentorshipDraftOperation" })
+  operation!: EMentorshipDraftOperation;
+
+  @ApiProperty({ type: MentorshipDraftPersonResponse })
+  subordinate!: MentorshipDraftPersonResponse;
+
+  @ApiProperty({ type: MentorshipDraftPersonResponse, nullable: true })
+  proposedSupervisor!: MentorshipDraftPersonResponse | null;
+
+  @ApiProperty({ format: "uuid", type: String, nullable: true })
+  expectedCurrentMentorshipId!: string | null;
+}
+
+export class MentorshipDraftSummaryResponse {
+  @ApiProperty({ format: "uuid" })
+  id!: string;
+
+  @ApiProperty()
+  title!: string;
+
+  @ApiProperty({ enum: EMentorshipDraftStatus, enumName: "EMentorshipDraftStatus" })
+  status!: EMentorshipDraftStatus;
+
+  @ApiProperty({ type: MentorshipDraftPersonResponse })
+  createdBy!: MentorshipDraftPersonResponse;
+
+  @ApiProperty()
+  itemCount!: number;
+
+  @ApiProperty()
+  createdAt!: Date;
+
+  @ApiProperty()
+  updatedAt!: Date;
+
+  @ApiProperty({ type: Date, nullable: true })
+  submittedAt!: Date | null;
+
+  @ApiProperty({ type: Date, nullable: true })
+  decidedAt!: Date | null;
+
+  @ApiProperty({ type: Date, nullable: true })
+  publishedAt!: Date | null;
+
+  @ApiProperty({ type: Date, nullable: true })
+  cancelledAt!: Date | null;
+
+  @ApiProperty({ enum: EMentorshipDraftAction, enumName: "EMentorshipDraftAction", isArray: true })
+  allowedActions!: EMentorshipDraftAction[];
+}
+
+export class MentorshipDraftDetailResponse extends MentorshipDraftSummaryResponse {
+  @ApiProperty({ type: MentorshipDraftPersonResponse, nullable: true })
+  reviewedBy!: MentorshipDraftPersonResponse | null;
+
+  @ApiProperty({ type: MentorshipDraftPersonResponse, nullable: true })
+  approvedBy!: MentorshipDraftPersonResponse | null;
+
+  @ApiProperty({ type: MentorshipDraftPersonResponse, nullable: true })
+  publishedBy!: MentorshipDraftPersonResponse | null;
+
+  @ApiProperty({ type: MentorshipDraftPersonResponse, nullable: true })
+  cancelledBy!: MentorshipDraftPersonResponse | null;
+
+  @ApiProperty({ type: String, nullable: true })
+  decisionComment!: string | null;
+
+  @ApiProperty({ type: [MentorshipDraftDetailItemResponse] })
+  items!: MentorshipDraftDetailItemResponse[];
+}
+
+export class MentorshipDraftDetailApiResponse extends AbstractApiResponse {
+  @ApiProperty({ type: MentorshipDraftDetailResponse })
+  data!: MentorshipDraftDetailResponse;
+}
+
+export class PaginatedMentorshipDraftsResponse {
+  @ApiProperty({ type: [MentorshipDraftSummaryResponse] })
+  data!: MentorshipDraftSummaryResponse[];
+
+  @ApiProperty({ type: PaginationMetaResponse })
+  meta!: PaginationMetaResponse;
+}
+
+export class PaginatedMentorshipDraftsApiResponse extends AbstractApiResponse {
+  @ApiProperty({ type: PaginatedMentorshipDraftsResponse })
+  data!: PaginatedMentorshipDraftsResponse;
 }

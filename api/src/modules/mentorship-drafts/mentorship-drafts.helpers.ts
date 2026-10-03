@@ -1,5 +1,9 @@
 import { BadRequestException, ConflictException, ForbiddenException } from "@nestjs/common";
 
+import type { ObjectQuery } from "@mikro-orm/core";
+
+import type { MentorshipDraftItem } from "@/common/entities/mentorship-draft-items.entity";
+import type { MentorshipDraft } from "@/common/entities/mentorship-drafts.entity";
 import type { User } from "@/common/entities/users.entity";
 import {
   EMentorshipDraftOperation,
@@ -13,10 +17,15 @@ import { findAssignmentViolations } from "@/modules/mentorships/mentorships.help
 import type { IMentorshipParticipant } from "@/modules/mentorships/mentorships.interfaces";
 import { EPermission, EResource } from "@/modules/permissions/permissions.enums";
 
-import { MENTORSHIP_DRAFT_ERROR_MESSAGES } from "./mentorship-drafts.constants";
+import {
+  DRAFT_STATUS_TRANSITIONS,
+  MENTORSHIP_DRAFT_ERROR_MESSAGES,
+  SUBMITTED_DRAFT,
+} from "./mentorship-drafts.constants";
 import type { MentorshipDraftItemDto } from "./mentorship-drafts.dtos";
-import { EMentorshipDraftErrorCode } from "./mentorship-drafts.enums";
+import { EMentorshipDraftAction, EMentorshipDraftErrorCode } from "./mentorship-drafts.enums";
 import type {
+  IDraftActionContext,
   IDraftItemInput,
   IDraftItemsValidationInput,
   IDraftItemViolation,
@@ -27,6 +36,14 @@ export function toDraftItemInput(item: MentorshipDraftItemDto): IDraftItemInput 
     operation: item.operation,
     subordinateId: item.subordinateId,
     proposedSupervisorId: item.proposedSupervisorId ?? null,
+  };
+}
+
+export function toStoredDraftItemInput(item: MentorshipDraftItem): IDraftItemInput {
+  return {
+    operation: item.operation,
+    subordinateId: item.subordinate.id,
+    proposedSupervisorId: item.proposedSupervisor?.id ?? null,
   };
 }
 
@@ -173,6 +190,76 @@ export function assertDraftIsEditable(status: EMentorshipDraftStatus): void {
   if (status !== EMentorshipDraftStatus.DRAFT) {
     throw new ConflictException(MENTORSHIP_DRAFT_ERROR_MESSAGES.DRAFT_NOT_EDITABLE);
   }
+}
+
+export function canTransitionDraft(
+  from: EMentorshipDraftStatus,
+  to: EMentorshipDraftStatus,
+): boolean {
+  return DRAFT_STATUS_TRANSITIONS[from].includes(to);
+}
+
+export function assertDraftTransition(
+  from: EMentorshipDraftStatus,
+  to: EMentorshipDraftStatus,
+): void {
+  if (!canTransitionDraft(from, to)) {
+    throw new ConflictException(MENTORSHIP_DRAFT_ERROR_MESSAGES.INVALID_STATUS_TRANSITION);
+  }
+}
+
+export function assertDraftHasItems(itemCount: number): void {
+  if (itemCount === 0) {
+    throw new BadRequestException(MENTORSHIP_DRAFT_ERROR_MESSAGES.EMPTY_DRAFT);
+  }
+}
+
+export function buildVisibleDraftsFilter(actorId: string): ObjectQuery<MentorshipDraft> {
+  return { $or: [{ createdBy: actorId }, SUBMITTED_DRAFT] };
+}
+
+export function resolveAllowedDraftActions({
+  status,
+  authorId,
+  itemCount,
+  actorId,
+  ability,
+}: IDraftActionContext): EMentorshipDraftAction[] {
+  const isAuthor = authorId === actorId;
+  const draftSubject = { __caslSubjectType__: EResource.DRAFT, createdBy: authorId };
+  const canWriteDrafts = ability.can(EPermission.CREATE, EResource.DRAFT);
+
+  const actionChecks: [EMentorshipDraftAction, boolean][] = [
+    [
+      EMentorshipDraftAction.EDIT,
+      isAuthor && canWriteDrafts && status === EMentorshipDraftStatus.DRAFT,
+    ],
+    [
+      EMentorshipDraftAction.SUBMIT,
+      isAuthor &&
+        canWriteDrafts &&
+        itemCount > 0 &&
+        canTransitionDraft(status, EMentorshipDraftStatus.IN_REVIEW),
+    ],
+    [
+      EMentorshipDraftAction.APPROVE,
+      !isAuthor &&
+        ability.can(EPermission.APPROVE, draftSubject) &&
+        canTransitionDraft(status, EMentorshipDraftStatus.APPROVED),
+    ],
+    [
+      EMentorshipDraftAction.REJECT,
+      !isAuthor &&
+        ability.can(EPermission.REVIEW, draftSubject) &&
+        canTransitionDraft(status, EMentorshipDraftStatus.REJECTED),
+    ],
+    [
+      EMentorshipDraftAction.CANCEL,
+      isAuthor && canTransitionDraft(status, EMentorshipDraftStatus.CANCELLED),
+    ],
+  ];
+
+  return actionChecks.filter(([, isAllowed]) => isAllowed).map(([action]) => action);
 }
 
 function findItemViolations(

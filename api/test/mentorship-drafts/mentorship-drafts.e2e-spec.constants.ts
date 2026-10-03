@@ -15,3 +15,7 @@ export const DRAFT_TITLE = "Spring rebalancing";
 export const NEW_DRAFT_TITLE = "Spring rebalancing, take two";
 
 export const INVALID_ITEMS_ERROR_CODE = "MENTORSHIP_DRAFT_INVALID_ITEMS";
+
+export const SUBMIT_PATH = "submit";
+export const OTHER_DRAFT_TITLE = "Autumn moves";
+export const SUBMITTED_DRAFT_TITLE = "Winter moves";

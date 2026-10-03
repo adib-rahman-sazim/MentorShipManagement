@@ -73,6 +73,7 @@ export const DEFAULT_PERMISSION_DEFINITIONS: IPermissionDefinition[] = [
     EPermissionConditionType.MENTOR_MENTEE,
   ),
   toPermissionDefinition(EPermissionCode.CAN_CREATE_DRAFT, EResource.DRAFT, EPermission.CREATE),
+  toPermissionDefinition(EPermissionCode.CAN_READ_DRAFT, EResource.DRAFT, EPermission.READ),
   toPermissionDefinition(EPermissionCode.CAN_REVIEW_DRAFT, EResource.DRAFT, EPermission.REVIEW),
   toPermissionDefinition(EPermissionCode.CAN_APPROVE_DRAFT, EResource.DRAFT, EPermission.APPROVE),
   toPermissionDefinition(
@@ -110,6 +111,7 @@ const HIERARCHY_PAGE_VIEW_CODES = [
 const MMS_DOMAIN_CODES = [
   EPermissionCode.CAN_ASSIGN_MENTOR,
   EPermissionCode.CAN_CREATE_DRAFT,
+  EPermissionCode.CAN_READ_DRAFT,
   EPermissionCode.CAN_REVIEW_DRAFT,
   EPermissionCode.CAN_APPROVE_DRAFT,
 ];
