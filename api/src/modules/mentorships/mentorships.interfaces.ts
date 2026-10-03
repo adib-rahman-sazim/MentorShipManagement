@@ -22,6 +22,12 @@ export interface IMentorshipEdge {
   subordinateId: string;
 }
 
+export interface IMentorshipStart {
+  supervisorId: string;
+  subordinateId: string;
+  relationshipType: EMentorshipRelationshipType;
+}
+
 export interface IMentorshipAssignmentInput {
   supervisor: IMentorshipParticipant;
   subordinate: IMentorshipParticipant;

@@ -42,6 +42,15 @@ export class UsersRepository extends CustomSQLBaseRepository<User> {
     );
   }
 
+  async findByIdsForUpdate(ids: string[], em?: EntityManager): Promise<User[]> {
+    const users = await this.getScopedRepository(em).find(
+      { id: { $in: ids }, ...NOT_SOFT_DELETED },
+      { orderBy: { id: "ASC" }, lockMode: LockMode.PESSIMISTIC_WRITE },
+    );
+
+    return this.getScopedEntityManager(em).populate(users, ["role"]);
+  }
+
   findActiveSuperadmin(em?: EntityManager): Promise<User | null> {
     return this.getScopedRepository(em).findOne({
       role: { code: EUserRole.SUPERADMIN },

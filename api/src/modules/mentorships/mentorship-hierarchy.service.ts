@@ -20,12 +20,18 @@ export class MentorshipHierarchyService {
     return this.mentorshipsRepository.findAncestorUserIds(userId, MENTORSHIP_SUBTREE_MAX_DEPTH);
   }
 
-  async invalidateForMentorshipChange(userId: string): Promise<void> {
-    const [ancestorUserIds, descendantUserIds] = await Promise.all([
-      this.findChainUserIds(userId),
-      this.findSubtreeUserIds(userId),
-    ]);
+  async invalidateForMentorshipChanges(userIds: string[]): Promise<void> {
+    const relatedUserIds = await Promise.all(
+      userIds.map(async (userId) => {
+        const [ancestorUserIds, descendantUserIds] = await Promise.all([
+          this.findChainUserIds(userId),
+          this.findSubtreeUserIds(userId),
+        ]);
 
-    await this.caslCacheService.invalidateUsers([userId, ...ancestorUserIds, ...descendantUserIds]);
+        return [userId, ...ancestorUserIds, ...descendantUserIds];
+      }),
+    );
+
+    await this.caslCacheService.invalidateUsers(relatedUserIds.flat());
   }
 }

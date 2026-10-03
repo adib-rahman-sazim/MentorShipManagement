@@ -35,11 +35,11 @@ describe("MentorshipHierarchyService", () => {
     };
   };
 
-  describe("invalidateForMentorshipChange", () => {
+  describe("invalidateForMentorshipChanges", () => {
     it("clears the cache for the user and everyone above and below them", async () => {
       const { service, caslCacheService, mentorshipsRepository } = buildService();
 
-      await service.invalidateForMentorshipChange(USER_ID);
+      await service.invalidateForMentorshipChanges([USER_ID]);
 
       expect(mentorshipsRepository.findAncestorUserIds).toHaveBeenCalledExactlyOnceWith(
         USER_ID,

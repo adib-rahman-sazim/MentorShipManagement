@@ -10,7 +10,10 @@ import type {
   EMentorshipViolation,
 } from "@/common/enums/mentorships.enums";
 import type { TAppAbility } from "@/modules/casl/casl.types";
-import type { IMentorshipParticipant } from "@/modules/mentorships/mentorships.interfaces";
+import type {
+  IMentorshipParticipant,
+  IMentorshipStart,
+} from "@/modules/mentorships/mentorships.interfaces";
 import type { EPermission } from "@/modules/permissions/permissions.enums";
 
 import type {
@@ -99,6 +102,16 @@ export interface IStaleDraftItem {
   expectedSupervisorId: string | null;
   currentSupervisorId: string | null;
   changedByDraftId: string | null;
+}
+
+export interface IDraftApplyPlan {
+  endedMentorships: IMentorshipSnapshot[];
+  startedMentorships: IMentorshipStart[];
+}
+
+export interface IPublishedMentorshipDraft {
+  view: IMentorshipDraftDetailView;
+  changedUserIds: string[];
 }
 
 export interface IDraftChangeSummaryItem {

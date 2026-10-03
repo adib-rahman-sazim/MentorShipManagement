@@ -73,4 +73,6 @@ export const MENTORSHIP_DRAFT_ERROR_MESSAGES = {
   DUPLICATE_SUBORDINATE: "Each person can appear in at most one change per draft",
   OWN_DRAFT_DECISION: "You can't approve or reject a draft you wrote",
   STALE_ITEMS: "Some changes in this draft no longer match the live hierarchy",
+  NO_LONGER_VALID_ITEMS: "Some changes in this draft are no longer allowed for these people",
+  CONCURRENT_PUBLISH: "Another change to these people was published at the same time",
 } as const;
