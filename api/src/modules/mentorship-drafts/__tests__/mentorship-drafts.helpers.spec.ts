@@ -18,6 +18,7 @@ import { EPermission, EResource } from "@/modules/permissions/permissions.enums"
 import { EMentorshipDraftAction } from "../mentorship-drafts.enums";
 import {
   assertCanAssignDraftItems,
+  assertCanCancelDraft,
   assertDraftTransition,
   buildDraftApplyPlan,
   canDecideDraft,
@@ -206,6 +207,15 @@ const WRITE_ONLY_DRAFT_ABILITY = buildAbility(({ can }) => {
   can(EPermission.READ, EResource.DRAFT);
 });
 
+const PUBLISHER_DRAFT_ABILITY = buildAbility(({ can }) => {
+  can(EPermission.CREATE, EResource.DRAFT);
+  can(EPermission.READ, EResource.DRAFT);
+  can(EPermission.REVIEW, EResource.DRAFT);
+  can(EPermission.APPROVE, EResource.DRAFT);
+  can(EPermission.PUBLISH, EResource.DRAFT);
+});
+const READ_ONLY_DRAFT_ABILITY = buildAbility(({ can }) => can(EPermission.READ, EResource.DRAFT));
+
 const notAuthorDraftAbility = (actorId: string): TAppAbility =>
   buildAbility(({ can }) => {
     can(EPermission.REVIEW, EResource.DRAFT);
@@ -273,6 +283,68 @@ describe("resolveAllowedDraftActions", () => {
     expect(
       resolveFor("other-sensei", WRITE_ONLY_DRAFT_ABILITY, EMentorshipDraftStatus.IN_REVIEW),
     ).toEqual([]);
+  });
+
+  it.each([
+    [
+      EMentorshipDraftStatus.IN_REVIEW,
+      [EMentorshipDraftAction.APPROVE, EMentorshipDraftAction.REJECT],
+    ],
+    [
+      EMentorshipDraftStatus.APPROVED,
+      [EMentorshipDraftAction.PUBLISH, EMentorshipDraftAction.CANCEL],
+    ],
+    [EMentorshipDraftStatus.PUBLISHED, []],
+    [EMentorshipDraftStatus.CANCELLED, []],
+  ])("gives a publisher on someone else's %s draft %j", (status, expected) => {
+    expect(resolveFor("other-sensei", PUBLISHER_DRAFT_ABILITY, status)).toEqual(expected);
+  });
+
+  it("does not offer cancel to an author who can no longer write drafts", () => {
+    expect(resolveFor("sensei", READ_ONLY_DRAFT_ABILITY, EMentorshipDraftStatus.IN_REVIEW)).toEqual(
+      [],
+    );
+  });
+});
+
+describe("assertCanCancelDraft", () => {
+  const cancelCheck = (actorId: string, ability: TAppAbility, status: EMentorshipDraftStatus) => ({
+    status,
+    authorId: "sensei",
+    actorId,
+    ability,
+  });
+
+  it("refuses another Sensei with 403", () => {
+    expect(() =>
+      assertCanCancelDraft(
+        cancelCheck("other-sensei", SENSEI_DRAFT_ABILITY, EMentorshipDraftStatus.APPROVED),
+      ),
+    ).toThrow(ForbiddenException);
+  });
+
+  it("refuses a publisher with 409 until someone else's draft is approved", () => {
+    expect(() =>
+      assertCanCancelDraft(
+        cancelCheck("other-sensei", PUBLISHER_DRAFT_ABILITY, EMentorshipDraftStatus.IN_REVIEW),
+      ),
+    ).toThrow(ConflictException);
+  });
+
+  it("refuses the author with 409 once the draft is closed", () => {
+    expect(() =>
+      assertCanCancelDraft(
+        cancelCheck("sensei", SENSEI_DRAFT_ABILITY, EMentorshipDraftStatus.REJECTED),
+      ),
+    ).toThrow(ConflictException);
+  });
+
+  it("lets a publisher cancel someone else's approved draft", () => {
+    expect(() =>
+      assertCanCancelDraft(
+        cancelCheck("other-sensei", PUBLISHER_DRAFT_ABILITY, EMentorshipDraftStatus.APPROVED),
+      ),
+    ).not.toThrow();
   });
 });
 
