@@ -48,6 +48,16 @@ export const DRAFT_ITEM_PEOPLE_POPULATE = ["subordinate.role", "proposedSupervis
 
 export const DRAFT_ITEM_EXPECTED_MENTORSHIP_POPULATE = ["expectedCurrentMentorship"] as const;
 
+export const DRAFT_ITEM_CHANGE_SUMMARY_POPULATE = [
+  ...DRAFT_ITEM_PEOPLE_POPULATE,
+  "expectedCurrentMentorship.supervisor.role",
+] as const;
+
+export const OVERLAPPING_DRAFT_STATUSES = [
+  EMentorshipDraftStatus.IN_REVIEW,
+  EMentorshipDraftStatus.APPROVED,
+] as const;
+
 export const QUERY_PARAM_TRUE = "true";
 
 export const MENTORSHIP_DRAFT_ERROR_MESSAGES = {

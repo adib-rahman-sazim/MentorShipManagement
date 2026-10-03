@@ -2,9 +2,11 @@ import type { ObjectQuery } from "@mikro-orm/core";
 
 import type { MentorshipDraftItem } from "@/common/entities/mentorship-draft-items.entity";
 import type { MentorshipDraft } from "@/common/entities/mentorship-drafts.entity";
+import type { User } from "@/common/entities/users.entity";
 import type {
   EMentorshipDraftOperation,
   EMentorshipDraftStatus,
+  EMentorshipRelationshipType,
   EMentorshipViolation,
 } from "@/common/enums/mentorships.enums";
 import type { TAppAbility } from "@/modules/casl/casl.types";
@@ -97,6 +99,20 @@ export interface IStaleDraftItem {
   expectedSupervisorId: string | null;
   currentSupervisorId: string | null;
   changedByDraftId: string | null;
+}
+
+export interface IDraftChangeSummaryItem {
+  item: MentorshipDraftItem;
+  currentSupervisor: User | null;
+  relationshipType: EMentorshipRelationshipType | null;
+  violations: EMentorshipViolation[];
+  stale: IStaleDraftItem | null;
+  overlappingDrafts: MentorshipDraft[];
+}
+
+export interface IMentorshipDraftChangeSummaryView {
+  draft: MentorshipDraft;
+  items: IDraftChangeSummaryItem[];
 }
 
 export interface IFindVisibleDraftsOptions {

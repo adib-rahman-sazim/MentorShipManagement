@@ -31,6 +31,7 @@ import { EPermissionCode } from "@/modules/permissions/permissions.enums";
 import { ApproveMentorshipDraftInteractor } from "./interactors/approve-mentorship-draft.interactor";
 import { CreateMentorshipDraftInteractor } from "./interactors/create-mentorship-draft.interactor";
 import { GetMentorshipDraftInteractor } from "./interactors/get-mentorship-draft.interactor";
+import { GetMentorshipDraftChangeSummaryInteractor } from "./interactors/get-mentorship-draft-change-summary.interactor";
 import { ListMentorshipDraftsInteractor } from "./interactors/list-mentorship-drafts.interactor";
 import { RejectMentorshipDraftInteractor } from "./interactors/reject-mentorship-draft.interactor";
 import { SubmitMentorshipDraftInteractor } from "./interactors/submit-mentorship-draft.interactor";
@@ -43,6 +44,8 @@ import {
 } from "./mentorship-drafts.dtos";
 import {
   MentorshipDraftApiResponse,
+  MentorshipDraftChangeSummaryApiResponse,
+  MentorshipDraftChangeSummaryResponse,
   MentorshipDraftDetailApiResponse,
   MentorshipDraftDetailResponse,
   MentorshipDraftInvalidItemsResponse,
@@ -63,6 +66,7 @@ export class MentorshipDraftsController {
     private readonly submitMentorshipDraftInteractor: SubmitMentorshipDraftInteractor,
     private readonly listMentorshipDraftsInteractor: ListMentorshipDraftsInteractor,
     private readonly getMentorshipDraftInteractor: GetMentorshipDraftInteractor,
+    private readonly getMentorshipDraftChangeSummaryInteractor: GetMentorshipDraftChangeSummaryInteractor,
     private readonly approveMentorshipDraftInteractor: ApproveMentorshipDraftInteractor,
     private readonly rejectMentorshipDraftInteractor: RejectMentorshipDraftInteractor,
   ) {}
@@ -91,6 +95,21 @@ export class MentorshipDraftsController {
     @Param("id", ParseUUIDPipe) draftId: string,
   ): Promise<MentorshipDraftDetailResponse> {
     return this.getMentorshipDraftInteractor.execute({
+      draftId,
+      actorId: req.user!.id,
+      ability: req.ability!,
+    });
+  }
+
+  @Get(":id/change-summary")
+  @UseGuards(CaslPermissionsGuard)
+  @Permissions([EPermissionCode.CAN_READ_DRAFT])
+  @ApiOkResponse({ type: MentorshipDraftChangeSummaryApiResponse })
+  async getDraftChangeSummary(
+    @Req() req: Request,
+    @Param("id", ParseUUIDPipe) draftId: string,
+  ): Promise<MentorshipDraftChangeSummaryResponse> {
+    return this.getMentorshipDraftChangeSummaryInteractor.execute({
       draftId,
       actorId: req.user!.id,
       ability: req.ability!,

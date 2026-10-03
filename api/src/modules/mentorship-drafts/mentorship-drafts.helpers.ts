@@ -14,7 +14,10 @@ import {
 } from "@/common/enums/mentorships.enums";
 import type { TAppAbility } from "@/modules/casl/casl.types";
 import { LEGAL_ROLE_PAIRS } from "@/modules/mentorships/mentorships.constants";
-import { findAssignmentViolations } from "@/modules/mentorships/mentorships.helpers";
+import {
+  buildSupervisorBySubordinate,
+  findAssignmentViolations,
+} from "@/modules/mentorships/mentorships.helpers";
 import type { IMentorshipParticipant } from "@/modules/mentorships/mentorships.interfaces";
 import { EPermission, EResource } from "@/modules/permissions/permissions.enums";
 
@@ -259,6 +262,31 @@ export function toDraftItemExpectation(item: MentorshipDraftItem): IDraftItemExp
       ? toMentorshipSnapshot(item.expectedCurrentMentorship)
       : null,
   };
+}
+
+export function toLiveSupervisorBySubordinate(
+  mentorships: readonly Mentorship[],
+): Map<string, string> {
+  return buildSupervisorBySubordinate(
+    mentorships.map((mentorship) => ({
+      supervisorId: mentorship.supervisor.id,
+      subordinateId: mentorship.subordinate.id,
+    })),
+  );
+}
+
+export function groupDraftsBySubordinate(
+  items: readonly MentorshipDraftItem[],
+): Map<string, MentorshipDraft[]> {
+  const draftsBySubordinate = new Map<string, MentorshipDraft[]>();
+
+  for (const item of items) {
+    const drafts = draftsBySubordinate.get(item.subordinate.id) ?? [];
+    drafts.push(item.draft);
+    draftsBySubordinate.set(item.subordinate.id, drafts);
+  }
+
+  return draftsBySubordinate;
 }
 
 export function findStaleDraftItems(

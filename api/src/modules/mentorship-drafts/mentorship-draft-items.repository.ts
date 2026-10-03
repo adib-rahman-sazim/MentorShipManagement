@@ -6,8 +6,11 @@ import type { MentorshipDraft } from "@/common/entities/mentorship-drafts.entity
 import { CustomSQLBaseRepository } from "@/common/repository/custom-sql-base.repository";
 
 import {
+  DRAFT_ITEM_CHANGE_SUMMARY_POPULATE,
   DRAFT_ITEM_EXPECTED_MENTORSHIP_POPULATE,
   DRAFT_ITEM_PEOPLE_POPULATE,
+  NOT_SOFT_DELETED_DRAFT,
+  OVERLAPPING_DRAFT_STATUSES,
 } from "./mentorship-drafts.constants";
 import type { IDraftItemCountRow, IValidatedDraftItem } from "./mentorship-drafts.interfaces";
 
@@ -36,6 +39,37 @@ export class MentorshipDraftItemsRepository extends CustomSQLBaseRepository<Ment
     return this.getScopedRepository(em).find(
       { draft: draftId },
       { populate: DRAFT_ITEM_EXPECTED_MENTORSHIP_POPULATE },
+    );
+  }
+
+  findByDraftIdForChangeSummary(
+    draftId: string,
+    em?: EntityManager,
+  ): Promise<MentorshipDraftItem[]> {
+    return this.getScopedRepository(em).find(
+      { draft: draftId },
+      {
+        orderBy: { subordinate: { name: "ASC" }, id: "ASC" },
+        populate: DRAFT_ITEM_CHANGE_SUMMARY_POPULATE,
+      },
+    );
+  }
+
+  findOverlapping(
+    subordinateIds: string[],
+    excludedDraftId: string,
+    em?: EntityManager,
+  ): Promise<MentorshipDraftItem[]> {
+    return this.getScopedRepository(em).find(
+      {
+        subordinate: { $in: subordinateIds },
+        draft: {
+          id: { $ne: excludedDraftId },
+          status: { $in: [...OVERLAPPING_DRAFT_STATUSES] },
+          ...NOT_SOFT_DELETED_DRAFT,
+        },
+      },
+      { populate: ["draft"], orderBy: { draft: { submittedAt: "ASC" }, id: "ASC" } },
     );
   }
 
