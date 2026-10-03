@@ -31,6 +31,7 @@ import { EMentorshipDraftAction, EMentorshipDraftErrorCode } from "./mentorship-
 import type {
   IDraftActionContext,
   IDraftApplyPlan,
+  IDraftCancelCheck,
   IDraftDecisionCheck,
   IDraftItemExpectation,
   IDraftItemInput,
@@ -241,6 +242,39 @@ export function assertCanDecideDraft(check: IDraftDecisionCheck): void {
   }
 }
 
+export function canCancelOwnDraft({ authorId, actorId, ability }: IDraftCancelCheck): boolean {
+  return authorId === actorId && ability.can(EPermission.CREATE, EResource.DRAFT);
+}
+
+export function canCancelDraft(check: IDraftCancelCheck): boolean {
+  const { status, ability } = check;
+  const canCancelAsPublisher =
+    ability.can(EPermission.PUBLISH, EResource.DRAFT) && status === EMentorshipDraftStatus.APPROVED;
+
+  return (
+    canTransitionDraft(status, EMentorshipDraftStatus.CANCELLED) &&
+    (canCancelOwnDraft(check) || canCancelAsPublisher)
+  );
+}
+
+export function assertCanCancelDraft(check: IDraftCancelCheck): void {
+  const { status, ability } = check;
+
+  if (canCancelOwnDraft(check)) {
+    assertDraftTransition(status, EMentorshipDraftStatus.CANCELLED);
+
+    return;
+  }
+
+  if (!ability.can(EPermission.PUBLISH, EResource.DRAFT)) {
+    throw new ForbiddenException(MENTORSHIP_DRAFT_ERROR_MESSAGES.CANCEL_FORBIDDEN);
+  }
+
+  if (status !== EMentorshipDraftStatus.APPROVED) {
+    throw new ConflictException(MENTORSHIP_DRAFT_ERROR_MESSAGES.CANCEL_NOT_APPROVED);
+  }
+}
+
 export function toDecisionComment(comment?: string): string | null {
   const trimmedComment = comment?.trim();
 
@@ -413,10 +447,7 @@ export function resolveAllowedDraftActions({
       EMentorshipDraftAction.PUBLISH,
       canPublishDrafts && canTransitionDraft(status, EMentorshipDraftStatus.PUBLISHED),
     ],
-    [
-      EMentorshipDraftAction.CANCEL,
-      isAuthor && canTransitionDraft(status, EMentorshipDraftStatus.CANCELLED),
-    ],
+    [EMentorshipDraftAction.CANCEL, canCancelDraft({ status, authorId, actorId, ability })],
   ];
 
   return actionChecks.filter(([, isAllowed]) => isAllowed).map(([action]) => action);

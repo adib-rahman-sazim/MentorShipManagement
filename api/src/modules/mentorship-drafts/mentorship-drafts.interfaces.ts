@@ -85,6 +85,13 @@ export interface IDraftDecisionCheck {
   ability: TAppAbility;
 }
 
+export interface IDraftCancelCheck {
+  status: EMentorshipDraftStatus;
+  authorId: string;
+  actorId: string;
+  ability: TAppAbility;
+}
+
 export interface IMentorshipSnapshot {
   id: string;
   supervisorId: string;
