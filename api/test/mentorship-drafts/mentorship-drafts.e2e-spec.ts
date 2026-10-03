@@ -35,11 +35,13 @@ import { seedPermissionCatalogInDb } from "../utils/helpers/permissions.helpers"
 import type { THttpServer } from "../utils/http-server.types";
 import {
   APPROVE_PATH,
+  CHANGE_SUMMARY_PATH,
   DECISION_COMMENT,
   DRAFT_TITLE,
   E2E_PASSWORD,
   FREE_MENTEE_EMAIL,
   INVALID_ITEMS_ERROR_CODE,
+  LEAVING_MENTEE_EMAIL,
   MENTEE_EMAIL,
   MENTOR_EMAIL,
   MENTORSHIP_DRAFTS_ROUTE,
@@ -218,6 +220,15 @@ describe("Mentorship drafts (E2E)", () => {
 
     return request(httpServer)
       .get(`${MENTORSHIP_DRAFTS_ROUTE}/${draftId}`)
+      .set("Authorization", `Bearer ${token}`)
+      .expect(expectedStatus);
+  };
+
+  const getChangeSummaryAs = async (email: string, draftId: string, expectedStatus: HttpStatus) => {
+    const token = await getBearerToken(httpServer, email, E2E_PASSWORD);
+
+    return request(httpServer)
+      .get(`${MENTORSHIP_DRAFTS_ROUTE}/${draftId}/${CHANGE_SUMMARY_PATH}`)
       .set("Authorization", `Bearer ${token}`)
       .expect(expectedStatus);
   };
@@ -868,6 +879,113 @@ describe("Mentorship drafts (E2E)", () => {
 
       await decideDraftAs(SUPERADMIN_EMAIL, draftId, APPROVE_PATH, {}, HttpStatus.CONFLICT);
       expect(await findDraftStatus(draftId)).toBe(EMentorshipDraftStatus.REJECTED);
+    });
+  });
+
+  describe("GET /mentorship-drafts/:id/change-summary", () => {
+    const summaryItem = (fields: object) => ({
+      id: expect.any(String),
+      relationshipType: EMentorshipRelationshipType.MENTOR_MENTEE,
+      violations: [],
+      stale: null,
+      overlaps: [],
+      ...fields,
+    });
+
+    it("returns OK(200) with each change as before and after", async () => {
+      const leavingMentee = await arrangeUser(LEAVING_MENTEE_EMAIL, EUserRole.MENTEE);
+      await arrangeMentorship(
+        otherMentor,
+        leavingMentee,
+        EMentorshipRelationshipType.MENTOR_MENTEE,
+      );
+      const draftId = await arrangeDraft(SENSEI_EMAIL, DRAFT_TITLE, [
+        assign(freeMentee, mentor),
+        reassign(mentee, otherMentor),
+        unassign(leavingMentee),
+      ]);
+
+      const response = await getChangeSummaryAs(SENSEI_EMAIL, draftId, HttpStatus.OK);
+
+      expect(response.body.data).toEqual({
+        draftId,
+        items: [
+          summaryItem({
+            operation: EMentorshipDraftOperation.ASSIGN,
+            subordinate: person(freeMentee, EUserRole.MENTEE),
+            expectedSupervisor: null,
+            currentSupervisor: null,
+            proposedSupervisor: person(mentor, EUserRole.MENTOR),
+          }),
+          summaryItem({
+            operation: EMentorshipDraftOperation.UNASSIGN,
+            subordinate: person(leavingMentee, EUserRole.MENTEE),
+            expectedSupervisor: person(otherMentor, EUserRole.MENTOR),
+            currentSupervisor: person(otherMentor, EUserRole.MENTOR),
+            proposedSupervisor: null,
+          }),
+          summaryItem({
+            operation: EMentorshipDraftOperation.REASSIGN,
+            subordinate: person(mentee, EUserRole.MENTEE),
+            expectedSupervisor: person(mentor, EUserRole.MENTOR),
+            currentSupervisor: person(mentor, EUserRole.MENTOR),
+            proposedSupervisor: person(otherMentor, EUserRole.MENTOR),
+          }),
+        ],
+      });
+    });
+
+    it("returns OK(200) naming the draft that moved a person once the draft is out of date", async () => {
+      const draftId = await arrangeSubmittedDraft(SENSEI_EMAIL, [reassign(mentee, otherMentor)]);
+      const movingDraftId = await arrangeMenteeMovedByAnotherDraft();
+
+      const response = await getChangeSummaryAs(OTHER_SENSEI_EMAIL, draftId, HttpStatus.OK);
+
+      expect(response.body.data.items).toEqual([
+        summaryItem({
+          operation: EMentorshipDraftOperation.REASSIGN,
+          subordinate: person(mentee, EUserRole.MENTEE),
+          expectedSupervisor: person(mentor, EUserRole.MENTOR),
+          currentSupervisor: person(otherMentor, EUserRole.MENTOR),
+          proposedSupervisor: person(otherMentor, EUserRole.MENTOR),
+          violations: [EMentorshipViolation.SAME_SUPERVISOR],
+          stale: { changedByDraftId: movingDraftId },
+        }),
+      ]);
+    });
+
+    it("returns OK(200) listing other submitted drafts that change the same person", async () => {
+      const draftId = await arrangeSubmittedDraft(SENSEI_EMAIL, [reassign(mentee, otherMentor)]);
+      const overlappingDraftId = await arrangeDraft(OTHER_SENSEI_EMAIL, SUBMITTED_DRAFT_TITLE, [
+        unassign(mentee),
+      ]);
+      await submitDraftAs(OTHER_SENSEI_EMAIL, overlappingDraftId, HttpStatus.OK);
+      await arrangeDraft(OTHER_SENSEI_EMAIL, OTHER_DRAFT_TITLE, [unassign(mentee)]);
+
+      const response = await getChangeSummaryAs(SENSEI_EMAIL, draftId, HttpStatus.OK);
+
+      expect(response.body.data.items[0].overlaps).toEqual([
+        {
+          id: overlappingDraftId,
+          title: SUBMITTED_DRAFT_TITLE,
+          status: EMentorshipDraftStatus.IN_REVIEW,
+        },
+      ]);
+    });
+
+    it.each([
+      MENTOR_EMAIL,
+      MENTEE_EMAIL,
+    ])("fails with FORBIDDEN(403) for %s, who cannot read drafts", async (email) => {
+      const draftId = await arrangeSubmittedDraft(SENSEI_EMAIL, [assign(freeMentee, mentor)]);
+
+      await getChangeSummaryAs(email, draftId, HttpStatus.FORBIDDEN);
+    });
+
+    it("fails with NOT_FOUND(404) for another Sensei until the draft is submitted", async () => {
+      const draftId = await arrangeDraft(SENSEI_EMAIL, DRAFT_TITLE, [assign(freeMentee, mentor)]);
+
+      await getChangeSummaryAs(OTHER_SENSEI_EMAIL, draftId, HttpStatus.NOT_FOUND);
     });
   });
 });
