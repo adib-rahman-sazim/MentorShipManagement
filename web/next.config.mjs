@@ -52,6 +52,7 @@ const nextConfig = {
   },
 
   reactStrictMode: true,
+  devIndicators: false,
   poweredByHeader: false,
   pageExtensions: ["page.tsx"],
   output: "standalone",

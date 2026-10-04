@@ -4,7 +4,7 @@ import { getInitials } from "@/shared/utils/string";
 import { IAppSidebarUserProps } from "./AppSidebarUser.interfaces";
 
 const AppSidebarUser = ({ user }: IAppSidebarUserProps) => (
-  <div className="flex min-w-0 items-center gap-3 rounded-lg px-2 py-1">
+  <div className="flex min-w-0 items-center gap-3 rounded-lg px-2 py-1 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0!">
     <Avatar>
       <AvatarImage src={user.image ?? undefined} alt={user.name} />
       <AvatarFallback>{getInitials(user.name)}</AvatarFallback>

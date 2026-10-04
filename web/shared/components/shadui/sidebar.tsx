@@ -253,7 +253,7 @@ function SidebarTrigger({ className, onClick, ...props }: React.ComponentProps<t
       data-slot="sidebar-trigger"
       variant="ghost"
       size="icon-sm"
-      className={cn(className)}
+      className={cn("cursor-pointer", className)}
       onClick={(event) => {
         onClick?.(event);
         toggleSidebar();

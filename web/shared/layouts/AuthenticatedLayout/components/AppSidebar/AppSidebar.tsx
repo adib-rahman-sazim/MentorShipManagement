@@ -21,6 +21,7 @@ import { canPerform, useAbilityContext } from "@/shared/providers/AbilityProvide
 import { useAuth } from "@/shared/providers/AuthProvider";
 
 import AppSidebarUser from "./components/AppSidebarUser";
+import { SIGN_OUT_LABEL } from "./AppSidebar.constants";
 import { getVisibleSidebarMenuItems } from "./AppSidebar.helpers";
 
 const AppSidebar = () => {
@@ -30,7 +31,7 @@ const AppSidebar = () => {
 
   if (isLoading || !user || isAbilityLoading) {
     return (
-      <Sidebar>
+      <Sidebar collapsible="icon">
         <SidebarSkeleton />
       </Sidebar>
     );
@@ -41,7 +42,7 @@ const AppSidebar = () => {
   );
 
   return (
-    <Sidebar>
+    <Sidebar collapsible="icon">
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Mentorship Management System</SidebarGroupLabel>
@@ -64,8 +65,13 @@ const AppSidebar = () => {
           <LanguageSelector />
         </div>
         <AppSidebarUser user={user} />
-        <Button variant="destructive" onClick={() => signOut()}>
-          Sign Out
+        <Button
+          variant="destructive"
+          className="group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-0!"
+          aria-label={SIGN_OUT_LABEL}
+          onClick={() => signOut()}
+        >
+          <span className="group-data-[collapsible=icon]:hidden">{SIGN_OUT_LABEL}</span>
           <ArrowRight />
         </Button>
       </SidebarFooter>
