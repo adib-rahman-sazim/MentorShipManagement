@@ -134,7 +134,7 @@ const CreateUserDialog = ({ isOpen, onOpenChange }: ICreateUserDialogProps) => {
                     disabled={isSubmitting}
                   >
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="w-full">
                         <SelectValue
                           placeholder={CREATE_USER_ROLE_PLACEHOLDER}
                           renderValue={(value) =>
@@ -169,7 +169,7 @@ const CreateUserDialog = ({ isOpen, onOpenChange }: ICreateUserDialogProps) => {
                     disabled={isSubmitting}
                   >
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="w-full">
                         <SelectValue
                           placeholder={CREATE_USER_STATE_PLACEHOLDER}
                           renderValue={(value) =>

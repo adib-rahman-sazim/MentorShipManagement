@@ -9,10 +9,12 @@ export const useToggleUserStateForm = ({
   userId,
   currentState,
   onSuccess,
+  onFailure,
 }: {
   userId?: string;
   currentState?: EUserState;
   onSuccess?: () => void;
+  onFailure?: () => void;
 }) => {
   const form = useForm();
   const [updateUser] = useUpdateUserMutation();
@@ -42,6 +44,10 @@ export const useToggleUserStateForm = ({
           description: parseApiErrorMessage(error),
         },
       );
+
+      if (onFailure) {
+        onFailure();
+      }
     }
   };
 

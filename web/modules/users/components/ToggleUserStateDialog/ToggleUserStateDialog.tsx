@@ -18,13 +18,16 @@ const ToggleUserStateDialog = ({
   onOpenChange,
   onCancel,
 }: IToggleUserStateDialogProps) => {
+  const handleClose = () => {
+    onOpenChange(false);
+    onCancel();
+  };
+
   const { form, onSubmit } = useToggleUserStateForm({
     userId: user?.id,
     currentState: user?.state,
-    onSuccess: () => {
-      onOpenChange(false);
-      onCancel();
-    },
+    onSuccess: handleClose,
+    onFailure: handleClose,
   });
 
   if (!user) {
