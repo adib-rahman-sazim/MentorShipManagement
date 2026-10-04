@@ -9,6 +9,8 @@ import {
 } from "@/shared/typedefs";
 
 import {
+  GROUP_GRANTED_SEPARATOR,
+  GROUP_GRANTED_SUFFIX,
   HIDDEN_PERMISSION_CODES,
   OTHER_PERMISSION_GROUP,
   PERMISSION_GROUPS,
@@ -98,13 +100,14 @@ export function summarizePermissions(
 }
 
 function toPermissionGroupView(
-  { group, title, description }: IPermissionGroupDefinition,
+  { group, title, description, icon }: IPermissionGroupDefinition,
   permissions: IUserPermissionEntryResponse[],
 ): IPermissionGroupView {
   return {
     group,
     title,
     description,
+    icon,
     permissions,
     grantedCount: permissions.filter((permission) => permission.effective).length,
     totalCount: permissions.length,
@@ -128,6 +131,10 @@ export function groupPermissions(
   return [...groups, toPermissionGroupView(OTHER_PERMISSION_GROUP, ungrouped)].filter(
     (group) => group.totalCount > 0,
   );
+}
+
+export function formatGroupGrantedLabel(grantedCount: number, totalCount: number): string {
+  return `${grantedCount} ${GROUP_GRANTED_SEPARATOR} ${totalCount} ${GROUP_GRANTED_SUFFIX}`;
 }
 
 export function formatUnsavedChangesLabel(count: number): string {

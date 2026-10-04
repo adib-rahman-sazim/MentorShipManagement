@@ -1,3 +1,5 @@
+import { KeyRound, Network, PanelsTopLeft, Users } from "lucide-react";
+
 import { EPermissionCode } from "@/shared/typedefs";
 
 import { EPermissionGroup } from "./permissions.enums";
@@ -131,6 +133,7 @@ export const PERMISSION_GROUPS: IPermissionGroupDefinition[] = [
     group: EPermissionGroup.PAGES,
     title: "Pages",
     description: "Which pages they can open.",
+    icon: PanelsTopLeft,
     codes: [
       EPermissionCode.CAN_VIEW_DASHBOARD,
       EPermissionCode.CAN_VIEW_USERS_PAGE,
@@ -142,6 +145,7 @@ export const PERMISSION_GROUPS: IPermissionGroupDefinition[] = [
     group: EPermissionGroup.USERS,
     title: "People",
     description: "What they can see and do with other people's accounts.",
+    icon: Users,
     codes: [
       EPermissionCode.CAN_LIST_USERS,
       EPermissionCode.CAN_READ_USER,
@@ -154,6 +158,7 @@ export const PERMISSION_GROUPS: IPermissionGroupDefinition[] = [
     group: EPermissionGroup.MENTORSHIP,
     title: "Mentorship",
     description: "Assigning mentors and working with drafts.",
+    icon: Network,
     codes: [
       EPermissionCode.CAN_ASSIGN_MENTOR,
       EPermissionCode.CAN_CREATE_DRAFT,
@@ -169,8 +174,12 @@ export const OTHER_PERMISSION_GROUP: IPermissionGroupDefinition = {
   group: EPermissionGroup.OTHER,
   title: "Other",
   description: "Permissions that are not in a group yet.",
+  icon: KeyRound,
   codes: [],
 };
+
+export const GROUP_GRANTED_SEPARATOR = "of";
+export const GROUP_GRANTED_SUFFIX = "on";
 
 export const UNSAVED_CHANGE_LABEL = "unsaved change";
 export const UNSAVED_CHANGES_LABEL = "unsaved changes";

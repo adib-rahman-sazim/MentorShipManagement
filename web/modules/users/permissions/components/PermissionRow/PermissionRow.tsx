@@ -14,16 +14,16 @@ const PermissionRow = ({ permission, control, isChecked, isReadOnly }: IPermissi
   return (
     <div
       className={cn(
-        "flex items-start justify-between gap-4 border-l-4 px-4 py-4 transition-colors md:px-6",
+        "flex items-start justify-between gap-4 border-l-4 py-3.5 pr-4 pl-3 transition-colors md:pr-6 md:pl-5",
         isPending ? "border-l-primary bg-muted/60" : "border-l-transparent",
       )}
     >
-      <div className="min-w-0 space-y-1">
-        <p className="text-sm font-medium">{details.label}</p>
-        <p className="text-sm break-words text-muted-foreground">{details.description}</p>
+      <div className="min-w-0 space-y-0.5">
+        <p className="text-sm leading-5 font-medium text-foreground">{details.label}</p>
+        <p className="text-sm leading-5 break-words text-muted-foreground">{details.description}</p>
       </div>
 
-      <div className="flex shrink-0 flex-col-reverse items-end gap-2 sm:flex-row sm:items-center sm:gap-4">
+      <div className="flex shrink-0 flex-col-reverse items-end gap-2 sm:h-5 sm:flex-row sm:items-center sm:gap-4">
         {isPending ? (
           <PendingChangeBadge isChecked={isChecked} />
         ) : (

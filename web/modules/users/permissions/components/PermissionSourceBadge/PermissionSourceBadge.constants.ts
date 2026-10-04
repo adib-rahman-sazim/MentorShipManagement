@@ -10,8 +10,8 @@ export const PERMISSION_SOURCE_BADGES: Partial<
   [EPermissionSource.ROLE]: {
     label: "From role",
     icon: ShieldCheck,
-    variant: "secondary",
-    className: "",
+    variant: "outline",
+    className: "border-transparent font-normal text-muted-foreground",
   },
   [EPermissionSource.GRANTED]: {
     label: "Added",
