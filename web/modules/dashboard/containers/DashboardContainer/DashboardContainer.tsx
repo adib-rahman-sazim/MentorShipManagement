@@ -4,8 +4,11 @@ import MentorshipSectionCard from "@/modules/dashboard/components/MentorshipSect
 import MyMentorshipEmptyState from "@/modules/dashboard/components/MyMentorshipEmptyState";
 import MyMentorshipLoadError from "@/modules/dashboard/components/MyMentorshipLoadError";
 import MyMentorshipSkeleton from "@/modules/dashboard/components/MyMentorshipSkeleton";
+import QuickActions from "@/modules/dashboard/components/QuickActions";
 import MentorshipChain from "@/modules/mentorships/components/MentorshipChain";
 import MentorshipTeam from "@/modules/mentorships/components/MentorshipTeam";
+import { useCan } from "@/shared/providers/AbilityProvider";
+import { EPermission, EResource } from "@/shared/typedefs";
 
 import {
   CURRENT_USER_LABEL,
@@ -20,7 +23,16 @@ import { isMentorshipEmpty } from "./DashboardContainer.helpers";
 import { useMyMentorship } from "./DashboardContainer.hooks";
 
 const DashboardContainer = () => {
-  const { mentorship, isLoading, errorMessage, refetch } = useMyMentorship();
+  const { isAllowed: canManageUsers } = useCan(EPermission.PAGE_VIEW, EResource.USER);
+  const { mentorship, isLoading, errorMessage, refetch } = useMyMentorship(canManageUsers);
+
+  if (canManageUsers) {
+    return (
+      <div className="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 md:px-8">
+        <QuickActions />
+      </div>
+    );
+  }
 
   let content: ReactNode;
 
@@ -57,6 +69,7 @@ const DashboardContainer = () => {
         <p className="text-sm text-muted-foreground">{DASHBOARD_DESCRIPTION}</p>
       </header>
       {content}
+      <QuickActions />
     </div>
   );
 };
