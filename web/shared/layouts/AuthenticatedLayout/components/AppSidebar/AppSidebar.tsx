@@ -2,7 +2,6 @@ import Link from "next/link";
 
 import { ArrowRight } from "lucide-react";
 
-import { LanguageSelector } from "@/shared/components/LanguageSelector";
 import { Button } from "@/shared/components/shadui/button";
 import {
   Sidebar,
@@ -61,9 +60,6 @@ const AppSidebar = () => {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <div className="flex flex-1 w-full">
-          <LanguageSelector />
-        </div>
         <AppSidebarUser user={user} />
         <Button
           variant="destructive"
