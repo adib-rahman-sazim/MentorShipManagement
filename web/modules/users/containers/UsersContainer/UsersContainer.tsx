@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 
 import { ColumnDef } from "@tanstack/react-table";
 import { MoreVertical } from "lucide-react";
-import { parseAsInteger, parseAsStringEnum, useQueryStates } from "nuqs";
+import { parseAsInteger, parseAsString, parseAsStringEnum, useQueryStates } from "nuqs";
 
 import ChangeUserRoleDialog from "@/modules/users/components/ChangeUserRoleDialog";
 import CreateUserDialog from "@/modules/users/components/CreateUserDialog";
@@ -34,7 +34,7 @@ import { useAuth } from "@/shared/providers/AuthProvider";
 import { useGetUsersQuery } from "@/shared/redux/rtk-apis/users/users.api";
 import { EPermission, EResource, EUserState, IUserResponse } from "@/shared/typedefs";
 
-import { USERS_PAGE_SIZE_OPTIONS } from "./UsersContainer.constants";
+import { USERS_PAGE_SIZE_OPTIONS, USERS_SEARCH_PLACEHOLDER } from "./UsersContainer.constants";
 import { canUpdateUserRow } from "./UsersContainer.helpers";
 
 const UsersContainer = () => {
@@ -43,15 +43,18 @@ const UsersContainer = () => {
   const { ability } = useAbilityContext();
   const { isAllowed: canViewPermissions } = useCan(EPermission.READ, EResource.PERMISSIONS);
   const { isAllowed: canCreateUsers } = useCan(EPermission.CREATE, EResource.USER);
-  const [{ page, limit, userState }, setQueryStates] = useQueryStates({
+  const [{ page, limit, userState, search }, setQueryStates] = useQueryStates({
     page: parseAsInteger.withDefault(1),
     limit: parseAsInteger.withDefault(10),
     userState: parseAsStringEnum<EUserState>(Object.values(EUserState)),
+    search: parseAsString.withDefault(""),
   });
+  const trimmedSearch = search.trim();
   const { data: users, isLoading: isUsersLoading } = useGetUsersQuery({
     limit,
     page,
     state: userState ?? undefined,
+    search: trimmedSearch || undefined,
   });
 
   const [isCreateUserDialogOpen, setIsCreateUserDialogOpen] = useState(false);
@@ -96,11 +99,6 @@ const UsersContainer = () => {
       ),
       enableSorting: false,
       enableHiding: false,
-    },
-    {
-      accessorKey: "id",
-      header: "ID",
-      cell: ({ row }) => row.original.id,
     },
     {
       accessorKey: "email",
@@ -220,8 +218,11 @@ const UsersContainer = () => {
       </div>
 
       <DataTableShell
-        showSearch={false}
-        searchValue=""
+        searchValue={search}
+        searchPlaceholder={USERS_SEARCH_PLACEHOLDER}
+        onSearchChange={(value) => {
+          setQueryStates({ search: value, page: 1 });
+        }}
         filters={userStateFilter}
         pageSize={limit}
         onPageSizeChange={(nextLimit) => {
