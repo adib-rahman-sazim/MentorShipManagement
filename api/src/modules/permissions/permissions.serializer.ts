@@ -20,7 +20,7 @@ import {
 
 @Injectable()
 export class PermissionsSerializer {
-  serializeAbilityRules(ability: TAppAbility): IGetMyCaslRulesResult {
+  serializeAbilityRules(ability: TAppAbility, holdsAllManage: boolean): IGetMyCaslRulesResult {
     const rules: INormalizedCaslRule[] = ability.rules.map((rule) => {
       let fields: string[] | undefined;
       if (rule.fields) {
@@ -39,11 +39,11 @@ export class PermissionsSerializer {
       };
     });
 
-    return { rules };
+    return { rules, holdsAllManage };
   }
 
   serializeEmptyRules(): IGetMyCaslRulesResult {
-    return { rules: [] };
+    return { rules: [], holdsAllManage: false };
   }
 
   serializeUserPermissions({

@@ -13,6 +13,7 @@ const defaultAbility = createMongoAbility<TAppAbility>([]);
 
 const AbilityContext = createContext<TAbilityContextType>({
   ability: defaultAbility,
+  holdsAllManage: false,
   isAbilityLoading: true,
   isAbilityError: false,
 });
@@ -41,6 +42,7 @@ export function AbilityProvider({ children }: TAbilityProviderProps) {
   );
 
   const ability = useMemo(() => createMongoAbility<TAppAbility>(data?.rules ?? []), [data?.rules]);
+  const holdsAllManage = data?.holdsAllManage ?? false;
   const hasRulesData = data?.rules !== undefined;
   const isAbilityLoading = getIsAbilityLoading({
     isAuthenticated,
@@ -53,10 +55,11 @@ export function AbilityProvider({ children }: TAbilityProviderProps) {
   const value = useMemo<TAbilityContextType>(
     () => ({
       ability,
+      holdsAllManage,
       isAbilityLoading,
       isAbilityError: isError,
     }),
-    [ability, isAbilityLoading, isError],
+    [ability, holdsAllManage, isAbilityLoading, isError],
   );
 
   return (

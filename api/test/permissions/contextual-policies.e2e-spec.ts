@@ -200,6 +200,7 @@ describe("Contextual policies (E2E)", () => {
       );
 
       expect(scoped).toEqual([]);
+      expect(response.body.data.holdsAllManage).toBe(true);
     });
   });
 });

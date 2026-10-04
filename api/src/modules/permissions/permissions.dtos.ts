@@ -38,6 +38,9 @@ export class NormalizedCaslRuleResponse {
 export class GetMyCaslRulesResponse {
   @ApiProperty({ type: [NormalizedCaslRuleResponse] })
   rules!: NormalizedCaslRuleResponse[];
+
+  @ApiProperty()
+  holdsAllManage!: boolean;
 }
 
 export class UserPermissionOverrideDto {

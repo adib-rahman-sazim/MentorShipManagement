@@ -22,11 +22,11 @@ export class GetMyCaslRulesInteractor {
       return this.permissionsSerializer.serializeEmptyRules();
     }
 
-    const ability = await this.caslAbilityFactory.createForUser({
+    const { ability, holdsAllManage } = await this.caslAbilityFactory.resolveUserAbility({
       userId: context.userId,
       role: context.role as EUserRole,
     });
 
-    return this.permissionsSerializer.serializeAbilityRules(ability);
+    return this.permissionsSerializer.serializeAbilityRules(ability, holdsAllManage);
   }
 }

@@ -193,6 +193,7 @@ export interface IGetDraftParams {
 }
 
 export interface IGetMyCaslRulesResponse {
+  holdsAllManage: boolean;
   rules: INormalizedCaslRuleResponse[];
 }
 

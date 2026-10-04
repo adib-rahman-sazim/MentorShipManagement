@@ -16,6 +16,7 @@ export type TCanCheck = (action: EPermission, resource: TAppResource) => boolean
 
 export type TAbilityContextType = {
   ability: TAppAbility;
+  holdsAllManage: boolean;
   isAbilityLoading: boolean;
   isAbilityError: boolean;
 };

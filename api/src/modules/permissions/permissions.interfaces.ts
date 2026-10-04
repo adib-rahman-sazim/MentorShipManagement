@@ -35,6 +35,7 @@ export interface IGetMyCaslRulesContext {
 
 export interface IGetMyCaslRulesResult {
   rules: INormalizedCaslRule[];
+  holdsAllManage: boolean;
 }
 
 export interface IEffectivePermissionsContext {

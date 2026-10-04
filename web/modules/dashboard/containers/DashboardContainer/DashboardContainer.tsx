@@ -7,9 +7,8 @@ import MyMentorshipSkeleton from "@/modules/dashboard/components/MyMentorshipSke
 import QuickActions from "@/modules/dashboard/components/QuickActions";
 import MentorshipChain from "@/modules/mentorships/components/MentorshipChain";
 import MentorshipTeam from "@/modules/mentorships/components/MentorshipTeam";
-import { useAppAbility } from "@/shared/providers/AbilityProvider";
+import { useAbilityContext } from "@/shared/providers/AbilityProvider";
 import { useAuth } from "@/shared/providers/AuthProvider";
-import { EPermission, EResource } from "@/shared/typedefs";
 
 import { DASHBOARD_TITLE, MY_TEAM_TITLE, REPORTS_TO_TITLE } from "./DashboardContainer.constants";
 import { isMentorshipEmpty } from "./DashboardContainer.helpers";
@@ -17,11 +16,10 @@ import { useMyMentorship } from "./DashboardContainer.hooks";
 
 const DashboardContainer = () => {
   const { user } = useAuth();
-  const ability = useAppAbility();
-  const isSuperAdmin = ability.can(EPermission.MANAGE, EResource.ALL);
-  const { mentorship, isLoading, errorMessage, refetch } = useMyMentorship(isSuperAdmin);
+  const { holdsAllManage } = useAbilityContext();
+  const { mentorship, isLoading, errorMessage, refetch } = useMyMentorship(holdsAllManage);
 
-  if (isSuperAdmin) {
+  if (holdsAllManage) {
     return (
       <div className="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 md:px-8">
         <QuickActions />

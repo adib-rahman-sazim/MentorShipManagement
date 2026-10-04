@@ -4,7 +4,7 @@ import { ConfigService } from "@nestjs/config";
 import { RedisService } from "@/modules/redis/redis.service";
 import { readNumericEnv } from "@/utils/env/env.helpers";
 
-import type { TAppRawRule } from "./casl.types";
+import type { ICachedUserAbility } from "./casl.interfaces";
 import {
   CASL_CACHE_KEY_PREFIX,
   CASL_CACHE_TTL_SECONDS_DEFAULT,
@@ -31,13 +31,13 @@ export class CaslCacheService {
     return `${CASL_CACHE_KEY_PREFIX}user:${userId}`;
   }
 
-  async getRules(key: string): Promise<TAppRawRule[] | null> {
+  async getUserAbility(key: string): Promise<ICachedUserAbility | null> {
     try {
-      const rawCaslRules = await this.redisService.get(key);
-      if (!rawCaslRules) {
+      const rawUserAbility = await this.redisService.get(key);
+      if (!rawUserAbility) {
         return null;
       }
-      return JSON.parse(rawCaslRules) as TAppRawRule[];
+      return JSON.parse(rawUserAbility) as ICachedUserAbility;
     } catch (error: unknown) {
       this.logger.warn(
         `Failed to read CASL cache for key ${key}: ${
@@ -48,9 +48,9 @@ export class CaslCacheService {
     }
   }
 
-  async setRules(key: string, rules: TAppRawRule[]): Promise<void> {
+  async setUserAbility(key: string, userAbility: ICachedUserAbility): Promise<void> {
     try {
-      await this.redisService.set(key, JSON.stringify(rules), this.ttlSeconds);
+      await this.redisService.set(key, JSON.stringify(userAbility), this.ttlSeconds);
     } catch (error: unknown) {
       this.logger.warn(
         `Failed to write CASL cache for key ${key}: ${

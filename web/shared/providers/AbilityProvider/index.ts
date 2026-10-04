@@ -7,7 +7,6 @@ export {
 export { canPerform } from "./AbilityProvider.helpers";
 export {
   isAllowedForAnyResourceRules,
-  useAppAbility,
   useCan,
   useCanForAnyResource,
 } from "./AbilityProvider.hooks";
