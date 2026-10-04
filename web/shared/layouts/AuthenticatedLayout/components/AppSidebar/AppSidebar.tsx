@@ -19,9 +19,9 @@ import { useSignOut } from "@/shared/hooks/useSignOut";
 import { canPerform, useAbilityContext } from "@/shared/providers/AbilityProvider";
 import { useAuth } from "@/shared/providers/AuthProvider";
 
-import AppSidebarUser from "./components/AppSidebarUser";
 import { SIGN_OUT_LABEL } from "./AppSidebar.constants";
 import { getVisibleSidebarMenuItems } from "./AppSidebar.helpers";
+import AppSidebarUser from "./components/AppSidebarUser";
 
 const AppSidebar = () => {
   const { isLoading, user } = useAuth();
