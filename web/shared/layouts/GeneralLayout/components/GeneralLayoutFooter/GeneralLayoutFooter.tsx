@@ -1,19 +1,20 @@
 import dayjs from "dayjs";
 
-import CustomLink from "@/shared/components/CustomLink";
+import { cn } from "@/lib/utils";
+import { PUBLIC_PAGE_CONTAINER_CLASS } from "@/shared/layouts/GeneralLayout/GeneralLayout.constants";
+
+import { COMPANY_NAME } from "./GeneralLayoutFooter.constants";
 
 const GeneralLayoutFooter = () => {
   const currentYear = dayjs().year();
 
   return (
-    <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
-      <p className="text-xs text-gray-500 dark:text-gray-400">
-        © {currentYear} Sazim Tech Ltd. All rights reserved.
-      </p>
-      <nav className="sm:ml-auto flex gap-4 sm:gap-6">
-        <CustomLink className="text-xs" href="#" label="Terms of Service" />
-        <CustomLink className="text-xs" href="#" label="Privacy Policy" />
-      </nav>
+    <footer className="border-t">
+      <div className={cn(PUBLIC_PAGE_CONTAINER_CLASS, "flex h-16 items-center")}>
+        <p className="text-xs text-muted-foreground">
+          © {currentYear} {COMPANY_NAME}
+        </p>
+      </div>
     </footer>
   );
 };
