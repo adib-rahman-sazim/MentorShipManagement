@@ -20,6 +20,7 @@ import { useSignOut } from "@/shared/hooks/useSignOut";
 import { canPerform, useAbilityContext } from "@/shared/providers/AbilityProvider";
 import { useAuth } from "@/shared/providers/AuthProvider";
 
+import AppSidebarUser from "./components/AppSidebarUser";
 import { getVisibleSidebarMenuItems } from "./AppSidebar.helpers";
 
 const AppSidebar = () => {
@@ -62,6 +63,7 @@ const AppSidebar = () => {
         <div className="flex flex-1 w-full">
           <LanguageSelector />
         </div>
+        <AppSidebarUser user={user} />
         <Button variant="destructive" onClick={() => signOut()}>
           Sign Out
           <ArrowRight />
