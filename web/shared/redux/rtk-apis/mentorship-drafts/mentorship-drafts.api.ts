@@ -3,6 +3,7 @@ import { transformPaginationMeta } from "@/shared/redux/rtk-apis/users/users.hel
 import {
   ICreateMentorshipDraftDto,
   IListDraftsParams,
+  IMentorshipDraftChangeSummaryResponse,
   IMentorshipDraftDetailResponse,
   IMentorshipDraftResponse,
   IMentorshipDraftSummaryResponse,
@@ -33,6 +34,13 @@ const mentorshipDraftsApi = projectApi.injectEndpoints({
       providesTags: (_result, _error, id) => [{ type: "MentorshipDraft", id }],
     }),
 
+    getMentorshipDraftChangeSummary: builder.query<IMentorshipDraftChangeSummaryResponse, string>({
+      query: (id) => `mentorship-drafts/${id}/change-summary`,
+      transformResponse: (response: TApiResponse<IMentorshipDraftChangeSummaryResponse>) =>
+        response.data,
+      providesTags: (_result, _error, id) => [{ type: "MentorshipDraft", id }, "MentorshipGraph"],
+    }),
+
     createMentorshipDraft: builder.mutation<IMentorshipDraftResponse, ICreateMentorshipDraftDto>({
       query: (body) => ({ url: "mentorship-drafts", method: "POST", body }),
       transformResponse: (response: TApiResponse<IMentorshipDraftResponse>) => response.data,
@@ -60,6 +68,7 @@ const mentorshipDraftsApi = projectApi.injectEndpoints({
 export const {
   useGetMentorshipDraftsQuery,
   useGetMentorshipDraftQuery,
+  useGetMentorshipDraftChangeSummaryQuery,
   useCreateMentorshipDraftMutation,
   useUpdateMentorshipDraftMutation,
   useSubmitMentorshipDraftMutation,

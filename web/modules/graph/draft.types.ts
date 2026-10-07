@@ -64,6 +64,7 @@ export type TPersonDraftState = {
   hasViolation: boolean;
   isTargetConnectable: boolean;
   isSourceConnectable: boolean;
+  isStale?: boolean;
 };
 
 export type TDraftChange = {

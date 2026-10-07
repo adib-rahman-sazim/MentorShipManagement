@@ -7,7 +7,13 @@ import { Button } from "@/shared/components/shadui/button";
 import { getRemoveChangeLabel } from "./DraftChangeRow.helpers";
 import { IDraftChangeRowProps } from "./DraftChangeRow.interfaces";
 
-const DraftChangeRow = ({ change, isEditable, onSelect, onRemove }: IDraftChangeRowProps) => {
+const DraftChangeRow = ({
+  change,
+  isEditable,
+  onSelect,
+  onRemove,
+  children,
+}: IDraftChangeRowProps) => {
   const details = DRAFT_OPERATION_DETAILS[change.operation];
   const removeLabel = getRemoveChangeLabel(change.name);
 
@@ -22,25 +28,28 @@ const DraftChangeRow = ({ change, isEditable, onSelect, onRemove }: IDraftChange
       >
         {details.glyph}
       </span>
-      <button
-        type="button"
-        className="flex min-w-0 flex-1 flex-col rounded-md text-left outline-none focus-visible:ring-2 focus-visible:ring-focus"
-        onClick={() => onSelect(change.subordinateId)}
-      >
-        <span className="truncate text-sm font-medium">
-          {change.name}
-          <span className="font-normal text-muted-foreground"> · {change.roleLabel}</span>
-        </span>
-        <span className="text-xs text-muted-foreground">
-          <span className={details.textClassName}>{details.word}</span> · {change.fromName} →{" "}
-          {change.toName}
-        </span>
-        {change.violations.map((violation) => (
-          <span key={violation} className="text-xs text-destructive">
-            {violation}
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <button
+          type="button"
+          className="flex flex-col rounded-md text-left outline-none focus-visible:ring-2 focus-visible:ring-focus"
+          onClick={() => onSelect(change.subordinateId)}
+        >
+          <span className="truncate text-sm font-medium">
+            {change.name}
+            <span className="font-normal text-muted-foreground"> · {change.roleLabel}</span>
           </span>
-        ))}
-      </button>
+          <span className="text-xs text-muted-foreground">
+            <span className={details.textClassName}>{details.word}</span> · {change.fromName} →{" "}
+            {change.toName}
+          </span>
+          {change.violations.map((violation) => (
+            <span key={violation} className="text-xs text-destructive">
+              {violation}
+            </span>
+          ))}
+        </button>
+        {children}
+      </div>
       {isEditable ? (
         <Button
           variant="ghost"
@@ -48,7 +57,7 @@ const DraftChangeRow = ({ change, isEditable, onSelect, onRemove }: IDraftChange
           className="text-muted-foreground"
           aria-label={removeLabel}
           title={removeLabel}
-          onClick={() => onRemove(change.subordinateId)}
+          onClick={() => onRemove?.(change.subordinateId)}
         >
           <X />
         </Button>

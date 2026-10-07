@@ -1,10 +1,12 @@
 import { memo } from "react";
 
 import { Handle, NodeProps, Position } from "@xyflow/react";
+import { TriangleAlert } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { DRAFT_OPERATION_DETAILS } from "@/modules/graph/draft.constants";
 import type { TPersonNode } from "@/modules/graph/graph.types";
+import { STALE_CHANGE_LABEL } from "@/modules/graph/review.constants";
 import { EUserState } from "@/shared/typedefs";
 import { getInitials } from "@/shared/utils/string";
 
@@ -22,8 +24,7 @@ const PersonNode = ({ data, selected }: NodeProps<TPersonNode>) => {
       className={cn(
         "relative flex h-14 w-40 items-center gap-2 rounded-lg bg-card px-2.5 text-card-foreground shadow-xs ring-1 ring-foreground/10 transition-shadow hover:ring-foreground/30",
         {
-          "ring-2 ring-destructive hover:ring-destructive": data.draft?.hasViolation,
-          "ring-2 ring-focus hover:ring-focus": selected,
+          "ring-2 ring-destructive hover:ring-destructive": selected || data.draft?.hasViolation,
           "opacity-60": data.state === EUserState.INACTIVE,
         },
       )}
@@ -52,6 +53,14 @@ const PersonNode = ({ data, selected }: NodeProps<TPersonNode>) => {
           )}
         >
           {operationDetails.glyph}
+        </span>
+      ) : null}
+      {data.draft?.isStale ? (
+        <span
+          title={STALE_CHANGE_LABEL}
+          className="absolute -top-2 -left-2 flex size-5 items-center justify-center rounded-full border border-destructive/40 bg-background text-destructive"
+        >
+          <TriangleAlert aria-hidden className="size-3" />
         </span>
       ) : null}
       <Handle
