@@ -2,6 +2,8 @@ import { SUBORDINATE_ROLE, SUPERVISOR_ROLE } from "@/modules/graph/graph.constan
 import type { TLinkDetails, TPersonDetails } from "@/modules/graph/graph.types";
 import { IMentorshipGraphResponse } from "@/shared/typedefs";
 
+import { ALERT_DIALOG_SELECTOR } from "./GraphSidePanel.constants";
+
 export function getPersonDetails(
   { nodes, edges }: IMentorshipGraphResponse,
   personId: string,
@@ -37,4 +39,8 @@ export function getLinkDetails(
   const subordinate = nodes.find(({ id }) => id === link?.subordinateId);
 
   return link && supervisor && subordinate ? { link, supervisor, subordinate } : null;
+}
+
+export function isInsideAlertDialog(target: EventTarget | null) {
+  return target instanceof Element && target.closest(ALERT_DIALOG_SELECTOR) !== null;
 }

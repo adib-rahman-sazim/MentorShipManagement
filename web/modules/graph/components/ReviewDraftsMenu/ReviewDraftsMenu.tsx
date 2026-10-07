@@ -14,7 +14,10 @@ import {
   DropdownMenuTrigger,
 } from "@/shared/components/shadui/dropdown-menu";
 
-import { REVIEW_DRAFTS_LABEL } from "./ReviewDraftsMenu.constants";
+import {
+  REVIEW_DRAFTS_LABEL,
+  REVIEW_DRAFTS_MENU_CONTENT_CLASS_NAME,
+} from "./ReviewDraftsMenu.constants";
 import {
   getMenuStatusText,
   getShowAllLabel,
@@ -47,7 +50,7 @@ const ReviewDraftsMenu = ({ onOpenDraft }: IReviewDraftsMenuProps) => {
         ) : null}
         <ChevronDown className="text-muted-foreground" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-[min(20rem,calc(100vw-2rem))]">
+      <DropdownMenuContent align="end" className={REVIEW_DRAFTS_MENU_CONTENT_CLASS_NAME}>
         {statusText ? (
           <p className="px-2 py-1.5 text-sm text-muted-foreground">{statusText}</p>
         ) : null}
@@ -55,7 +58,7 @@ const ReviewDraftsMenu = ({ onOpenDraft }: IReviewDraftsMenuProps) => {
           <Fragment key={group}>
             {index > 0 ? <DropdownMenuSeparator /> : null}
             <DropdownMenuGroup>
-              <DropdownMenuLabel className="flex justify-between">
+              <DropdownMenuLabel className="sticky top-0 z-10 flex justify-between bg-popover">
                 {label}
                 <span className="font-mono">{total}</span>
               </DropdownMenuLabel>

@@ -4,6 +4,8 @@ import { EReviewDraftGroup } from "./ReviewDraftsMenu.enums";
 import type { TReviewDraftGroupConfig } from "./ReviewDraftsMenu.types";
 
 export const REVIEW_DRAFTS_LABEL = "Review drafts";
+export const REVIEW_DRAFTS_MENU_CONTENT_CLASS_NAME =
+  "no-scrollbar w-[min(20rem,calc(100vw-2rem))] max-h-[min(20rem,var(--available-height))] overflow-y-auto overscroll-contain";
 export const LOADING_DRAFTS_TEXT = "Loading drafts…";
 export const NO_DRAFTS_TEXT = "No drafts yet.";
 export const YOU_LABEL = "You";

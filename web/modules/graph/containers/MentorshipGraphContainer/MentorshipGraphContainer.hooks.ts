@@ -4,6 +4,16 @@ import { skipToken } from "@reduxjs/toolkit/query";
 import { useQueryState } from "nuqs";
 import { toast } from "sonner";
 
+import {
+  DRAFT_APPROVED_MESSAGE,
+  DRAFT_CANCELLED_MESSAGE,
+  DRAFT_PUBLISHED_MESSAGE,
+  DRAFT_REJECTED_MESSAGE,
+  EMPTY_DRAFT_NOTE,
+} from "@/modules/graph/decision.constants";
+import { toDecisionComment, toDraftConflict } from "@/modules/graph/decision.helpers";
+import type { IDraftDecisions } from "@/modules/graph/decision.interfaces";
+import type { TDraftConflict, TDraftNote } from "@/modules/graph/decision.types";
 import { DRAFT_QUERY_KEY, DRAFT_QUERY_PARSER, NEW_DRAFT_ID } from "@/modules/graph/draft.constants";
 import {
   isDraftDirty,
@@ -19,9 +29,13 @@ import { getDraftReview } from "@/modules/graph/review.helpers";
 import type { TDraftReview } from "@/modules/graph/review.types";
 import { useCan } from "@/shared/providers/AbilityProvider/AbilityProvider.hooks";
 import {
+  useApproveMentorshipDraftMutation,
+  useCancelMentorshipDraftMutation,
   useCreateMentorshipDraftMutation,
   useGetMentorshipDraftChangeSummaryQuery,
   useGetMentorshipDraftQuery,
+  usePublishMentorshipDraftMutation,
+  useRejectMentorshipDraftMutation,
   useSubmitMentorshipDraftMutation,
   useUpdateMentorshipDraftMutation,
 } from "@/shared/redux/rtk-apis/mentorship-drafts/mentorship-drafts.api";
@@ -31,6 +45,7 @@ import {
   EMentorshipDraftStatus,
   EPermission,
   EResource,
+  IMentorshipDraftDetailResponse,
 } from "@/shared/typedefs";
 import { parseApiErrorMessage } from "@/shared/utils/errors";
 
@@ -206,4 +221,70 @@ export const useDraftReview = ({ detail, isEditable }: IGraphDraft): TDraftRevie
     () => (detail && reviewId ? getDraftReview(detail, summary) : null),
     [detail, reviewId, summary],
   );
+};
+
+export const useDraftDecisions = (
+  detail: IMentorshipDraftDetailResponse | null,
+): IDraftDecisions => {
+  const draftId = detail?.id ?? null;
+  const [note, setNote] = useState<TDraftNote>(EMPTY_DRAFT_NOTE);
+  const [conflict, setConflict] = useState<TDraftConflict | null>(null);
+  const [approveDraft, { isLoading: isApproving }] = useApproveMentorshipDraftMutation();
+  const [rejectDraft, { isLoading: isRejecting }] = useRejectMentorshipDraftMutation();
+  const [publishDraft, { isLoading: isPublishing }] = usePublishMentorshipDraftMutation();
+  const [cancelDraft, { isLoading: isCancelling }] = useCancelMentorshipDraftMutation();
+  const noteText = note.draftId === draftId ? note.text : "";
+  const decisionComment = toDecisionComment(noteText);
+
+  const run = async (
+    action: EMentorshipDraftAction,
+    request: (id: string) => Promise<unknown>,
+    successMessage: string,
+  ) => {
+    if (!draftId) {
+      return;
+    }
+
+    try {
+      await request(draftId);
+      setNote(EMPTY_DRAFT_NOTE);
+      setConflict(null);
+      toast.success(successMessage);
+    } catch (error) {
+      const nextConflict = toDraftConflict(error, draftId, action);
+
+      if (nextConflict) {
+        setConflict(nextConflict);
+      } else {
+        toast.error(parseApiErrorMessage(error));
+      }
+    }
+  };
+
+  return {
+    note: noteText,
+    conflict: conflict?.draftId === draftId ? conflict : null,
+    isBusy: isApproving || isRejecting || isPublishing || isCancelling,
+    setNote: (text: string) => setNote({ draftId, text }),
+    approve: () =>
+      run(
+        EMentorshipDraftAction.APPROVE,
+        (id) => approveDraft({ id, decisionComment }).unwrap(),
+        DRAFT_APPROVED_MESSAGE,
+      ),
+    reject: () =>
+      run(
+        EMentorshipDraftAction.REJECT,
+        (id) => rejectDraft({ id, decisionComment }).unwrap(),
+        DRAFT_REJECTED_MESSAGE,
+      ),
+    publish: () =>
+      run(
+        EMentorshipDraftAction.PUBLISH,
+        (id) => publishDraft(id).unwrap(),
+        DRAFT_PUBLISHED_MESSAGE,
+      ),
+    cancel: () =>
+      run(EMentorshipDraftAction.CANCEL, (id) => cancelDraft(id).unwrap(), DRAFT_CANCELLED_MESSAGE),
+  };
 };
