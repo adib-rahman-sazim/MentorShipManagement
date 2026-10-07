@@ -43,7 +43,7 @@ const UserPermissionsContainer = () => {
       {isReadOnly ? <ReadOnlyRecordNotice /> : <PermissionSourceLegend />}
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           {groups.map((group) => (
             <PermissionGroupCard
               key={group.group}

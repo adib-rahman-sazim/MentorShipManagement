@@ -6,3 +6,5 @@ export const USERS_PAGE_SIZE_OPTIONS: IPageSizeOption[] = PAGINATION_LIMIT_OPTIO
   value,
   label: String(value),
 }));
+
+export const USERS_SEARCH_PLACEHOLDER = "Search by name or email";

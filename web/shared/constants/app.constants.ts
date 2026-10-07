@@ -1,4 +1,5 @@
-export const APP_NAME = "Mentor Management System";
+export const APP_NAME = "Mentorship Management System";
+export const APP_SHORT_NAME = "MMS";
 
 export const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 export const MAX_TOTAL_IMAGE_SIZE = 10 * MAX_IMAGE_SIZE;

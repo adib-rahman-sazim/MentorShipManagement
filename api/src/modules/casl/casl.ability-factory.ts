@@ -3,7 +3,7 @@ import { Injectable } from "@nestjs/common";
 import { AbilityBuilder, createMongoAbility } from "@casl/ability";
 
 import type { Permission } from "@/common/entities/permissions.entity";
-import type { IAbilityContext } from "@/modules/casl/casl.interfaces";
+import type { IAbilityContext, IUserAbility } from "@/modules/casl/casl.interfaces";
 import { MentorshipHierarchyService } from "@/modules/mentorships/mentorship-hierarchy.service";
 import type { IPolicyScope } from "@/modules/permissions/contextual-policies.interfaces";
 import { EffectivePermissionsService } from "@/modules/permissions/effective-permissions.service";
@@ -22,10 +22,18 @@ export class CaslAbilityFactory {
   ) {}
 
   async createForUser(context: IAbilityContext): Promise<TAppAbility> {
+    const { ability } = await this.resolveUserAbility(context);
+    return ability;
+  }
+
+  async resolveUserAbility(context: IAbilityContext): Promise<IUserAbility> {
     const cacheKey = this.caslCacheService.buildUserCacheKey(context.userId);
-    const cachedRules = await this.caslCacheService.getRules(cacheKey);
-    if (cachedRules) {
-      return this.buildAbilityFromRules(cachedRules);
+    const cachedUserAbility = await this.caslCacheService.getUserAbility(cacheKey);
+    if (cachedUserAbility) {
+      return {
+        ability: this.buildAbilityFromRules(cachedUserAbility.rules),
+        holdsAllManage: cachedUserAbility.holdsAllManage,
+      };
     }
 
     const { permissions, holdsAllManage } =
@@ -33,9 +41,9 @@ export class CaslAbilityFactory {
 
     const scope = await this.resolveScope(context.userId, permissions, holdsAllManage);
     const resolvedRules = this.toResolvedRules(permissions, scope, holdsAllManage);
-    await this.caslCacheService.setRules(cacheKey, resolvedRules);
+    await this.caslCacheService.setUserAbility(cacheKey, { rules: resolvedRules, holdsAllManage });
 
-    return this.buildAbilityFromRules(resolvedRules);
+    return { ability: this.buildAbilityFromRules(resolvedRules), holdsAllManage };
   }
 
   private resolveConditionType(

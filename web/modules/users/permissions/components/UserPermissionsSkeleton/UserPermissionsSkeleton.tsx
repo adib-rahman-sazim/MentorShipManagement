@@ -35,10 +35,14 @@ const UserPermissionsSkeleton = () => (
     </div>
 
     {GROUP_SKELETON_KEYS.map((groupKey) => (
-      <div key={groupKey} className="rounded-xl border">
-        <div className="space-y-2 border-b p-4 md:px-6">
-          <Skeleton className="h-4 w-28" />
-          <Skeleton className="h-3 w-64 max-w-full" />
+      <div key={groupKey} className="overflow-hidden rounded-xl border">
+        <div className="flex items-center gap-3 border-b bg-muted/50 p-4 md:px-6">
+          <Skeleton className="size-9 shrink-0 rounded-lg" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-4 w-28" />
+            <Skeleton className="h-3 w-64 max-w-full" />
+          </div>
+          <Skeleton className="h-5 w-16 rounded-full" />
         </div>
         <div className="divide-y">
           {ROW_SKELETON_KEYS.map((rowKey) => (

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildPermissionOverrides,
+  formatGroupGrantedLabel,
   getVisiblePermissions,
 } from "@/modules/users/permissions/permissions.helpers";
 import { EPermissionOverrideEffect } from "@/shared/typedefs";
@@ -36,5 +37,11 @@ describe("buildPermissionOverrides", () => {
 
   it("drops the override when a permission is switched back to its role default", () => {
     expect(buildPermissionOverrides([REMOVED], { [REMOVED.code]: true })).toEqual([]);
+  });
+});
+
+describe("formatGroupGrantedLabel", () => {
+  it("reads as how many of the group's permissions are on", () => {
+    expect(formatGroupGrantedLabel(3, 4)).toBe("3 of 4 on");
   });
 });

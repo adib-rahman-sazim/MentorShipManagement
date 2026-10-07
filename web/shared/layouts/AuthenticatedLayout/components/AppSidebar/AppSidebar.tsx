@@ -2,7 +2,6 @@ import Link from "next/link";
 
 import { ArrowRight } from "lucide-react";
 
-import { LanguageSelector } from "@/shared/components/LanguageSelector";
 import { Button } from "@/shared/components/shadui/button";
 import {
   Sidebar,
@@ -20,7 +19,9 @@ import { useSignOut } from "@/shared/hooks/useSignOut";
 import { canPerform, useAbilityContext } from "@/shared/providers/AbilityProvider";
 import { useAuth } from "@/shared/providers/AuthProvider";
 
+import { SIGN_OUT_LABEL } from "./AppSidebar.constants";
 import { getVisibleSidebarMenuItems } from "./AppSidebar.helpers";
+import AppSidebarUser from "./components/AppSidebarUser";
 
 const AppSidebar = () => {
   const { isLoading, user } = useAuth();
@@ -29,7 +30,7 @@ const AppSidebar = () => {
 
   if (isLoading || !user || isAbilityLoading) {
     return (
-      <Sidebar>
+      <Sidebar collapsible="icon">
         <SidebarSkeleton />
       </Sidebar>
     );
@@ -40,10 +41,10 @@ const AppSidebar = () => {
   );
 
   return (
-    <Sidebar>
+    <Sidebar collapsible="icon">
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Application</SidebarGroupLabel>
+          <SidebarGroupLabel>Mentorship Management System</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (
@@ -59,11 +60,14 @@ const AppSidebar = () => {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <div className="flex flex-1 w-full">
-          <LanguageSelector />
-        </div>
-        <Button variant="destructive" onClick={() => signOut()}>
-          Sign Out
+        <AppSidebarUser user={user} />
+        <Button
+          variant="destructive"
+          className="group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-0!"
+          aria-label={SIGN_OUT_LABEL}
+          onClick={() => signOut()}
+        >
+          <span className="group-data-[collapsible=icon]:hidden">{SIGN_OUT_LABEL}</span>
           <ArrowRight />
         </Button>
       </SidebarFooter>

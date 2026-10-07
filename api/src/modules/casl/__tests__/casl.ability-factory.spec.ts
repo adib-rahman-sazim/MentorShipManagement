@@ -5,6 +5,7 @@ import { mockDeep } from "vitest-mock-extended";
 import type { Permission } from "@/common/entities/permissions.entity";
 import { EUserRole } from "@/common/enums/roles.enums";
 import { CaslAbilityFactory } from "@/modules/casl/casl.ability-factory";
+import type { ICachedUserAbility } from "@/modules/casl/casl.interfaces";
 import type { TAppRawRule } from "@/modules/casl/casl.types";
 import { CaslCacheService } from "@/modules/casl/casl-cache.service";
 import { MentorshipHierarchyService } from "@/modules/mentorships/mentorship-hierarchy.service";
@@ -57,13 +58,13 @@ describe("CaslAbilityFactory", () => {
 
   const buildFactory = (
     permissions: Permission[],
-    cachedRules: TAppRawRule[] | null = null,
+    cachedUserAbility: ICachedUserAbility | null = null,
     holdsAllManage = false,
   ) => {
     const caslCacheService = mockDeep<CaslCacheService>();
     caslCacheService.buildUserCacheKey.mockReturnValue(`casl:user:${USER_ID}`);
-    caslCacheService.getRules.mockResolvedValue(cachedRules);
-    caslCacheService.setRules.mockResolvedValue(undefined);
+    caslCacheService.getUserAbility.mockResolvedValue(cachedUserAbility);
+    caslCacheService.setUserAbility.mockResolvedValue(undefined);
 
     const effectivePermissionsService = mockDeep<EffectivePermissionsService>();
     effectivePermissionsService.resolveForUser.mockResolvedValue({ permissions, holdsAllManage });
@@ -84,8 +85,13 @@ describe("CaslAbilityFactory", () => {
     };
   };
 
-  const cachedRulesFrom = (caslCacheService: { setRules: { mock: { calls: unknown[][] } } }) =>
-    caslCacheService.setRules.mock.calls[0][1] as TAppRawRule[];
+  const cachedUserAbilityFrom = (caslCacheService: {
+    setUserAbility: { mock: { calls: unknown[][] } };
+  }) => caslCacheService.setUserAbility.mock.calls[0][1] as ICachedUserAbility;
+
+  const cachedRulesFrom = (caslCacheService: {
+    setUserAbility: { mock: { calls: unknown[][] } };
+  }): TAppRawRule[] => cachedUserAbilityFrom(caslCacheService).rules;
 
   const readUserPermission = () =>
     buildPermission({
@@ -107,14 +113,27 @@ describe("CaslAbilityFactory", () => {
     it("builds from the cached rules without resolving anything", async () => {
       const { factory, effectivePermissionsService, mentorshipHierarchyService } = buildFactory(
         [],
-        [{ action: EPermission.READ, subject: EResource.USER }],
+        {
+          rules: [{ action: EPermission.READ, subject: EResource.USER }],
+          holdsAllManage: true,
+        },
       );
 
-      const ability = await factory.createForUser(ABILITY_CONTEXT);
+      const { ability, holdsAllManage } = await factory.resolveUserAbility(ABILITY_CONTEXT);
 
       expect(ability.can(EPermission.READ, EResource.USER)).toBe(true);
+      expect(holdsAllManage).toBe(true);
       expect(effectivePermissionsService.resolveForUser).not.toHaveBeenCalled();
       expect(mentorshipHierarchyService.findSubtreeUserIds).not.toHaveBeenCalled();
+    });
+
+    it("caches the manage-all flag alongside the rules", async () => {
+      const { factory, caslCacheService } = buildFactory([readUserPermission()], null, true);
+
+      const { holdsAllManage } = await factory.resolveUserAbility(ABILITY_CONTEXT);
+
+      expect(holdsAllManage).toBe(true);
+      expect(cachedUserAbilityFrom(caslCacheService).holdsAllManage).toBe(true);
     });
 
     it("still resolves when the cache is unavailable", async () => {

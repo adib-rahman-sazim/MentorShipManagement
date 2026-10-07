@@ -10,6 +10,8 @@ import { EResource } from "@/shared/typedefs";
 
 import { TSidebarMenuItem } from "./AppSidebar.types";
 
+export const SIGN_OUT_LABEL = "Sign Out";
+
 export const SIDEBAR_MENU_ITEMS: TSidebarMenuItem[] = [
   {
     title: "Home",
